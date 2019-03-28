@@ -22,6 +22,8 @@ class PageLogin extends React.Component<any, State> {
             <div className="page-login">
                 { this.state.error ? <div className="notification">{this.state.error}</div> : '' }
                 <form onSubmit={this.handleSubmit.bind(this)}>
+                    <h3 className="title">Login</h3>
+
                     <div className="input-group">
                         <label htmlFor="email">email</label>
                         <input type="email" id="email" value={this.state.email} onChange={(e) => { this.setState({email: e.currentTarget.value}); }} />
@@ -42,12 +44,11 @@ class PageLogin extends React.Component<any, State> {
             email: this.state.email,
             password: this.state.password
         }).then((res) => {
-            console.log(res);
+            this.setState({error: null});
             this.props.dispatch({ type: 'SET_EMAIL', data: res.data.email });
             this.props.dispatch({ type: 'SET_AUTHORIZED', data: true });
-        }).catch((res) => {
-            console.log(res);
-            // @todo set error
+        }).catch((err) => {
+            this.setState({error: err.response.data.error});
         });
     }
 }

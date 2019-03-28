@@ -8,12 +8,32 @@ form {
         justify-content: space-between;
         margin-bottom: 1rem;
 
+
+
         label {
             margin-right: 1rem;
         }
     }
 
+    @include mobile {
+        .input-group {
+            flex-direction: column;
+            label {
+                margin-bottom: .5rem;
+                margin-right: 0;
+            }
+        }
+    }
+
     input {
-        
+        border: 1px solid lightgray;
+        padding: .25rem;
+        font-size: 1rem;
+        line-height: 1rem;
+    }
+
+    label {
+        display: flex;
+        align-items: center;
     }
 }

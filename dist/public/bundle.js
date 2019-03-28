@@ -42662,6 +42662,7 @@ var PageLogin = (function (_super) {
         return (React.createElement("div", { className: "page-login" },
             this.state.error ? React.createElement("div", { className: "notification" }, this.state.error) : '',
             React.createElement("form", { onSubmit: this.handleSubmit.bind(this) },
+                React.createElement("h3", { className: "title" }, "Login"),
                 React.createElement("div", { className: "input-group" },
                     React.createElement("label", { htmlFor: "email" }, "email"),
                     React.createElement("input", { type: "email", id: "email", value: this.state.email, onChange: function (e) { _this.setState({ email: e.currentTarget.value }); } })),
@@ -42677,11 +42678,11 @@ var PageLogin = (function (_super) {
             email: this.state.email,
             password: this.state.password
         }).then(function (res) {
-            console.log(res);
+            _this.setState({ error: null });
             _this.props.dispatch({ type: 'SET_EMAIL', data: res.data.email });
             _this.props.dispatch({ type: 'SET_AUTHORIZED', data: true });
-        })["catch"](function (res) {
-            console.log(res);
+        })["catch"](function (err) {
+            _this.setState({ error: err.response.data.error });
         });
     };
     return PageLogin;
@@ -42770,6 +42771,7 @@ var PageRegister = (function (_super) {
         _this.state = {
             email: '',
             password: '',
+            confirmPassword: '',
             error: false
         };
         return _this;
@@ -42779,13 +42781,17 @@ var PageRegister = (function (_super) {
         return (React.createElement("div", { className: "page-login" },
             this.state.error ? React.createElement("div", { className: "notification" }, this.state.error) : '',
             React.createElement("form", { onSubmit: this.handleSubmit.bind(this) },
+                React.createElement("h3", { className: "title" }, "Register"),
                 React.createElement("div", { className: "input-group" },
                     React.createElement("label", { htmlFor: "email" }, "email"),
                     React.createElement("input", { type: "email", id: "email", value: this.state.email, onChange: function (e) { _this.setState({ email: e.currentTarget.value }); } })),
                 React.createElement("div", { className: "input-group" },
                     React.createElement("label", { htmlFor: "password" }, "password"),
                     React.createElement("input", { type: "password", id: "password", value: this.state.password, onChange: function (e) { _this.setState({ password: e.currentTarget.value }); } })),
-                React.createElement("button", { type: "submit" }, "login"))));
+                React.createElement("div", { className: "input-group" },
+                    React.createElement("label", { htmlFor: "confirm-password" }, "confirm password"),
+                    React.createElement("input", { type: "password", id: "confirm-password", value: this.state.password, onChange: function (e) { _this.setState({ confirmPassword: e.currentTarget.value }); } })),
+                React.createElement("button", { type: "submit" }, "register"))));
     };
     PageRegister.prototype.handleSubmit = function (e) {
         var _this = this;
@@ -42794,11 +42800,13 @@ var PageRegister = (function (_super) {
             email: this.state.email,
             password: this.state.password
         }).then(function (res) {
-            console.log(res);
+            _this.setState({ error: null });
             _this.props.dispatch({ type: 'SET_EMAIL', data: res.data.email });
             _this.props.dispatch({ type: 'SET_AUTHORIZED', data: true });
+            return res;
         })["catch"](function (res) {
-            console.log(res);
+            console.log('error', res);
+            _this.setState({ error: res.data.error });
         });
     };
     return PageRegister;

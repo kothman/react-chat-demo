@@ -5,6 +5,7 @@ import { connect } from 'react-redux';
 interface State {
     email: string,
     password: string,
+    confirmPassword: string,
     error: string | boolean
 }
 class PageRegister extends React.Component<any, State> {
@@ -13,6 +14,7 @@ class PageRegister extends React.Component<any, State> {
         this.state = {
             email: '',
             password: '',
+            confirmPassword: '',
             error: false
         };
     }
@@ -21,6 +23,7 @@ class PageRegister extends React.Component<any, State> {
             <div className="page-login">
                 {this.state.error ? <div className="notification">{this.state.error}</div> : ''}
                 <form onSubmit={this.handleSubmit.bind(this)}>
+                    <h3 className="title">Register</h3>
                     <div className="input-group">
                         <label htmlFor="email">email</label>
                         <input type="email" id="email" value={this.state.email} onChange={(e) => { this.setState({ email: e.currentTarget.value }); }} />
@@ -29,7 +32,11 @@ class PageRegister extends React.Component<any, State> {
                         <label htmlFor="password">password</label>
                         <input type="password" id="password" value={this.state.password} onChange={(e) => { this.setState({ password: e.currentTarget.value }); }} />
                     </div>
-                    <button type="submit">login</button>
+                    <div className="input-group">
+                        <label htmlFor="confirm-password">confirm password</label>
+                        <input type="password" id="confirm-password" value={this.state.password} onChange={(e) => { this.setState({ confirmPassword: e.currentTarget.value }); }} />
+                    </div>
+                    <button type="submit">register</button>
                 </form>
             </div>
         );
@@ -41,11 +48,13 @@ class PageRegister extends React.Component<any, State> {
             email: this.state.email,
             password: this.state.password
         }).then((res) => {
-            console.log(res);
+            this.setState({ error: null });
             this.props.dispatch({ type: 'SET_EMAIL', data: res.data.email });
             this.props.dispatch({ type: 'SET_AUTHORIZED', data: true });
+            return res;
         }).catch((res) => {
-            console.log(res);
+            console.log('error', res);
+            this.setState({ error: res.data.error });
         });
     }
 }

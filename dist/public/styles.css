@@ -89,18 +89,56 @@ form {
     margin-bottom: 1rem; }
     form .input-group label {
       margin-right: 1rem; }
+  @media (max-width: 800px) {
+    form .input-group {
+      flex-direction: column; }
+      form .input-group label {
+        margin-bottom: .5rem;
+        margin-right: 0; } }
+  form input {
+    border: 1px solid lightgray;
+    padding: .25rem;
+    font-size: 1rem;
+    line-height: 1rem; }
+  form label {
+    display: flex;
+    align-items: center; }
 
-.page-login {
-  margin-top: 2rem;
+.page-login, .page-register {
+  padding-top: 2rem;
+  background: aquamarine;
   display: flex;
-  justify-content: center;
-  align-items: center; }
+  flex-grow: 1;
+  justify-content: flex-start;
+  align-items: center;
+  flex-direction: column; }
+  .page-login form, .page-register form {
+    padding: 2rem;
+    border: 1px solid black;
+    background-color: #b2ffe5;
+    flex-grow: 0;
+    max-width: 100%; }
+    .page-login form .title, .page-register form .title {
+      font-size: 1.5rem;
+      line-height: 1.5rem;
+      margin-bottom: 2rem; }
+    .page-login form input, .page-register form input {
+      width: 14rem;
+      max-width: 100%; }
+    .page-login form button[type="submit"], .page-register form button[type="submit"] {
+      margin-left: auto;
+      background: white;
+      border-radius: 0;
+      border: 1px solid black;
+      padding: .5rem; }
+      .page-login form button[type="submit"]:hover, .page-register form button[type="submit"]:hover {
+        background: #e6e6e6; }
 
 .page-dashboard {
   display: flex;
   flex: 1 0 auto;
   flex-direction: row;
-  background: #b1bbc5;
+  background: aquamarine;
   height: calc(100% - 4rem); }
   .page-dashboard .sidebar {
     display: flex;
@@ -164,7 +202,7 @@ form {
         align-items: center;
         justify-content: center; }
         .chat-container .chat-history .message .message-email:hover {
-          background: #94a2af; }
+          background: #4cffc3; }
       .chat-container .chat-history .message .message-content {
         padding: .5rem;
         display: flex;
@@ -253,6 +291,15 @@ form {
         justify-content: center;
         margin-left: 1rem;
         cursor: pointer; }
+
+.notification {
+  background: salmon;
+  width: 100%;
+  margin-bottom: 1rem;
+  justify-content: center;
+  display: flex;
+  padding: .5rem;
+  color: white; }
 
 html, body, #app, #react-app {
   height: 100%;

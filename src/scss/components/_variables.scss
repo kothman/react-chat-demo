@@ -1,4 +1,5 @@
 $mobile-breakpoint: 800px;
+$main-background: aquamarine;
 
 /* Navbar */
 $vertical-padding: 1rem;
@@ -10,7 +11,7 @@ $online-users-height: 4rem;
 
 /* Dashboard */
 $dashboard-height: calc(100% - #{$navbar-height});
-$dashboard-background: lighten(lightslategray, 20);
+$dashboard-background: $main-background;
 
 /* Chat */
 $chat-input-height: 6rem;
