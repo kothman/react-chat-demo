@@ -14,7 +14,7 @@ import websocket from './socket.io/index';
 const env = require('../../env');
 
 const app = express();
-const port = process.env.production ? 80 : 3000;
+const port = process.env.PORT || 3000;
 console.log('port', port);
 
 MongoClient.connect(env.mongodbConnectionUri, {useNewUrlParser: true}, function(err: Error, client: MongoClient) {
