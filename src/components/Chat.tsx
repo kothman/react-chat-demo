@@ -20,8 +20,19 @@ interface State {
     viewingPreviousMessages: boolean,
     scrolling: boolean,
     scrollingTimeout: any,
-    messageOffset: number
-    userDetails: any
+    messageOffset: number,
+    fetchingNewMessages: boolean,
+    hasMoreMessages: boolean,
+    userDetails: any,
+}
+
+interface ScrollEvent extends Event {
+    target: {
+        scrollTop: number,
+        addEventListener: any,
+        removeEventListener: any,
+        dispatchEvent: any
+    }
 }
 
 class Chat extends React.Component<Props, State> {
@@ -34,11 +45,12 @@ class Chat extends React.Component<Props, State> {
             scrolling: false,
             scrollingTimeout: false,
             messageOffset: 0,
+            fetchingNewMessages: false,
+            hasMoreMessages: true,
             userDetails: {},
         }
         props.socket.on('message', this.handleReceiveMessage);
         props.socket.on('message received', this.enableChatInput);
-        this.retrieveMessages();
     }
     handleSendMessage = (e: React.FormEvent | React.KeyboardEvent) => {
         e.preventDefault();
@@ -52,6 +64,7 @@ class Chat extends React.Component<Props, State> {
         if (this.state.viewingPreviousMessages === false) {
             this.scrollChatHistory();
         }
+        this.setState({ messageOffset: this.state.messageOffset + 1 })
     }
     handleKeyPress = (e: React.KeyboardEvent | any) => {
         if (e.key === 'Enter') {
@@ -64,27 +77,39 @@ class Chat extends React.Component<Props, State> {
         textarea.value = '';
     }
     retrieveMessages = () => {
-        axios.get('/api/v1/messages/' + this.props.channel).then((res) => {
+        // don't try and fetch more messages if already in progress or all messages fetched
+        if (this.state.fetchingNewMessages || !this.state.hasMoreMessages)
+            return;
+        this.setState({fetchingNewMessages: true});
+        axios.get('/api/v1/messages/' + this.props.channel + '/' + this.state.messageOffset).then((res) => {
             console.log(res.data.messages)
-            this.setState(Object.assign({}, this.state, {messages: res.data.messages}));
+            if (res.data.messages.length === 0) {
+                this.setState({hasMoreMessages: false});
+                return;
+            }
+            this.setState({messages: res.data.messages.concat(this.state.messages)});
             if(this.state.viewingPreviousMessages === false) {
                 this.scrollChatHistory();
             }
-        });
+            this.setState({messageOffset: this.state.messageOffset + 20})
+        }).catch().then(() => this.setState({ fetchingNewMessages: false }));
     }
     scrollChatHistory = () => {
         let chatDiv: HTMLDivElement = document.querySelector('#chat-history');
         chatDiv.scrollTop = chatDiv.scrollHeight;
     }
-    handleUserScroll = () => {
-        if (this.state.scrolling)
+    handleUserScroll = (e: ScrollEvent) => {
+        if (e.target.scrollTop <= 50 && !this.state.fetchingNewMessages)
+            return this.retrieveMessages();
+        if (this.state.scrolling) {
             return;
+        }
         this.setState({scrolling: true});
         
         clearTimeout(this.state.scrollingTimeout);
         this.setState({scrollingTimeout: window.setTimeout(() => {
             this.setState({scrolling: false});
-            let chatDiv: HTMLDivElement = document.querySelector('#chat-history');
+            let chatDiv: HTMLElement | any = e.target;
             if (chatDiv.offsetHeight + chatDiv.scrollTop >= chatDiv.scrollHeight) {
                 this.setState({ viewingPreviousMessages: false })
             } else {
@@ -115,8 +140,9 @@ class Chat extends React.Component<Props, State> {
         }
     }
     componentDidMount = () => {
-        document.querySelector('#chat-history')
-            .addEventListener('scroll', this.handleUserScroll);
+        this.retrieveMessages();
+        let chatDiv: HTMLElement = document.querySelector('#chat-history');
+        chatDiv.addEventListener('scroll', this.handleUserScroll);
     }
     componentWillUnmount = () => {
         document.querySelector('#chat-history')
@@ -135,13 +161,14 @@ class Chat extends React.Component<Props, State> {
                             <div>message id: {m['_id']}</div>
                             <div>user id: {this.state.userDetails[m.userEmail]['_id']}</div>
                             <div>email: {m.userEmail}</div> 
+                            <div>timestamp: {date.toLocaleDateString()} {date.toLocaleTimeString()}</div>
                         </div> :
                     <span></span>
                     }
                 </Modal>
                 <span className="message-email" onClick={() => { this.handleDisplayUserDetails(modalId, m.userEmail) }}>{m.userEmail}</span>
                 <span className="message-content">{m.text}</span>
-                <span className="message-date">{date.toDateString()}</span>
+                <span className="message-date">{date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
             </div>);
         });
         return (

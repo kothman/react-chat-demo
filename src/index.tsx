@@ -22,4 +22,12 @@ declare global {
     interface Window { axios: any; }
 }
 axios.defaults.withCredentials = true;
+axios.interceptors.response.use(function (res) {
+    // should get a new csrfToken for each request, update headers
+    let newToken: string = res.headers['new-csrf-token'];
+    if (newToken) {
+        axios.defaults.headers['csrf-token'] = newToken;
+    }
+    return res;
+});
 window.axios = axios;

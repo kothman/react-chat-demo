@@ -5,7 +5,7 @@ import { connect } from 'react-redux';
 class Navbar extends React.Component<any, any> {
     navLinks = {
         authorized: [
-            {text: 'Dashboard', to: '/'},
+            {text: 'Settings', to: '/settings'},
             {text: 'Logout', to: '/logout'}
         ],
         unauthorized: [

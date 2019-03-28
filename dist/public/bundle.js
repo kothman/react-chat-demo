@@ -42111,6 +42111,7 @@ var PageLogin_1 = __webpack_require__(/*! ./PageLogin */ "./src/components/PageL
 var PageLogout_1 = __webpack_require__(/*! ./PageLogout */ "./src/components/PageLogout.tsx");
 var PageRegister_1 = __webpack_require__(/*! ./PageRegister */ "./src/components/PageRegister.tsx");
 var PageDashboard_1 = __webpack_require__(/*! ./PageDashboard */ "./src/components/PageDashboard.tsx");
+var PageSettings_1 = __webpack_require__(/*! ./PageSettings */ "./src/components/PageSettings.tsx");
 var Page404_1 = __webpack_require__(/*! ./Page404 */ "./src/components/Page404.tsx");
 var App = (function (_super) {
     __extends(App, _super);
@@ -42136,8 +42137,9 @@ var App = (function (_super) {
     App.prototype.render = function () {
         var availableViews = [];
         if (this.props.user.authorized) {
-            availableViews.push(React.createElement(react_router_dom_1.Route, { exact: true, path: "/dashboard", key: "page-dashboard", component: PageDashboard_1["default"] }));
+            availableViews.push(React.createElement(react_router_dom_1.Route, { exact: true, path: "/dashboard/:channel?", key: "page-dashboard", component: PageDashboard_1["default"] }));
             availableViews.push(React.createElement(react_router_dom_1.Route, { exact: true, path: "/logout", key: "page-logout", component: PageLogout_1["default"] }));
+            availableViews.push(React.createElement(react_router_dom_1.Route, { exact: true, path: "/settings", key: "page-settings", component: PageSettings_1["default"] }));
         }
         else {
             availableViews.push(React.createElement(react_router_dom_1.Route, { exact: true, path: "/login", key: "page-login", component: PageLogin_1["default"] }));
@@ -42200,6 +42202,7 @@ var Chat = (function (_super) {
             if (_this.state.viewingPreviousMessages === false) {
                 _this.scrollChatHistory();
             }
+            _this.setState({ messageOffset: _this.state.messageOffset + 1 });
         };
         _this.handleKeyPress = function (e) {
             if (e.key === 'Enter') {
@@ -42212,26 +42215,37 @@ var Chat = (function (_super) {
             textarea.value = '';
         };
         _this.retrieveMessages = function () {
-            axios_1["default"].get('/api/v1/messages/' + _this.props.channel).then(function (res) {
+            if (_this.state.fetchingNewMessages || !_this.state.hasMoreMessages)
+                return;
+            _this.setState({ fetchingNewMessages: true });
+            axios_1["default"].get('/api/v1/messages/' + _this.props.channel + '/' + _this.state.messageOffset).then(function (res) {
                 console.log(res.data.messages);
-                _this.setState(Object.assign({}, _this.state, { messages: res.data.messages }));
+                if (res.data.messages.length === 0) {
+                    _this.setState({ hasMoreMessages: false });
+                    return;
+                }
+                _this.setState({ messages: res.data.messages.concat(_this.state.messages) });
                 if (_this.state.viewingPreviousMessages === false) {
                     _this.scrollChatHistory();
                 }
-            });
+                _this.setState({ messageOffset: _this.state.messageOffset + 20 });
+            })["catch"]().then(function () { return _this.setState({ fetchingNewMessages: false }); });
         };
         _this.scrollChatHistory = function () {
             var chatDiv = document.querySelector('#chat-history');
             chatDiv.scrollTop = chatDiv.scrollHeight;
         };
-        _this.handleUserScroll = function () {
-            if (_this.state.scrolling)
+        _this.handleUserScroll = function (e) {
+            if (e.target.scrollTop <= 50 && !_this.state.fetchingNewMessages)
+                return _this.retrieveMessages();
+            if (_this.state.scrolling) {
                 return;
+            }
             _this.setState({ scrolling: true });
             clearTimeout(_this.state.scrollingTimeout);
             _this.setState({ scrollingTimeout: window.setTimeout(function () {
                     _this.setState({ scrolling: false });
-                    var chatDiv = document.querySelector('#chat-history');
+                    var chatDiv = e.target;
                     if (chatDiv.offsetHeight + chatDiv.scrollTop >= chatDiv.scrollHeight) {
                         _this.setState({ viewingPreviousMessages: false });
                     }
@@ -42262,8 +42276,9 @@ var Chat = (function (_super) {
             }
         };
         _this.componentDidMount = function () {
-            document.querySelector('#chat-history')
-                .addEventListener('scroll', _this.handleUserScroll);
+            _this.retrieveMessages();
+            var chatDiv = document.querySelector('#chat-history');
+            chatDiv.addEventListener('scroll', _this.handleUserScroll);
         };
         _this.componentWillUnmount = function () {
             document.querySelector('#chat-history')
@@ -42276,11 +42291,12 @@ var Chat = (function (_super) {
             scrolling: false,
             scrollingTimeout: false,
             messageOffset: 0,
+            fetchingNewMessages: false,
+            hasMoreMessages: true,
             userDetails: {},
         };
         props.socket.on('message', _this.handleReceiveMessage);
         props.socket.on('message received', _this.enableChatInput);
-        _this.retrieveMessages();
         return _this;
     }
     Chat.prototype.render = function () {
@@ -42301,11 +42317,16 @@ var Chat = (function (_super) {
                             _this.state.userDetails[m.userEmail]['_id']),
                         React.createElement("div", null,
                             "email: ",
-                            m.userEmail)) :
+                            m.userEmail),
+                        React.createElement("div", null,
+                            "timestamp: ",
+                            date.toLocaleDateString(),
+                            " ",
+                            date.toLocaleTimeString())) :
                     React.createElement("span", null)),
                 React.createElement("span", { className: "message-email", onClick: function () { _this.handleDisplayUserDetails(modalId, m.userEmail); } }, m.userEmail),
                 React.createElement("span", { className: "message-content" }, m.text),
-                React.createElement("span", { className: "message-date" }, date.toDateString())));
+                React.createElement("span", { className: "message-date" }, date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }))));
         });
         return (React.createElement("div", { className: "chat-container" },
             React.createElement("div", { id: "chat-history", className: "chat-history" }, messages),
@@ -42408,7 +42429,7 @@ var Navbar = (function (_super) {
         var _this = _super.call(this, props) || this;
         _this.navLinks = {
             authorized: [
-                { text: 'Dashboard', to: '/' },
+                { text: 'Settings', to: '/settings' },
                 { text: 'Logout', to: '/logout' }
             ],
             unauthorized: [
@@ -42564,8 +42585,10 @@ var React = __webpack_require__(/*! react */ "./node_modules/react/index.js");
 var react_redux_1 = __webpack_require__(/*! react-redux */ "./node_modules/react-redux/es/index.js");
 var io = __webpack_require__(/*! socket.io-client */ "./node_modules/socket.io-client/lib/index.js");
 var axios_1 = __webpack_require__(/*! axios */ "./node_modules/axios/index.js");
+var react_router_dom_1 = __webpack_require__(/*! react-router-dom */ "./node_modules/react-router-dom/esm/react-router-dom.js");
 var OnlineUsers_1 = __webpack_require__(/*! ./OnlineUsers */ "./src/components/OnlineUsers.tsx");
 var Chat_1 = __webpack_require__(/*! ./Chat */ "./src/components/Chat.tsx");
+var history_1 = __webpack_require__(/*! ../lib/history */ "./src/lib/history.ts");
 var PageDashboard = (function (_super) {
     __extends(PageDashboard, _super);
     function PageDashboard(props) {
@@ -42573,6 +42596,13 @@ var PageDashboard = (function (_super) {
         _this.getChannels = function () {
             axios_1["default"].get('/api/v1/channels').then(function (res) {
                 _this.setState({ channels: res.data.channels });
+                if (!_this.state.channels.find(function (c) {
+                    return c.name === _this.props.match.params.channel;
+                })) {
+                    var channelName = _this.state.channels[0].name;
+                    history_1["default"].push('/dashboard/' + channelName);
+                    _this.setState({ channel: channelName });
+                }
             });
         };
         _this.updateActiveChannel = function (channelName) {
@@ -42580,6 +42610,9 @@ var PageDashboard = (function (_super) {
         };
         _this.componentWillUnmount = function () {
             _this.state.socket.close();
+        };
+        _this.componentDidMount = function () {
+            _this.getChannels();
         };
         _this.state = {
             socket: io(),
@@ -42592,7 +42625,6 @@ var PageDashboard = (function (_super) {
         _this.state.socket.on('disconnect', function () {
             console.log('Disconnected from websocket server, attempting reconnect');
         });
-        _this.getChannels();
         return _this;
     }
     PageDashboard.prototype.render = function () {
@@ -42600,18 +42632,23 @@ var PageDashboard = (function (_super) {
         console.log('Dashboard props', this.props);
         console.log('Dashboard state', this.state);
         var channels = [];
+        var chats = [];
         this.state.channels.forEach(function (c) {
             var className = 'channel';
             _this.state.channel === c.name ?
                 className += ' active' : '';
-            channels.push(React.createElement("div", { className: className, key: c['_id'], onClick: function () { return _this.updateActiveChannel(c.name); } }, c.name));
+            channels.push(React.createElement(react_router_dom_1.Link, { to: "/dashboard/" + c.name, className: className, key: c['_id'], onClick: function () { return _this.updateActiveChannel(c.name); } }, c.name));
+            chats.push(React.createElement(react_router_dom_1.Route, { key: c.name, path: "/dashboard/" + c.name, render: function () {
+                    return React.createElement(Chat_1["default"], { socket: _this.state.socket, channel: c.name });
+                } }));
         });
-        return (React.createElement("div", { className: "page-dashboard" },
-            React.createElement("div", { className: "sidebar" },
-                React.createElement("div", { className: "channels" }, channels)),
-            React.createElement("div", { className: "content" },
-                React.createElement(OnlineUsers_1["default"], { socket: this.state.socket }),
-                React.createElement(Chat_1["default"], { socket: this.state.socket, channel: this.state.channel }))));
+        return (React.createElement(react_router_dom_1.Router, { history: history_1["default"] },
+            React.createElement("div", { className: "page-dashboard" },
+                React.createElement("div", { className: "sidebar" },
+                    React.createElement("div", { className: "channels" }, channels)),
+                React.createElement("div", { className: "content" },
+                    React.createElement(OnlineUsers_1["default"], { socket: this.state.socket }),
+                    React.createElement(react_router_dom_1.Switch, null, chats)))));
     };
     return PageDashboard;
 }(React.Component));
@@ -42817,6 +42854,68 @@ exports["default"] = react_redux_1.connect()(PageRegister);
 
 /***/ }),
 
+/***/ "./src/components/PageSettings.tsx":
+/*!*****************************************!*\
+  !*** ./src/components/PageSettings.tsx ***!
+  \*****************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    };
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+exports.__esModule = true;
+var React = __webpack_require__(/*! react */ "./node_modules/react/index.js");
+var react_redux_1 = __webpack_require__(/*! react-redux */ "./node_modules/react-redux/es/index.js");
+var PageSettings = (function (_super) {
+    __extends(PageSettings, _super);
+    function PageSettings(props) {
+        var _this = _super.call(this, props) || this;
+        _this.handleUpdateEmail = function (e) {
+            e.preventDefault();
+        };
+        _this.state = {
+            user: {
+                email: _this.props.user.email
+            }
+        };
+        return _this;
+    }
+    PageSettings.prototype.render = function () {
+        var _this = this;
+        return React.createElement("div", { className: "page-settings" },
+            React.createElement("div", { className: "container" },
+                React.createElement("h3", { className: "title" }, "Settings"),
+                React.createElement("div", { className: "settings-group" },
+                    React.createElement("div", { className: "subtitle" }, "Account"),
+                    React.createElement("div", null,
+                        React.createElement("form", { onSubmit: this.handleUpdateEmail },
+                            React.createElement("div", { className: "input-group" },
+                                React.createElement("label", { htmlFor: "email" }, "email"),
+                                React.createElement("input", { type: "email", id: "emal", value: this.state.user.email, onChange: function (e) { _this.setState({ user: { email: e.currentTarget.value } }); } }),
+                                React.createElement("button", { type: "submit" }, "update email"))),
+                        React.createElement("form", null,
+                            React.createElement("div", null, "password"))))));
+    };
+    return PageSettings;
+}(React.Component));
+exports["default"] = react_redux_1.connect(function (props) { return props; })(PageSettings);
+
+
+/***/ }),
+
 /***/ "./src/html/index.html":
 /*!*****************************!*\
   !*** ./src/html/index.html ***!
@@ -42850,7 +42949,30 @@ var root = document.getElementById('app');
 ReactDOM.render(React.createElement(react_redux_1.Provider, { store: store_1["default"] },
     React.createElement(App_1["default"], null)), root);
 axios_1["default"].defaults.withCredentials = true;
+axios_1["default"].interceptors.response.use(function (res) {
+    var newToken = res.headers['new-csrf-token'];
+    if (newToken) {
+        axios_1["default"].defaults.headers['csrf-token'] = newToken;
+    }
+    return res;
+});
 window.axios = axios_1["default"];
+
+
+/***/ }),
+
+/***/ "./src/lib/history.ts":
+/*!****************************!*\
+  !*** ./src/lib/history.ts ***!
+  \****************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+exports.__esModule = true;
+var history_1 = __webpack_require__(/*! history */ "./node_modules/history/esm/history.js");
+exports["default"] = history_1.createBrowserHistory();
 
 
 /***/ }),

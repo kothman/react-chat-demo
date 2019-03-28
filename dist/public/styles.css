@@ -50,60 +50,6 @@ table {
 /* Online Users */
 /* Dashboard */
 /* Chat */
-.navbar {
-  background: white;
-  padding: 0 8rem;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  width: 100%;
-  max-width: 1200px;
-  margin: 0 auto;
-  height: 4rem; }
-  @media (max-width: 800px) {
-    .navbar {
-      padding: 0 2rem; } }
-  .navbar .navbar-brand {
-    font-size: 1.5rem; }
-  .navbar .navbar-nav {
-    display: flex; }
-    .navbar .navbar-nav .navbar-item {
-      padding: 1rem 1rem;
-      height: 4rem;
-      display: flex;
-      align-items: center;
-      justify-content: center; }
-      .navbar .navbar-nav .navbar-item:hover {
-        background: #e6e6e6; }
-  .navbar a {
-    text-decoration: none;
-    color: black; }
-
-form {
-  display: flex;
-  flex-direction: column; }
-  form .input-group {
-    display: flex;
-    flex-direction: row;
-    justify-content: space-between;
-    margin-bottom: 1rem; }
-    form .input-group label {
-      margin-right: 1rem; }
-  @media (max-width: 800px) {
-    form .input-group {
-      flex-direction: column; }
-      form .input-group label {
-        margin-bottom: .5rem;
-        margin-right: 0; } }
-  form input {
-    border: 1px solid lightgray;
-    padding: .25rem;
-    font-size: 1rem;
-    line-height: 1rem; }
-  form label {
-    display: flex;
-    align-items: center; }
-
 .page-login, .page-register {
   padding-top: 2rem;
   background: aquamarine;
@@ -144,7 +90,7 @@ form {
     display: flex;
     flex-direction: column;
     border-right: 1px solid lightgray;
-    width: 15rem;
+    min-width: 15rem;
     height: 100%;
     overflow-y: scroll; }
   .page-dashboard .content {
@@ -152,6 +98,30 @@ form {
     flex-direction: column;
     flex-grow: 1;
     height: 100%; }
+
+.page-settings {
+  background: aquamarine;
+  display: flex;
+  flex-grow: 1;
+  flex-direction: column;
+  padding: 2rem; }
+  .page-settings .container {
+    max-width: 600px;
+    margin: 0 auto;
+    width: 100%; }
+    .page-settings .container .title {
+      font-size: 1.5rem;
+      line-height: 1.5rem;
+      margin-bottom: 2rem;
+      border-bottom: 1px solid black; }
+    .page-settings .container .subtitle {
+      font-size: 1.25rem;
+      line-height: 1.25rem;
+      margin-bottom: .5rem; }
+    .page-settings .container .settings-group {
+      margin-bottom: .5rem;
+      padding-left: 1rem;
+      border-left: 4px solid black; }
 
 .online-users {
   padding: 1rem 0;
@@ -188,7 +158,6 @@ form {
       border-bottom: 1px solid white;
       display: flex;
       flex-direction: row;
-      height: 3rem;
       align-items: center; }
       .chat-container .chat-history .message:first-child {
         border-top: none; }
@@ -210,12 +179,14 @@ form {
       .chat-container .chat-history .message .message-date {
         padding: .5rem;
         font-size: .85rem;
-        opacity: .8; }
+        opacity: .8;
+        white-space: nowrap; }
   .chat-container .chat-input {
     height: 6rem;
     display: flex;
     overflow-y: hidden;
-    flex-direction: row; }
+    flex-direction: row;
+    background: white; }
     .chat-container .chat-input textarea {
       resize: none;
       display: flex;
@@ -226,12 +197,14 @@ form {
     .chat-container .chat-input .chat-send {
       width: 4rem;
       border: none;
-      border-left: 1px solid lightgray;
+      border: 1px solid lightgray;
       display: flex;
       justify-content: center;
       align-items: center;
       background: white;
-      cursor: pointer; }
+      cursor: pointer;
+      margin: auto 1rem;
+      padding: 1rem; }
       .chat-container .chat-input .chat-send:hover {
         background: #e6e6e6; }
 
@@ -247,6 +220,8 @@ form {
     display: flex;
     padding: 1rem;
     border-left: 1px solid white;
+    text-decoration: none;
+    color: white;
     cursor: pointer; }
     .sidebar .channels .channel.active, .sidebar .channels .channel:hover {
       background: #333333; }
@@ -300,6 +275,72 @@ form {
   display: flex;
   padding: .5rem;
   color: white; }
+
+.navbar {
+  background: white;
+  padding: 0 8rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  height: 4rem; }
+  @media (max-width: 800px) {
+    .navbar {
+      padding: 0 2rem; } }
+  .navbar .navbar-brand {
+    font-size: 1.5rem; }
+  .navbar .navbar-nav {
+    display: flex; }
+    .navbar .navbar-nav .navbar-item {
+      padding: 1rem 1rem;
+      height: 4rem;
+      display: flex;
+      align-items: center;
+      justify-content: center; }
+      .navbar .navbar-nav .navbar-item:hover {
+        background: #e6e6e6; }
+  .navbar a {
+    text-decoration: none;
+    color: black; }
+
+form {
+  display: flex;
+  flex-direction: column; }
+  form .input-group {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    margin-bottom: 1rem; }
+    form .input-group label {
+      margin-right: 1rem; }
+  @media (max-width: 800px) {
+    form .input-group {
+      flex-direction: column; }
+      form .input-group label {
+        margin-bottom: .5rem;
+        margin-right: 0; }
+      form .input-group button {
+        margin-left: auto;
+        margin-top: .5rem; } }
+  form input {
+    border: 1px solid lightgray;
+    padding: .25rem;
+    font-size: 1rem;
+    line-height: 1rem; }
+  form label {
+    display: flex;
+    align-items: center; }
+
+button {
+  border: 1px solid black;
+  border-radius: 0;
+  padding: .5rem;
+  background: white;
+  cursor: pointer; }
+  button:hover {
+    background: #e6e6e6; }
 
 html, body, #app, #react-app {
   height: 100%;

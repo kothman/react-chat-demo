@@ -7,6 +7,10 @@ import MessageRoutes from './messages';
 import ChannelRoutes from './channels';
 
 export default function(app: any) {
+    app.use(function(req: any, res: any, next: Function) {
+        res.set('new-csrf-token', req.csrfToken());
+        return next();
+    });
     UserRoutes(app);
     MessageRoutes(app);
     ChannelRoutes(app);

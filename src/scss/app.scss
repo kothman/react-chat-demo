@@ -3,16 +3,18 @@
 @import 'components/variables';
 @import 'components/utilities';
 
-@import 'components/navbar';
-@import 'components/form';
-
 @import 'components/page-login-register';
 @import 'components/page-dashboard';
+@import 'components/page-settings';
+
 @import 'components/online-users';
 @import 'components/chat';
 @import 'components/channels';
 @import 'components/modal';
 @import 'components/notification';
+@import 'components/navbar';
+@import 'components/form';
+@import 'components/button';
 
 html, body, #app, #react-app {
     height: 100%;

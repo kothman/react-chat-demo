@@ -8,6 +8,7 @@ import PageLogin from './PageLogin';
 import PageLogout from './PageLogout';
 import PageRegister from './PageRegister';
 import PageDashboard from './PageDashboard';
+import PageSettings from './PageSettings';
 import Page404 from './Page404';
 
 interface State {
@@ -35,8 +36,9 @@ class App extends React.Component<any, State> {
     render() {
         let availableViews: any[] = [];
         if (this.props.user.authorized) {
-            availableViews.push(<Route exact path="/dashboard" key="page-dashboard" component={PageDashboard} />);
+            availableViews.push(<Route exact path="/dashboard/:channel?" key="page-dashboard" component={PageDashboard} />);
             availableViews.push(<Route exact path="/logout" key="page-logout" component={PageLogout} />);
+            availableViews.push(<Route exact path="/settings" key="page-settings" component={PageSettings} />)
         } else {
             availableViews.push(<Route exact path="/login" key="page-login" component={PageLogin} />);
             availableViews.push(<Route exact path="/register" key="page-register" component={PageRegister} />);

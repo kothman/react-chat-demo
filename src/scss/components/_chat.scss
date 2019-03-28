@@ -16,7 +16,6 @@
             border-bottom: 1px solid white;
             display: flex;
             flex-direction: row;
-            height: 3rem;
             align-items: center;
 
             &:first-child {
@@ -47,6 +46,7 @@
                 padding: .5rem;
                 font-size: .85rem;
                 opacity: .8;
+                white-space: nowrap;
             }
         }
     }
@@ -55,6 +55,7 @@
         display: flex;
         overflow-y: hidden;
         flex-direction: row;
+        background: white;
 
         textarea {
             resize: none;
@@ -67,12 +68,14 @@
         .chat-send {
             width: 4rem;
             border: none;
-            border-left: 1px solid lightgray;
+            border: 1px solid lightgray;
             display: flex;
             justify-content: center;
             align-items: center;
             background: white;
             cursor: pointer;
+            margin: auto 1rem;
+            padding: 1rem;
             
             &:hover {
                 background: darken(white, 10);
