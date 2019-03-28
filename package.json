@@ -50,7 +50,7 @@
     "build": "webpack",
     "watch": "webpack -w",
     "serve": "nodemon dist/server.js",
-    "web": "node dist/server.js"
+    "start": "node dist/server.js"
   },
   "dependencies": {
     "@types/cookie-parser": "^1.4.1",
