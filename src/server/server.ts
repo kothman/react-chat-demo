@@ -15,6 +15,7 @@ const env = require('../../env');
 
 const app = express();
 const port = process.env.production ? 80 : 3000;
+console.log('port', port);
 
 MongoClient.connect(env.mongodbConnectionUri, {useNewUrlParser: true}, function(err: Error, client: MongoClient) {
     if (err) return console.error(err);
