@@ -312,7 +312,7 @@ var index_1 = __webpack_require__(/*! ./routes/index */ "./src/server/routes/ind
 var index_2 = __webpack_require__(/*! ./socket.io/index */ "./src/server/socket.io/index.ts");
 var env = __webpack_require__(/*! ../../env */ "./env.js");
 var app = express();
-var port = 3000;
+var port = process.env.production ? 80 : 3000;
 mongodb_1.MongoClient.connect(env.mongodbConnectionUri, { useNewUrlParser: true }, function (err, client) {
     if (err)
         return console.error(err);
