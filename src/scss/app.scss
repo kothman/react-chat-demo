@@ -1,0 +1,28 @@
+@import 'components/reset';
+
+@import 'components/variables';
+@import 'components/utilities';
+
+@import 'components/navbar';
+@import 'components/form';
+
+@import 'components/page-login';
+@import 'components/page-dashboard';
+@import 'components/online-users';
+@import 'components/chat';
+@import 'components/channels';
+@import 'components/modal';
+
+html, body, #app, #react-app {
+    height: 100%;
+    width: 100%;
+}
+
+#react-app {
+    display: flex;
+    flex-direction: column;
+}
+
+* {
+    transition: all .2s ease-in-out;
+}

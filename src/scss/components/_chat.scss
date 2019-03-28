@@ -1,0 +1,82 @@
+.chat-container {
+    display: flex;
+    flex-direction: column;
+    flex: 1 0 auto;
+    height: calc(100% - #{$online-users-height});
+
+    .chat-history {
+        display: flex;
+        flex-direction: column;
+        flex: 1 0 auto;
+        overflow-y: auto;
+        height: $chat-history-height;
+        
+        .message {
+            border-left: 4px solid white;
+            border-bottom: 1px solid white;
+            display: flex;
+            flex-direction: row;
+            height: 3rem;
+            align-items: center;
+
+            &:first-child {
+                border-top: none;
+            }
+
+            .message-email {
+                height: 100%;
+                padding: .5rem;
+                margin-right: .5rem;
+                border-right: 1px solid white;
+                cursor: pointer;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+
+                &:hover {
+                    background: darken($dashboard-background, 10);
+                }
+            }
+            .message-content {
+                padding: .5rem;
+                display: flex;
+                flex-grow: 1;
+
+            }
+            .message-date {
+                padding: .5rem;
+                font-size: .85rem;
+                opacity: .8;
+            }
+        }
+    }
+    .chat-input {
+        height: $chat-input-height;
+        display: flex;
+        overflow-y: hidden;
+        flex-direction: row;
+
+        textarea {
+            resize: none;
+            display: flex;
+            flex-grow: 1;
+            border: none;
+            padding: .5rem;
+            margin: 0;
+        }
+        .chat-send {
+            width: 4rem;
+            border: none;
+            border-left: 1px solid lightgray;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: white;
+            cursor: pointer;
+            
+            &:hover {
+                background: darken(white, 10);
+            }
+        }
+    }
+}

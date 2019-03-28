@@ -1,0 +1,40 @@
+
+.navbar {
+    background: white;
+    padding: 0 8rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    max-width: $navbar-max-width;
+    margin: 0 auto;
+    height: $navbar-height;
+
+    @include mobile {
+        padding: 0 2rem;
+    }
+
+    .navbar-brand {
+        font-size: 1.5rem;
+    }
+    .navbar-nav {
+        display: flex;
+        
+        .navbar-item {
+            padding: $vertical-padding 1rem;
+            height: $navbar-height;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            &:hover {
+                background: darken(white, 10);
+            }
+        }
+    }
+
+    a {
+        text-decoration: none;
+        color: black;
+    }
+}

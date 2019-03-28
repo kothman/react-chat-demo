@@ -1,0 +1,17 @@
+$mobile-breakpoint: 800px;
+
+/* Navbar */
+$vertical-padding: 1rem;
+$navbar-max-width: 1200px;
+$navbar-height: 4rem;
+
+/* Online Users */
+$online-users-height: 4rem;
+
+/* Dashboard */
+$dashboard-height: calc(100% - #{$navbar-height});
+$dashboard-background: lighten(lightslategray, 20);
+
+/* Chat */
+$chat-input-height: 6rem;
+$chat-history-height: calc(100% - #{$chat-input-height});

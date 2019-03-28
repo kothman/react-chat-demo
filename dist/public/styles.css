@@ -1,0 +1,269 @@
+/* http://meyerweb.com/eric/tools/css/reset/ 
+   v2.0 | 20110126
+   License: none (public domain)
+*/
+html, body, div, span, applet, object, iframe,
+h1, h2, h3, h4, h5, h6, p, blockquote, pre,
+a, abbr, acronym, address, big, cite, code,
+del, dfn, em, img, ins, kbd, q, s, samp,
+small, strike, strong, sub, sup, tt, var,
+b, u, i, center,
+dl, dt, dd, ol, ul, li,
+fieldset, form, label, legend,
+table, caption, tbody, tfoot, thead, tr, th, td,
+article, aside, canvas, details, embed,
+figure, figcaption, footer, header, hgroup,
+menu, nav, output, ruby, section, summary,
+time, mark, audio, video {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  font-size: 100%;
+  font: inherit;
+  vertical-align: baseline;
+  box-sizing: border-box; }
+
+/* HTML5 display-role reset for older browsers */
+article, aside, details, figcaption, figure,
+footer, header, hgroup, menu, nav, section {
+  display: block; }
+
+body {
+  line-height: 1; }
+
+ol, ul {
+  list-style: none; }
+
+blockquote, q {
+  quotes: none; }
+
+blockquote:before, blockquote:after,
+q:before, q:after {
+  content: '';
+  content: none; }
+
+table {
+  border-collapse: collapse;
+  border-spacing: 0; }
+
+/* Navbar */
+/* Online Users */
+/* Dashboard */
+/* Chat */
+.navbar {
+  background: white;
+  padding: 0 8rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  height: 4rem; }
+  @media (max-width: 800px) {
+    .navbar {
+      padding: 0 2rem; } }
+  .navbar .navbar-brand {
+    font-size: 1.5rem; }
+  .navbar .navbar-nav {
+    display: flex; }
+    .navbar .navbar-nav .navbar-item {
+      padding: 1rem 1rem;
+      height: 4rem;
+      display: flex;
+      align-items: center;
+      justify-content: center; }
+      .navbar .navbar-nav .navbar-item:hover {
+        background: #e6e6e6; }
+  .navbar a {
+    text-decoration: none;
+    color: black; }
+
+form {
+  display: flex;
+  flex-direction: column; }
+  form .input-group {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    margin-bottom: 1rem; }
+    form .input-group label {
+      margin-right: 1rem; }
+
+.page-login {
+  margin-top: 2rem;
+  display: flex;
+  justify-content: center;
+  align-items: center; }
+
+.page-dashboard {
+  display: flex;
+  flex: 1 0 auto;
+  flex-direction: row;
+  background: #b1bbc5;
+  height: calc(100% - 4rem); }
+  .page-dashboard .sidebar {
+    display: flex;
+    flex-direction: column;
+    border-right: 1px solid lightgray;
+    width: 15rem;
+    height: 100%;
+    overflow-y: scroll; }
+  .page-dashboard .content {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+    height: 100%; }
+
+.online-users {
+  padding: 1rem 0;
+  display: flex;
+  align-items: center;
+  height: 4rem;
+  border-bottom: 1px solid white; }
+  .online-users .online-users-count {
+    padding: .25rem;
+    margin: 0 1rem;
+    display: inline-block;
+    color: black;
+    text-decoration: none;
+    border: 1px solid lightgray;
+    border-radius: 5px;
+    background: white;
+    opacity: .4; }
+    .online-users .online-users-count:hover {
+      opacity: 1; }
+
+.chat-container {
+  display: flex;
+  flex-direction: column;
+  flex: 1 0 auto;
+  height: calc(100% - 4rem); }
+  .chat-container .chat-history {
+    display: flex;
+    flex-direction: column;
+    flex: 1 0 auto;
+    overflow-y: auto;
+    height: calc(100% - 6rem); }
+    .chat-container .chat-history .message {
+      border-left: 4px solid white;
+      border-bottom: 1px solid white;
+      display: flex;
+      flex-direction: row;
+      height: 3rem;
+      align-items: center; }
+      .chat-container .chat-history .message:first-child {
+        border-top: none; }
+      .chat-container .chat-history .message .message-email {
+        height: 100%;
+        padding: .5rem;
+        margin-right: .5rem;
+        border-right: 1px solid white;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center; }
+        .chat-container .chat-history .message .message-email:hover {
+          background: #94a2af; }
+      .chat-container .chat-history .message .message-content {
+        padding: .5rem;
+        display: flex;
+        flex-grow: 1; }
+      .chat-container .chat-history .message .message-date {
+        padding: .5rem;
+        font-size: .85rem;
+        opacity: .8; }
+  .chat-container .chat-input {
+    height: 6rem;
+    display: flex;
+    overflow-y: hidden;
+    flex-direction: row; }
+    .chat-container .chat-input textarea {
+      resize: none;
+      display: flex;
+      flex-grow: 1;
+      border: none;
+      padding: .5rem;
+      margin: 0; }
+    .chat-container .chat-input .chat-send {
+      width: 4rem;
+      border: none;
+      border-left: 1px solid lightgray;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: white;
+      cursor: pointer; }
+      .chat-container .chat-input .chat-send:hover {
+        background: #e6e6e6; }
+
+.sidebar .channels {
+  background: #1a1a1a;
+  color: #e6e6e6;
+  padding: 1rem;
+  display: flex;
+  flex-grow: 1;
+  flex-direction: column;
+  overflow-y: scroll; }
+  .sidebar .channels .channel {
+    display: flex;
+    padding: 1rem;
+    border-left: 1px solid white;
+    cursor: pointer; }
+    .sidebar .channels .channel.active, .sidebar .channels .channel:hover {
+      background: #333333; }
+    .sidebar .channels .channel.active {
+      border-left: 4px solid white; }
+
+.modal {
+  display: none;
+  opacity: 0;
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: -1000;
+  background: rgba(255, 255, 255, 0); }
+  .modal.active {
+    display: flex;
+    opacity: 1;
+    z-index: 1000;
+    background: rgba(255, 255, 255, 0.2); }
+  .modal .modal-content {
+    padding: 2rem;
+    border: 1px solid lightgray;
+    background: white;
+    position: relative; }
+    .modal .modal-content .modal-header {
+      display: flex;
+      flex-direction: row;
+      justify-content: space-between;
+      width: 100%;
+      margin-bottom: 1rem; }
+      .modal .modal-content .modal-header .modal-title {
+        font-size: 1.5rem;
+        line-height: 1.5rem; }
+      .modal .modal-content .modal-header .modal-dismiss {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-left: 1rem;
+        cursor: pointer; }
+
+html, body, #app, #react-app {
+  height: 100%;
+  width: 100%; }
+
+#react-app {
+  display: flex;
+  flex-direction: column; }
+
+* {
+  transition: all .2s ease-in-out; }
+
+
+/*# sourceMappingURL=styles.css.map*/

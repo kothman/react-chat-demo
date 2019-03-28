@@ -1,0 +1,23 @@
+.page-dashboard {
+    display: flex;
+    flex: 1 0 auto;
+    flex-direction: row;
+    background: $dashboard-background;
+    height: $dashboard-height;
+
+    .sidebar {
+        display: flex;
+        flex-direction: column;
+        border-right: 1px solid lightgray;
+        width: 15rem;
+        height: 100%;
+        overflow-y: scroll;
+    }
+
+    .content {
+        display: flex;
+        flex-direction: column;
+        flex-grow: 1;
+        height: 100%;
+    }
+}
