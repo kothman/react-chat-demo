@@ -1,7 +1,7 @@
 const bcrypt = require('bcryptjs');
 
 import { Collection } from 'mongodb';
-import passport = require('passport');
+import * as validator from 'validator';
 import UserRoutes from './users';
 import MessageRoutes from './messages';
 import ChannelRoutes from './channels';
@@ -11,7 +11,13 @@ export default function(app: any) {
     MessageRoutes(app);
     ChannelRoutes(app);
     app.post('/api/v1/login', (req: any, res: any) => {
-        return req.authenticate(req.body.email, req.body.password, (user: Object | boolean) => {
+        if (validator.isEmpty(req.body.email) || validator.isEmpty(req.body.password)) {
+            return res.status(400).json({ error: 'Please supply an email and password' });
+        }
+        if (!validator.isEmail(req.body.email)) {
+            return res.status(400).json({error: 'Not a valid email address'});
+        }
+        req.authenticate(req.body.email, req.body.password, (user: Object | boolean) => {
             console.log(user);
             if (!user)
                 return res.status(401).json({error: 'Invalid email or password'});
@@ -19,6 +25,12 @@ export default function(app: any) {
         })
     });
     app.post('/api/v1/register', function(req: any, res: any) {
+        if (validator.isEmpty(req.body.email) || validator.isEmpty(req.body.password)) {
+            return res.status(400).json({ error: 'Please supply an email and password' });
+        }
+        if (!validator.isEmail(req.body.email)) {
+            return res.status(400).json({ error: 'Not a valid email address' });
+        }
         let passwordHash = bcrypt.hashSync(req.body.password);
         let users: Collection = req.db.collection('users');
         users.findOne({email: req.body.email}).then((user: any) => {

@@ -29,7 +29,7 @@ class Navbar extends React.Component<any, any> {
         }
         return (
         <nav className="navbar">
-            <Link to="/" className="navbar-brand">AnyChat</Link>
+                <Link to="/" className="navbar-brand">React Chat</Link>
             <div className="navbar-nav">
                 {nav}
             </div>

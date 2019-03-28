@@ -34,7 +34,7 @@ class PageRegister extends React.Component<any, State> {
                     </div>
                     <div className="input-group">
                         <label htmlFor="confirm-password">confirm password</label>
-                        <input type="password" id="confirm-password" value={this.state.password} onChange={(e) => { this.setState({ confirmPassword: e.currentTarget.value }); }} />
+                        <input type="password" id="confirm-password" value={this.state.confirmPassword} onChange={(e) => { this.setState({ confirmPassword: e.currentTarget.value }); }} />
                     </div>
                     <button type="submit">register</button>
                 </form>
@@ -44,6 +44,8 @@ class PageRegister extends React.Component<any, State> {
 
     handleSubmit(e: React.FormEvent) {
         e.preventDefault();
+        if (this.state.password !== this.state.confirmPassword)
+            return this.setState({error: 'Passwords do not match'});
         axios.post('/api/v1/register', {
             email: this.state.email,
             password: this.state.password
@@ -52,9 +54,8 @@ class PageRegister extends React.Component<any, State> {
             this.props.dispatch({ type: 'SET_EMAIL', data: res.data.email });
             this.props.dispatch({ type: 'SET_AUTHORIZED', data: true });
             return res;
-        }).catch((res) => {
-            console.log('error', res);
-            this.setState({ error: res.data.error });
+        }).catch((err) => {
+            this.setState({ error: err.response.data.error });
         });
     }
 }

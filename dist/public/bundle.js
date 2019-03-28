@@ -42431,7 +42431,7 @@ var Navbar = (function (_super) {
             });
         }
         return (React.createElement("nav", { className: "navbar" },
-            React.createElement(react_router_dom_1.Link, { to: "/", className: "navbar-brand" }, "AnyChat"),
+            React.createElement(react_router_dom_1.Link, { to: "/", className: "navbar-brand" }, "React Chat"),
             React.createElement("div", { className: "navbar-nav" }, nav)));
     };
     return Navbar;
@@ -42790,12 +42790,14 @@ var PageRegister = (function (_super) {
                     React.createElement("input", { type: "password", id: "password", value: this.state.password, onChange: function (e) { _this.setState({ password: e.currentTarget.value }); } })),
                 React.createElement("div", { className: "input-group" },
                     React.createElement("label", { htmlFor: "confirm-password" }, "confirm password"),
-                    React.createElement("input", { type: "password", id: "confirm-password", value: this.state.password, onChange: function (e) { _this.setState({ confirmPassword: e.currentTarget.value }); } })),
+                    React.createElement("input", { type: "password", id: "confirm-password", value: this.state.confirmPassword, onChange: function (e) { _this.setState({ confirmPassword: e.currentTarget.value }); } })),
                 React.createElement("button", { type: "submit" }, "register"))));
     };
     PageRegister.prototype.handleSubmit = function (e) {
         var _this = this;
         e.preventDefault();
+        if (this.state.password !== this.state.confirmPassword)
+            return this.setState({ error: 'Passwords do not match' });
         axios_1["default"].post('/api/v1/register', {
             email: this.state.email,
             password: this.state.password
@@ -42804,9 +42806,8 @@ var PageRegister = (function (_super) {
             _this.props.dispatch({ type: 'SET_EMAIL', data: res.data.email });
             _this.props.dispatch({ type: 'SET_AUTHORIZED', data: true });
             return res;
-        })["catch"](function (res) {
-            console.log('error', res);
-            _this.setState({ error: res.data.error });
+        })["catch"](function (err) {
+            _this.setState({ error: err.response.data.error });
         });
     };
     return PageRegister;
