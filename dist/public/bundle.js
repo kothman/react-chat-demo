@@ -42841,7 +42841,6 @@ var root = document.getElementById('app');
 ReactDOM.render(React.createElement(react_redux_1.Provider, { store: store_1["default"] },
     React.createElement(App_1["default"], null)), root);
 axios_1["default"].defaults.withCredentials = true;
-axios_1["default"].defaults.baseURL = 'http://localhost:3000';
 window.axios = axios_1["default"];
 
 

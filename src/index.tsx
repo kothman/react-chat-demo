@@ -22,5 +22,4 @@ declare global {
     interface Window { axios: any; }
 }
 axios.defaults.withCredentials = true;
-axios.defaults.baseURL = 'http://localhost:3000';
 window.axios = axios;
