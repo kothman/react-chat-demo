@@ -16,6 +16,9 @@
 @import 'components/form';
 @import 'components/button';
 
+// https://github.com/tobiasahlin/SpinKit
+@import '~spinkit/scss/spinkit';
+
 html, body, #app, #react-app {
     height: 100%;
     width: 100%;

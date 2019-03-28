@@ -1,0 +1,10 @@
+button {
+    border: 1px solid black;
+    border-radius: 0;
+    padding: .5rem;
+    background: white;
+    cursor: pointer;
+    &:hover {
+        background: darken(white, 10);
+    }
+}
