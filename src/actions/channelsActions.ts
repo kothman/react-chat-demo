@@ -2,8 +2,7 @@ import {State, Channel, Message} from '../reducers/channels';
 import { ReactReduxContext } from 'react-redux';
 import axios, { AxiosResponse, AxiosError } from 'axios';
 
-import {addError} from '../actions/notificationsActions';
-import { Dispatch } from 'redux';
+import {addError, addInfo} from '../actions/notificationsActions';
 
 export const ADD_CHANNELS = 'ADD_CHANNELS';
 export const SET_CHANNEL_FETCHING_NEW_MESSAGES = 'SET_CHANNEL_FETCHING_NEW_MESSAGES';
@@ -75,7 +74,7 @@ export const addRetrievedChannelMessages = (channelName: string, messages: Messa
 /* Async Actions */
 
 export const fetchChannels = () => {
-    return (dispatch: Dispatch)  => {
+    return (dispatch: any)  => {
         return axios.get('/api/v1/channels').then((res: AxiosResponse) => {
             let channels = res.data.channels.map( (c: {name: string, _id: string}) => {
                 return c.name;
@@ -89,18 +88,17 @@ export const fetchChannels = () => {
 }
 
 export const retrieveChannelMessages = (channelName: string) => {
-    return (dispatch: Dispatch, getState: any) => {
+    return async (dispatch: any, getState: any) => {
         let channel: Channel = getState().channels.find( (c: Channel) => {
             return c.name === channelName;
         })
-        if (!channel || channel.fetchingNewMessages) {
+        if (!channel || channel.fetchingNewMessages || !channel.hasMoreMessages) {
             console.log('Retrieve Channel Messages dispatched with incorrect channel name or while already fetching messages',
                         channelName,
                         getState());
-            return Promise.reject();
+            return Promise.resolve();
         }
         dispatch(setChannelFetchingNewMessages(channel.name, true));
-        if (!channel.hasMoreMessages) return Promise.reject();
         return axios.get('/api/v1/messages/' + channel.name + '/' + channel.retrieveMessagesOffset).then((res: AxiosResponse) => {
             if (res.data.messages.length === 0) {
                 dispatch(setChannelHasMoreMessages(channel.name, false));
@@ -112,7 +110,34 @@ export const retrieveChannelMessages = (channelName: string) => {
             console.log('Error fetching messages', channel, err);
             dispatch(addError('Something went wrong while trying to fetch messages'));
         }).then(() => {
-            dispatch(setChannelFetchingNewMessages(channel.name, false));
+            return dispatch(setChannelFetchingNewMessages(channel.name, false));
         });
     }
+}
+
+export const deleteChannel = (channelName: string) => {
+    return (dispatch: any) => {
+        return axios.get('/api/v1/channel/delete/' + channelName).
+            then((res: AxiosResponse) => {
+                dispatch(addInfo('Channel deleted'));
+                return dispatch(fetchChannels());
+            }).catch((err: AxiosError) => {
+                console.log('Error deleting channel', err);
+                return dispatch(addError(err.response.data.error));
+            });
+    };
+}
+
+export const addChannel = (channelName: string) => {
+    return (dispatch: any) => {
+        return axios.post('/api/v1/channel/create', {
+            channelName: channelName
+        }).then((res: AxiosResponse) => {
+            dispatch(addInfo('Channel created'));
+            return dispatch(fetchChannels());
+        }).catch((err: AxiosError) => {
+            console.log('Error creating chanel', err);
+            return dispatch(addError(err.response.data.error));
+        })
+    };
 }

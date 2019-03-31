@@ -117,6 +117,6 @@ export default function (state: State = initialState, action: Action) {
             return newChannels;
         }
         default:
-            return initialState;
+            return state;
     }
 }

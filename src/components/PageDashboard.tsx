@@ -47,6 +47,7 @@ interface State {
             if(this.props.channelNames.indexOf(this.props.match.params.channel) > -1 ) {
                 this.setState({channel: this.props.match.params.channel});
             } else {
+                this.setState({channel: this.props.channelNames[0]});
                 history.push('/dashboard/' + this.props.channelNames[0]);
             }
         });

@@ -95,10 +95,11 @@
 
 module.exports = {
     // https://docs.mongodb.com/manual/reference/connection-string/
-    mongodbConnectionUri: process.env.MONGODB_URI ? process.env.MONGODB_URI : 'mongodb://localhost:27017/reactChatDB',
-    mailgunApiKey: process.env.MAILGUN_API_KEY ? process.env.MAILGUN_API_KEY : 'key-1e7506bcdc9ccbfbf67c03bc39b95999',
-    mailgunDomain: process.env.MAILGUN_DOMAIN ? process.env.MAILGUN_DOMAIN : 'sandbox3786eaf2000b4a839664faae2fb3faf5.mailgun.org'
+    mongodbConnectionUri: process.env.MONGODB_URI,
+    mailgunApiKey: process.env.MAILGUN_API_KEY,
+    mailgunDomain: process.env.MAILGUN_DOMAIN
 }
+
 
 /***/ }),
 
@@ -134,14 +135,70 @@ exports["default"] = default_1;
 
 exports.__esModule = true;
 var authorized_1 = __webpack_require__(/*! ../../middleware/authorized */ "./src/server/middleware/authorized.ts");
+var validator = __webpack_require__(/*! validator */ "validator");
 function default_1(app) {
-    app.get('/api/v1/channels?', authorized_1["default"]);
+    app.get('/api/v1/channel*', authorized_1["default"]);
     app.get('/api/v1/channels', function (req, res) {
-        req.db.collection('channels').find({}, function (err, channels) {
-            if (!channels)
-                return res.state(400).json({ json: err });
-            channels.toArray(function (err, channelArr) {
-                return res.json({ channels: channelArr });
+        req.db.collection('channels', function (e, coll) {
+            var p = new Promise(function (resolve) {
+                coll.find({}).count(function (e, count) {
+                    if (count === 0) {
+                        coll.insertMany([{ name: 'general' }, { name: 'random' }], function () { return resolve(); });
+                    }
+                    else {
+                        resolve();
+                    }
+                });
+            });
+            p.then(function () {
+                coll.find({}).toArray(function (err, arr) {
+                    res.json({ channels: arr });
+                });
+            });
+        });
+    });
+    app.get('/api/v1/channel/delete/:channel', function (req, res) {
+        if (validator.isEmpty(req.params.channel)) {
+            return res.status(400).json({ error: 'Invalid channel name' });
+        }
+        return req.db.collection('channels', function (e, coll) {
+            var p = new Promise(function (resolve, reject) {
+                coll.find({ name: req.params.channel }).count(function (e, count) {
+                    if (count === 1) {
+                        return resolve();
+                    }
+                    return reject();
+                });
+            });
+            p.then(function () {
+                coll.deleteOne({ name: req.params.channel }).then(function () {
+                    return res.json({ success: true });
+                });
+            })["catch"](function () {
+                return res.status(400).json({ error: 'Returned channels count not equal to 1' });
+            });
+            return p;
+        });
+    });
+    app.post('/api/v1/channel/create', function (req, res) {
+        if (validator.isEmpty(req.body.channelName)) {
+            return res.status(400).json({ error: 'Invalid channel name' });
+        }
+        return req.db.collection('channels', function (e, coll) {
+            var p = new Promise(function (resolve, reject) {
+                coll.countDocuments({ name: req.body.channelName }, function (err, count) {
+                    if (count !== 0) {
+                        return reject();
+                    }
+                    return resolve();
+                });
+            });
+            return p.then(function () {
+                return coll.insertOne({ name: req.body.channelName }).then(function () {
+                    return res.json({ success: true });
+                });
+            })["catch"](function () {
+                return res.status(400).json({ error: 'Channel already exists' });
             });
         });
     });
@@ -300,7 +357,7 @@ exports["default"] = default_1;
 exports.__esModule = true;
 var authorized_1 = __webpack_require__(/*! ../../middleware/authorized */ "./src/server/middleware/authorized.ts");
 function default_1(app) {
-    app.get('/api/v1/users?', authorized_1["default"]);
+    app.get('/api/v1/user*', authorized_1["default"]);
     app.get('/api/v1/user', function (req, res) {
         res.send(req.session.user);
     });

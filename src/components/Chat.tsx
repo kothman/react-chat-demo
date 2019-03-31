@@ -18,7 +18,8 @@ interface State {
     viewingPreviousMessages: boolean,
     scrolling: boolean,
     scrollingTimeout: any,
-    userDetails: any, // @todo create new reduer to store user details
+    userDetails: any, // @todo create new reduer to store user details,
+    currentMessage: Message | any
 }
 
 interface ScrollEvent extends Event {
@@ -31,6 +32,7 @@ interface ScrollEvent extends Event {
 }
 
 class Chat extends React.Component<Props | any, State> {
+    private ref: React.RefObject<HTMLDivElement>;
     constructor(props: Props) {
         super(props);
 
@@ -44,11 +46,13 @@ class Chat extends React.Component<Props | any, State> {
             scrolling: false,
             scrollingTimeout: false,
             userDetails: {},
+            currentMessage: false
         }
+        this.ref = React.createRef();
     }
     handleSendMessage = (e: React.FormEvent | React.KeyboardEvent) => {
         e.preventDefault();
-        let textarea: HTMLTextAreaElement = document.querySelector('#chat-input-textarea');
+        let textarea: any = document.querySelector('#chat-input-textarea');
         this.props.socket.emit('message', { text: textarea.value, channel: this.props.channel })
         this.setState(Object.assign({}, this.state, {chatInputEnabled: false}));
     }
@@ -73,7 +77,7 @@ class Chat extends React.Component<Props | any, State> {
         this.setState({ textareaValue: '' });
     }
     scrollChatHistory = () => {
-        let chatDiv: HTMLDivElement = document.querySelector('#chat-history');
+        let chatDiv: HTMLDivElement = this.ref.current;
         chatDiv.scrollTop = chatDiv.scrollHeight;
     }
     handleUserScroll = (e: ScrollEvent) => {
@@ -95,10 +99,10 @@ class Chat extends React.Component<Props | any, State> {
             }
         }, 50)});
     }
-    handleDisplayUserDetails = (modalId: string, email: string) => {
-        if (this.state.userDetails[email])
-            return modalHelpers.toggle(modalId);
-        axios.get('/api/v1/user/' + email).then((res) => {
+    handleDisplayUserDetails = (m: Message) => {
+        if (this.state.userDetails[m.userEmail])
+            return this.setMessage(m);
+        axios.get('/api/v1/user/' + m.userEmail).then((res) => {
             let user: {email: string, _id: string, name: string} = res.data.user;
             this.setState({userDetails: Object.assign({}, this.state.userDetails, 
                 {
@@ -108,55 +112,61 @@ class Chat extends React.Component<Props | any, State> {
                     }
                 }
             )});
-            modalHelpers.toggle(modalId);
+            this.setMessage(m);
         });
     }
+    setMessage = (m: Message) => {
+        this.setState({currentMessage: m});
+    }
     componentDidMount = () => {
-        if(this.props.currentChannel.messages.length === 0) {
+        console.log(this.props);
+        if(this.props.currentChannel.messages.length === 0 &&
+           !this.props.currentChannel.fetchingNewMessages &&
+           this.ref && this.ref.current) {
             this.props.retrieveMessages().then(() => {
                 this.scrollChatHistory();
-                let chatDiv: HTMLElement = document.querySelector('#chat-history');
-                chatDiv.addEventListener('scroll', this.handleUserScroll);
+                this.ref.current.addEventListener('scroll', this.handleUserScroll);
             });
         } else {
             this.scrollChatHistory();
         }
     }
     componentWillUnmount = () => {
-        document.querySelector('#chat-history')
-            .removeEventListener('scroll', this.handleUserScroll);
+        this.ref.current.removeEventListener('scroll', this.handleUserScroll);
         this.props.socket.removeEventListener('message', this.handleReceiveMessage);
         this.props.socket.removeEventListener('message received', this.enableChatInput);
         if (this.state.scrollingTimeout) clearTimeout(this.state.scrollingTimeout);
     }
     render() {
+        let modal: JSX.Element = <div></div>;
+        if (this.state.currentMessage !== false) {
+            let m: Message = this.state.currentMessage;
+            let date: Date = new Date(m.created);
+            modal = <Modal title="Message Details"
+                           onDismiss={() => this.setState({currentMessage: false})}>
+                <div>
+                    <div className="row">
+                        <span className="column">message id:</span>
+                        <span>{m['_id']}</span></div>
+                    <div className="row">
+                        <span className="column">user id:</span>
+                        <span className="column">{this.state.userDetails[m.userEmail]['_id']}</span></div>
+                    <div className="row">
+                        <span className="column">email:</span>
+                        <span className="column">{m.userEmail}</span></div>
+                    <div className="row">
+                        <span className="column">timestamp:</span>
+                        <span className="column">{date.toLocaleDateString()} {date.toLocaleTimeString()}</span></div>
+                </div>
+            </Modal>
+        }
         let messages: JSX.Element[] = [];
         if (this.props.currentChannel && this.props.currentChannel.messages) {
             this.props.currentChannel.messages.forEach((m: Message) => {
                 let date: Date = new Date(m.created);
                 let messageId = 'message-' + m['_id'];
-                let modalId = 'modal-' + messageId;
                 messages.push(<div key={m['_id']} className="message" >
-                    <Modal title="User Details">
-                        {this.state.userDetails[m.userEmail] ?
-                            <div>
-                                <div className="row">
-                                    <span className="column">message id:</span>
-                                    <span>{m['_id']}</span></div>
-                                <div className="row">
-                                    <span className="column">user id:</span>
-                                    <span className="column">{this.state.userDetails[m.userEmail]['_id']}</span></div>
-                                <div className="row">
-                                    <span className="column">email:</span>
-                                    <span className="column">{m.userEmail}</span></div>
-                                <div className="row">
-                                    <span className="column">timestamp:</span>
-                                    <span className="column">{date.toLocaleDateString()} {date.toLocaleTimeString()}</span></div>
-                            </div> :
-                            <span></span>
-                        }
-                    </Modal>
-                    <span className="message-email" onClick={() => { this.handleDisplayUserDetails(modalId, m.userEmail) }}>{m.userEmail}</span>
+                    <span className="message-email" onClick={() => { this.handleDisplayUserDetails(m) }}>{m.userEmail}</span>
                     <span className="message-content">{m.text}</span>
                     <span className="message-date">{date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                 </div>);
@@ -165,7 +175,8 @@ class Chat extends React.Component<Props | any, State> {
         
         return (
             <div className="chat-container">
-                <div id="chat-history" className="chat-history">
+                {modal}
+                <div id="chat-history" className="chat-history" ref={this.ref}>
                     { this.props.currentChannel.fetchingNewMessages ?
                         <div className="message message-loading">
                             <div className="message-content">Loading more messages...</div>

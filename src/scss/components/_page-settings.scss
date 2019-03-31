@@ -52,6 +52,9 @@
             font-size: 1.25rem;
             line-height: 1.25rem;
             margin-bottom: .5rem;
+            display: flex;
+            justify-content: space-between;
+            padding: 1rem;
         }
 
         .settings-group {
@@ -61,6 +64,9 @@
         }
 
         .channels-settings {
+            .add-channel-icon {
+                cursor: pointer;
+            }
             .channels {
                 border: 1px solid gray;
                 background: lightgray;

@@ -34,6 +34,6 @@ export default function(state: State = initialState, action: Action) {
         case CLEAR_INFOS:
             return Object.assign({}, state, {infos: []});
         default:
-            return initialState;
+            return state;
     }
 }

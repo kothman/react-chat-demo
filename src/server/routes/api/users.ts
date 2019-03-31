@@ -3,7 +3,7 @@ import api from '.';
 import { Db } from 'mongodb';
 
 export default function(app: any) {
-    app.get('/api/v1/users?', authorizedMiddleware);
+    app.get('/api/v1/user*', authorizedMiddleware);
     app.get('/api/v1/user', function(req: any, res: any) {
         res.send(req.session.user);
     });

@@ -8,11 +8,12 @@ interface Props {
     onConfirm?: Function,
     canConfirm?: boolean,
     confirmText?: string
+    confirming?: boolean
 }
 
 interface State {
     modalContentRef: any,
-    active: boolean
+    active: boolean,
 }
 
 class Modal extends React.Component<Props, State> {
@@ -53,7 +54,9 @@ class Modal extends React.Component<Props, State> {
                     {this.props.children}
                     <div className="modal-actions">
                         {this.props.canConfirm ? 
-                            <button type="button" onClick={this.confirmModal}>
+                            <button 
+                                disabled={this.props.confirming === true ? true : false }
+                                type="button" onClick={this.confirmModal}>
                                 {this.props.confirmText ? 
                                     this.props.confirmText : 'confirm'
                                 }

@@ -46,6 +46,19 @@
             }
         }
 
+        .modal-actions {
+            padding-top: 1rem;
+            display: flex;
+            justify-content: flex-end;
+            
+            button {
+                background: $main-background;
+                &:hover {
+                    background: darken($main-background, 10);
+                }
+            }
+        }
+
         .row {
             margin-bottom: .5rem;
             display: flex;

@@ -139,11 +139,16 @@ table {
     .page-settings .container .subtitle {
       font-size: 1.25rem;
       line-height: 1.25rem;
-      margin-bottom: .5rem; }
+      margin-bottom: .5rem;
+      display: flex;
+      justify-content: space-between;
+      padding: 1rem; }
     .page-settings .container .settings-group {
       margin-bottom: .5rem;
       padding-left: 1rem;
       border-left: 4px solid black; }
+    .page-settings .container .channels-settings .add-channel-icon {
+      cursor: pointer; }
     .page-settings .container .channels-settings .channels {
       border: 1px solid gray;
       background: lightgray; }
@@ -303,6 +308,14 @@ table {
         justify-content: center;
         margin-left: 1rem;
         cursor: pointer; }
+    .modal .modal-content .modal-actions {
+      padding-top: 1rem;
+      display: flex;
+      justify-content: flex-end; }
+      .modal .modal-content .modal-actions button {
+        background: aquamarine; }
+        .modal .modal-content .modal-actions button:hover {
+          background: #4cffc3; }
     .modal .modal-content .row {
       margin-bottom: .5rem;
       display: flex;
