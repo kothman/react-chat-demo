@@ -37045,6 +37045,38 @@ if (false) {} else {
 
 /***/ }),
 
+/***/ "./node_modules/redux-thunk/es/index.js":
+/*!**********************************************!*\
+  !*** ./node_modules/redux-thunk/es/index.js ***!
+  \**********************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+function createThunkMiddleware(extraArgument) {
+  return function (_ref) {
+    var dispatch = _ref.dispatch,
+        getState = _ref.getState;
+    return function (next) {
+      return function (action) {
+        if (typeof action === 'function') {
+          return action(dispatch, getState, extraArgument);
+        }
+
+        return next(action);
+      };
+    };
+  };
+}
+
+var thunk = createThunkMiddleware();
+thunk.withExtraArgument = createThunkMiddleware;
+
+/* harmony default export */ __webpack_exports__["default"] = (thunk);
+
+/***/ }),
+
 /***/ "./node_modules/redux/es/redux.js":
 /*!****************************************!*\
   !*** ./node_modules/redux/es/redux.js ***!
@@ -42079,6 +42111,231 @@ module.exports = yeast;
 
 /***/ }),
 
+/***/ "./src/actions/channelsActions.ts":
+/*!****************************************!*\
+  !*** ./src/actions/channelsActions.ts ***!
+  \****************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+exports.__esModule = true;
+var axios_1 = __webpack_require__(/*! axios */ "./node_modules/axios/index.js");
+var notificationsActions_1 = __webpack_require__(/*! ../actions/notificationsActions */ "./src/actions/notificationsActions.ts");
+exports.ADD_CHANNELS = 'ADD_CHANNELS';
+exports.SET_CHANNEL_FETCHING_NEW_MESSAGES = 'SET_CHANNEL_FETCHING_NEW_MESSAGES';
+exports.SET_CHANNEL_HAS_MORE_MESSAGES = 'SET_CHANNEL_HAS_MORE_MESSAGE';
+exports.ADD_RECEIVED_CHANNEL_MESSAGE = 'ADD_RECEIVED_CHANNEL_MESSAGE';
+exports.ADD_RETRIEVED_CHANNEL_MESSAGES = 'ADD_RETRIEVED_CHANNEL_MESSAGES';
+exports.INCREMENT_CHANNEL_RETRIEVE_MESSAGES_OFFSET = 'INCREMENT_CHANNEL_RETRIEVE_MESSAGES_OFFSET';
+exports.RETRIEVE_CHANNEL_MESSAGES = 'RETRIEVE_CHANNEL_MESSAGES';
+exports.addChannels = function (channelNames) {
+    var channels = [];
+    channelNames.forEach(function (name) {
+        channels.push({
+            name: name,
+            messages: [],
+            retrieveMessagesOffset: 0,
+            hasMoreMessages: true,
+            fetchingNewMessages: false
+        });
+    });
+    return {
+        type: exports.ADD_CHANNELS,
+        data: { channels: channels }
+    };
+};
+exports.incrementChannelRetrieveMessagesOffset = function (channel, n) {
+    return {
+        type: exports.INCREMENT_CHANNEL_RETRIEVE_MESSAGES_OFFSET,
+        data: {
+            channel: channel,
+            increment: n
+        }
+    };
+};
+exports.setChannelFetchingNewMessages = function (channel, isFetching) {
+    return {
+        type: exports.SET_CHANNEL_FETCHING_NEW_MESSAGES,
+        data: {
+            channelName: channel,
+            isFetching: isFetching
+        }
+    };
+};
+exports.setChannelHasMoreMessages = function (channelName, hasMore) {
+    return {
+        type: exports.SET_CHANNEL_HAS_MORE_MESSAGES,
+        data: { channelName: channelName, hasMore: hasMore }
+    };
+};
+exports.addReceivedChannelMessage = function (channelName, message) {
+    return {
+        type: exports.ADD_RECEIVED_CHANNEL_MESSAGE,
+        data: { message: message, channelName: channelName }
+    };
+};
+exports.addRetrievedChannelMessages = function (channelName, messages) {
+    return {
+        type: exports.ADD_RETRIEVED_CHANNEL_MESSAGES,
+        data: { channelName: channelName, messages: messages }
+    };
+};
+exports.fetchChannels = function () {
+    return function (dispatch) {
+        return axios_1["default"].get('/api/v1/channels').then(function (res) {
+            var channels = res.data.channels.map(function (c) {
+                return c.name;
+            });
+            return dispatch(exports.addChannels(channels));
+        })["catch"](function (err) {
+            console.log(err);
+            return dispatch(notificationsActions_1.addError('Something went wrong while trying to fetch the channels'));
+        });
+    };
+};
+exports.retrieveChannelMessages = function (channelName) {
+    return function (dispatch, getState) {
+        var channel = getState().channels.find(function (c) {
+            return c.name === channelName;
+        });
+        if (!channel || channel.fetchingNewMessages) {
+            console.log('Retrieve Channel Messages dispatched with incorrect channel name or while already fetching messages', channelName, getState());
+            return Promise.reject();
+        }
+        dispatch(exports.setChannelFetchingNewMessages(channel.name, true));
+        if (!channel.hasMoreMessages)
+            return Promise.reject();
+        return axios_1["default"].get('/api/v1/messages/' + channel.name + '/' + channel.retrieveMessagesOffset).then(function (res) {
+            if (res.data.messages.length === 0) {
+                dispatch(exports.setChannelHasMoreMessages(channel.name, false));
+                return res;
+            }
+            dispatch(exports.incrementChannelRetrieveMessagesOffset(channelName, 20));
+            dispatch(exports.addRetrievedChannelMessages(channel.name, res.data.messages));
+        })["catch"](function (err) {
+            console.log('Error fetching messages', channel, err);
+            dispatch(notificationsActions_1.addError('Something went wrong while trying to fetch messages'));
+        }).then(function () {
+            dispatch(exports.setChannelFetchingNewMessages(channel.name, false));
+        });
+    };
+};
+
+
+/***/ }),
+
+/***/ "./src/actions/notificationsActions.ts":
+/*!*********************************************!*\
+  !*** ./src/actions/notificationsActions.ts ***!
+  \*********************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+exports.__esModule = true;
+exports.ADD_ERROR = 'ADD_ERROR';
+exports.REMOVE_ERROR = 'REMOVE_ERROR';
+exports.CLEAR_ERRORS = 'CLEAR_ERRORS';
+exports.ADD_INFO = 'ADD_INFO';
+exports.REMOVE_INFO = 'REMOVE_INFO';
+exports.CLEAR_INFOS = 'CLEAR_INFOS';
+exports.addError = function (error) {
+    return {
+        type: exports.ADD_ERROR,
+        data: error
+    };
+};
+exports.removeError = function (i) {
+    return {
+        type: exports.REMOVE_ERROR,
+        data: i
+    };
+};
+exports.clearErrors = function () {
+    return { type: exports.CLEAR_ERRORS };
+};
+exports.addInfo = function (info) {
+    return {
+        type: exports.ADD_INFO,
+        data: info
+    };
+};
+exports.removeInfo = function (i) {
+    return {
+        type: exports.REMOVE_INFO,
+        data: i
+    };
+};
+exports.clearInfos = function () {
+    return {
+        type: exports.CLEAR_INFOS
+    };
+};
+
+
+/***/ }),
+
+/***/ "./src/components/AccountSettings.tsx":
+/*!********************************************!*\
+  !*** ./src/components/AccountSettings.tsx ***!
+  \********************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    };
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+exports.__esModule = true;
+var React = __webpack_require__(/*! react */ "./node_modules/react/index.js");
+var react_redux_1 = __webpack_require__(/*! react-redux */ "./node_modules/react-redux/es/index.js");
+var AccountSettings = (function (_super) {
+    __extends(AccountSettings, _super);
+    function AccountSettings(props) {
+        var _this = _super.call(this, props) || this;
+        _this.handleUpdateEmail = function (e) {
+            e.preventDefault();
+        };
+        _this.state = {
+            user: { email: props.user.email }
+        };
+        return _this;
+    }
+    AccountSettings.prototype.render = function () {
+        var _this = this;
+        return React.createElement("div", { className: "account-settings" },
+            React.createElement("div", { className: "settings-group" },
+                React.createElement("div", { className: "subtitle" }, "Change Email"),
+                React.createElement("div", null,
+                    React.createElement("form", { onSubmit: this.handleUpdateEmail },
+                        React.createElement("div", { className: "input-group" },
+                            React.createElement("label", { htmlFor: "email" }, "email"),
+                            React.createElement("input", { type: "email", id: "emal", value: this.state.user.email, onChange: function (e) { _this.setState({ user: { email: e.currentTarget.value } }); } }),
+                            React.createElement("button", { type: "submit" }, "update email"))),
+                    React.createElement("form", null,
+                        React.createElement("div", null, "password")))));
+    };
+    return AccountSettings;
+}(React.Component));
+exports["default"] = react_redux_1.connect(function (props) { return props; })(AccountSettings);
+
+
+/***/ }),
+
 /***/ "./src/components/App.tsx":
 /*!********************************!*\
   !*** ./src/components/App.tsx ***!
@@ -42107,29 +42364,30 @@ var react_router_dom_1 = __webpack_require__(/*! react-router-dom */ "./node_mod
 var React = __webpack_require__(/*! react */ "./node_modules/react/index.js");
 var react_redux_1 = __webpack_require__(/*! react-redux */ "./node_modules/react-redux/es/index.js");
 var Navbar_1 = __webpack_require__(/*! ./Navbar */ "./src/components/Navbar.tsx");
+var Notifications_1 = __webpack_require__(/*! ./Notifications */ "./src/components/Notifications.tsx");
 var PageLogin_1 = __webpack_require__(/*! ./PageLogin */ "./src/components/PageLogin.tsx");
 var PageLogout_1 = __webpack_require__(/*! ./PageLogout */ "./src/components/PageLogout.tsx");
 var PageRegister_1 = __webpack_require__(/*! ./PageRegister */ "./src/components/PageRegister.tsx");
 var PageDashboard_1 = __webpack_require__(/*! ./PageDashboard */ "./src/components/PageDashboard.tsx");
 var PageSettings_1 = __webpack_require__(/*! ./PageSettings */ "./src/components/PageSettings.tsx");
+var VerifyEmail_1 = __webpack_require__(/*! ./VerifyEmail */ "./src/components/VerifyEmail.tsx");
 var Page404_1 = __webpack_require__(/*! ./Page404 */ "./src/components/Page404.tsx");
 var App = (function (_super) {
     __extends(App, _super);
     function App(props) {
         var _this = _super.call(this, props) || this;
+        console.log('Mounting app');
         _this.state = {
             finishedLoading: false
         };
         _this.checkIfLoggedIn().then(function () {
             _this.setState(Object.assign({}, _this.state, { finishedLoading: true }));
-            console.log(_this.state);
         });
         return _this;
     }
     App.prototype.checkIfLoggedIn = function () {
         var _this = this;
         return axios_1["default"].get('/api/v1/user').then(function (response) {
-            console.log(response.data);
             _this.props.dispatch({ type: 'SET_EMAIL', data: response.data.email });
             _this.props.dispatch({ type: 'SET_AUTHORIZED', data: true });
         })["catch"](function () { });
@@ -42139,16 +42397,18 @@ var App = (function (_super) {
         if (this.props.user.authorized) {
             availableViews.push(React.createElement(react_router_dom_1.Route, { exact: true, path: "/dashboard/:channel?", key: "page-dashboard", component: PageDashboard_1["default"] }));
             availableViews.push(React.createElement(react_router_dom_1.Route, { exact: true, path: "/logout", key: "page-logout", component: PageLogout_1["default"] }));
-            availableViews.push(React.createElement(react_router_dom_1.Route, { exact: true, path: "/settings", key: "page-settings", component: PageSettings_1["default"] }));
+            availableViews.push(React.createElement(react_router_dom_1.Route, { exact: true, path: "/settings/:setting?", key: "page-settings", component: PageSettings_1["default"] }));
         }
         else {
             availableViews.push(React.createElement(react_router_dom_1.Route, { exact: true, path: "/login", key: "page-login", component: PageLogin_1["default"] }));
             availableViews.push(React.createElement(react_router_dom_1.Route, { exact: true, path: "/register", key: "page-register", component: PageRegister_1["default"] }));
         }
-        availableViews.push(availableViews.push(React.createElement(react_router_dom_1.Route, { key: "catch-all", component: Page404_1["default"] })));
+        availableViews.push(React.createElement(react_router_dom_1.Route, { exact: true, path: "/verifyEmail/:key", key: "page-verify-email", component: VerifyEmail_1["default"] }));
+        availableViews.push(React.createElement(react_router_dom_1.Route, { key: "catch-all", component: Page404_1["default"] }));
         return (React.createElement(react_router_dom_1.BrowserRouter, null, this.state.finishedLoading ?
             React.createElement("div", { id: "react-app" },
                 React.createElement(Navbar_1["default"], null),
+                React.createElement(Notifications_1["default"], null),
                 React.createElement(react_router_dom_1.Switch, null, availableViews)) :
             React.createElement("div", { className: "loading loading-fullscreen" },
                 React.createElement("div", { className: "sk-fading-circle" },
@@ -42168,6 +42428,93 @@ var App = (function (_super) {
     return App;
 }(React.Component));
 exports["default"] = react_redux_1.connect(function (state) { return state; })(App);
+
+
+/***/ }),
+
+/***/ "./src/components/ChannelsSettings.tsx":
+/*!*********************************************!*\
+  !*** ./src/components/ChannelsSettings.tsx ***!
+  \*********************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    };
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+exports.__esModule = true;
+var React = __webpack_require__(/*! react */ "./node_modules/react/index.js");
+var react_redux_1 = __webpack_require__(/*! react-redux */ "./node_modules/react-redux/es/index.js");
+var channelsActions_1 = __webpack_require__(/*! ../actions/channelsActions */ "./src/actions/channelsActions.ts");
+var Modal_1 = __webpack_require__(/*! ./Modal */ "./src/components/Modal.tsx");
+var ChannelsSettings = (function (_super) {
+    __extends(ChannelsSettings, _super);
+    function ChannelsSettings(props) {
+        var _this = _super.call(this, props) || this;
+        _this.handleUpdateEmail = function (e) {
+            e.preventDefault();
+        };
+        _this.promptDeleteModal = function (channelName) {
+            _this.setState({ promptDeleteChannel: channelName });
+        };
+        _this.componentDidMount = function () {
+            _this.props.fetchChannels();
+        };
+        _this.state = {
+            promptDeleteChannel: false
+        };
+        return _this;
+    }
+    ChannelsSettings.prototype.render = function () {
+        var _this = this;
+        var channels = [];
+        this.props.channels.forEach(function (c) {
+            channels.push(React.createElement("div", { className: "channel", key: c.name },
+                c.name,
+                React.createElement("div", { className: "delete", onClick: function () { _this.promptDeleteModal(c.name); } },
+                    React.createElement("i", { className: "material-icons" }, "delete"))));
+        });
+        return React.createElement("div", { className: "channels-settings" },
+            this.state.promptDeleteChannel !== false ?
+                React.createElement(Modal_1["default"], { title: "Confirm deletion", onDismiss: function () {
+                        _this.setState({ promptDeleteChannel: false });
+                    }, onConfirm: function () {
+                        _this.props.removeChannel(_this.state.promptDeleteChannel);
+                        _this.setState({ promptDeleteChannel: false });
+                    }, canConfirm: true, confirmText: 'delete' },
+                    React.createElement("div", null,
+                        "Are you sure you want to delete the channel \"",
+                        this.state.promptDeleteChannel,
+                        "\"?")) : React.createElement("div", null),
+            React.createElement("div", { className: "settings-group" },
+                React.createElement("div", { className: "subtitle" }, "Add/Remove Channels"),
+                React.createElement("div", { className: "channels" }, channels)));
+    };
+    return ChannelsSettings;
+}(React.Component));
+exports["default"] = react_redux_1.connect(function (state) {
+    return {
+        channels: state.channels
+    };
+}, function (dispatch) {
+    return {
+        fetchChannels: function () { return dispatch(channelsActions_1.fetchChannels()); },
+        addChannel: function (name) { },
+        removeChannel: function (name) { console.log('Todo: implement removeChannel'); }
+    };
+})(ChannelsSettings);
 
 
 /***/ }),
@@ -42197,8 +42544,10 @@ var __extends = (this && this.__extends) || (function () {
 exports.__esModule = true;
 var React = __webpack_require__(/*! react */ "./node_modules/react/index.js");
 var axios_1 = __webpack_require__(/*! axios */ "./node_modules/axios/index.js");
+var react_redux_1 = __webpack_require__(/*! react-redux */ "./node_modules/react-redux/es/index.js");
 var Modal_1 = __webpack_require__(/*! ./Modal */ "./src/components/Modal.tsx");
 var modalHelpers_1 = __webpack_require__(/*! ../lib/modalHelpers */ "./src/lib/modalHelpers.ts");
+var channelsActions_1 = __webpack_require__(/*! ../actions/channelsActions */ "./src/actions/channelsActions.ts");
 var Chat = (function (_super) {
     __extends(Chat, _super);
     function Chat(props) {
@@ -42210,47 +42559,32 @@ var Chat = (function (_super) {
             _this.setState(Object.assign({}, _this.state, { chatInputEnabled: false }));
         };
         _this.handleReceiveMessage = function (message) {
-            console.log('message received', message);
-            _this.setState(Object.assign({}, _this.state, { messages: _this.state.messages.concat([message]) }));
+            console.log('Message received', message);
+            _this.props.addReceivedMessageData(message);
             if (_this.state.viewingPreviousMessages === false) {
                 _this.scrollChatHistory();
             }
-            _this.setState({ messageOffset: _this.state.messageOffset + 1 });
+            _this.props.incrementRetrieveOffset(1);
         };
         _this.handleKeyPress = function (e) {
             if (e.key === 'Enter') {
                 return _this.handleSendMessage(e);
             }
         };
-        _this.enableChatInput = function () {
-            _this.setState(Object.assign({}, _this.state, { chatInputEnabled: true }));
-            var textarea = document.querySelector('#chat-input-textarea');
-            textarea.value = '';
+        _this.handleTextareaChange = function (e) {
+            _this.setState({ textareaValue: e.target.value });
         };
-        _this.retrieveMessages = function () {
-            if (_this.state.fetchingNewMessages || !_this.state.hasMoreMessages)
-                return;
-            _this.setState({ fetchingNewMessages: true });
-            axios_1["default"].get('/api/v1/messages/' + _this.props.channel + '/' + _this.state.messageOffset).then(function (res) {
-                console.log(res.data.messages);
-                if (res.data.messages.length === 0) {
-                    _this.setState({ hasMoreMessages: false });
-                    return;
-                }
-                _this.setState({ messages: res.data.messages.concat(_this.state.messages) });
-                if (_this.state.viewingPreviousMessages === false) {
-                    _this.scrollChatHistory();
-                }
-                _this.setState({ messageOffset: _this.state.messageOffset + 20 });
-            })["catch"]().then(function () { return _this.setState({ fetchingNewMessages: false }); });
+        _this.enableChatInput = function () {
+            _this.setState({ chatInputEnabled: true });
+            _this.setState({ textareaValue: '' });
         };
         _this.scrollChatHistory = function () {
             var chatDiv = document.querySelector('#chat-history');
             chatDiv.scrollTop = chatDiv.scrollHeight;
         };
         _this.handleUserScroll = function (e) {
-            if (e.target.scrollTop <= 50 && !_this.state.fetchingNewMessages)
-                return _this.retrieveMessages();
+            if (e.target.scrollTop <= 600 && !_this.props.currentChannel.fetchingNewMessages && _this.props.currentChannel.hasMoreMessages)
+                _this.props.retrieveMessages();
             if (_this.state.scrolling) {
                 return;
             }
@@ -42265,7 +42599,7 @@ var Chat = (function (_super) {
                     else {
                         _this.setState({ viewingPreviousMessages: true });
                     }
-                }, 1000) });
+                }, 50) });
         };
         _this.handleDisplayUserDetails = function (modalId, email) {
             if (_this.state.userDetails[email])
@@ -42282,74 +42616,102 @@ var Chat = (function (_super) {
                 modalHelpers_1["default"].toggle(modalId);
             });
         };
-        _this.componentDidUpdate = function (prevProps) {
-            if (_this.props.channel !== prevProps.channel) {
-                _this.setState({ messages: [] });
-                _this.retrieveMessages();
-            }
-        };
         _this.componentDidMount = function () {
-            _this.retrieveMessages();
-            var chatDiv = document.querySelector('#chat-history');
-            chatDiv.addEventListener('scroll', _this.handleUserScroll);
+            if (_this.props.currentChannel.messages.length === 0) {
+                _this.props.retrieveMessages().then(function () {
+                    _this.scrollChatHistory();
+                    var chatDiv = document.querySelector('#chat-history');
+                    chatDiv.addEventListener('scroll', _this.handleUserScroll);
+                });
+            }
+            else {
+                _this.scrollChatHistory();
+            }
         };
         _this.componentWillUnmount = function () {
             document.querySelector('#chat-history')
                 .removeEventListener('scroll', _this.handleUserScroll);
+            _this.props.socket.removeEventListener('message', _this.handleReceiveMessage);
+            _this.props.socket.removeEventListener('message received', _this.enableChatInput);
+            if (_this.state.scrollingTimeout)
+                clearTimeout(_this.state.scrollingTimeout);
         };
+        _this.props.socket.on('message', _this.handleReceiveMessage);
+        _this.props.socket.on('message received', _this.enableChatInput);
         _this.state = {
+            textareaValue: '',
             chatInputEnabled: true,
-            messages: [],
             viewingPreviousMessages: false,
             scrolling: false,
             scrollingTimeout: false,
-            messageOffset: 0,
-            fetchingNewMessages: false,
-            hasMoreMessages: true,
             userDetails: {},
         };
-        props.socket.on('message', _this.handleReceiveMessage);
-        props.socket.on('message received', _this.enableChatInput);
         return _this;
     }
     Chat.prototype.render = function () {
         var _this = this;
         var messages = [];
-        this.state.messages.forEach(function (m) {
-            var date = new Date(m.created);
-            var messageId = 'message-' + m['_id'];
-            var modalId = 'modal-' + messageId;
-            messages.push(React.createElement("div", { key: m['_id'], className: "message" },
-                React.createElement(Modal_1["default"], { id: modalId, title: "User Details" }, _this.state.userDetails[m.userEmail] ?
-                    React.createElement("div", null,
+        if (this.props.currentChannel && this.props.currentChannel.messages) {
+            this.props.currentChannel.messages.forEach(function (m) {
+                var date = new Date(m.created);
+                var messageId = 'message-' + m['_id'];
+                var modalId = 'modal-' + messageId;
+                messages.push(React.createElement("div", { key: m['_id'], className: "message" },
+                    React.createElement(Modal_1["default"], { title: "User Details" }, _this.state.userDetails[m.userEmail] ?
                         React.createElement("div", null,
-                            "message id: ",
-                            m['_id']),
-                        React.createElement("div", null,
-                            "user id: ",
-                            _this.state.userDetails[m.userEmail]['_id']),
-                        React.createElement("div", null,
-                            "email: ",
-                            m.userEmail),
-                        React.createElement("div", null,
-                            "timestamp: ",
-                            date.toLocaleDateString(),
-                            " ",
-                            date.toLocaleTimeString())) :
-                    React.createElement("span", null)),
-                React.createElement("span", { className: "message-email", onClick: function () { _this.handleDisplayUserDetails(modalId, m.userEmail); } }, m.userEmail),
-                React.createElement("span", { className: "message-content" }, m.text),
-                React.createElement("span", { className: "message-date" }, date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }))));
-        });
+                            React.createElement("div", { className: "row" },
+                                React.createElement("span", { className: "column" }, "message id:"),
+                                React.createElement("span", null, m['_id'])),
+                            React.createElement("div", { className: "row" },
+                                React.createElement("span", { className: "column" }, "user id:"),
+                                React.createElement("span", { className: "column" }, _this.state.userDetails[m.userEmail]['_id'])),
+                            React.createElement("div", { className: "row" },
+                                React.createElement("span", { className: "column" }, "email:"),
+                                React.createElement("span", { className: "column" }, m.userEmail)),
+                            React.createElement("div", { className: "row" },
+                                React.createElement("span", { className: "column" }, "timestamp:"),
+                                React.createElement("span", { className: "column" },
+                                    date.toLocaleDateString(),
+                                    " ",
+                                    date.toLocaleTimeString()))) :
+                        React.createElement("span", null)),
+                    React.createElement("span", { className: "message-email", onClick: function () { _this.handleDisplayUserDetails(modalId, m.userEmail); } }, m.userEmail),
+                    React.createElement("span", { className: "message-content" }, m.text),
+                    React.createElement("span", { className: "message-date" }, date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }))));
+            });
+        }
         return (React.createElement("div", { className: "chat-container" },
-            React.createElement("div", { id: "chat-history", className: "chat-history" }, messages),
+            React.createElement("div", { id: "chat-history", className: "chat-history" },
+                this.props.currentChannel.fetchingNewMessages ?
+                    React.createElement("div", { className: "message message-loading" },
+                        React.createElement("div", { className: "message-content" }, "Loading more messages...")) : React.createElement("div", null),
+                messages),
             React.createElement("form", { className: "chat-input", onSubmit: this.handleSendMessage },
-                React.createElement("textarea", { disabled: !this.state.chatInputEnabled, id: "chat-input-textarea", onKeyPress: this.handleKeyPress }),
+                React.createElement("textarea", { value: this.state.textareaValue, disabled: !this.state.chatInputEnabled, id: "chat-input-textarea", onKeyPress: this.handleKeyPress, onChange: this.handleTextareaChange }),
                 React.createElement("button", { disabled: !this.state.chatInputEnabled, type: "submit", className: "chat-send" }, "send"))));
     };
     return Chat;
 }(React.Component));
-exports["default"] = Chat;
+exports["default"] = react_redux_1.connect(function (state, ownProps) {
+    return {
+        channels: state.channels,
+        currentChannel: state.channels.find(function (c) {
+            return c.name === ownProps.channel;
+        })
+    };
+}, function (dispatch, ownProps) {
+    return {
+        retrieveMessages: function () {
+            return dispatch(channelsActions_1.retrieveChannelMessages(ownProps.channel));
+        },
+        incrementRetrieveOffset: function (n) {
+            return dispatch(channelsActions_1.incrementChannelRetrieveMessagesOffset(ownProps.channel, n));
+        },
+        addReceivedMessageData: function (m) {
+            return dispatch(channelsActions_1.addReceivedChannelMessage(ownProps.channel, m));
+        }
+    };
+})(Chat);
 
 
 /***/ }),
@@ -42378,30 +42740,46 @@ var __extends = (this && this.__extends) || (function () {
 })();
 exports.__esModule = true;
 var React = __webpack_require__(/*! react */ "./node_modules/react/index.js");
-var modalHelpers_1 = __webpack_require__(/*! ../lib/modalHelpers */ "./src/lib/modalHelpers.ts");
 var Modal = (function (_super) {
     __extends(Modal, _super);
-    function Modal() {
-        var _this = _super !== null && _super.apply(this, arguments) || this;
+    function Modal(props) {
+        var _this = _super.call(this, props) || this;
         _this.dismissModal = function () {
-            modalHelpers_1["default"].dismiss(_this.props.id);
+            _this.setState({ active: false });
+            if (_this.props.onDismiss)
+                _this.props.onDismiss();
+        };
+        _this.confirmModal = function (e) {
+            _this.setState({ active: false });
+            _this.props.onConfirm();
         };
         _this.backdropListener = function (e) {
-            var backdrop = document.getElementById(_this.props.id);
-            if (backdrop === e.currentTarget)
+            if (_this.state.modalContentRef && !_this.state.modalContentRef.contains(e.target)) {
                 _this.dismissModal();
+            }
+        };
+        _this.setModalContentRef = function (node) {
+            _this.setState({ modalContentRef: node });
+        };
+        _this.state = {
+            modalContentRef: false,
+            active: true
         };
         return _this;
     }
     Modal.prototype.render = function () {
         var _this = this;
         var className = 'modal';
-        return (React.createElement("div", { id: this.props.id, className: className, onClick: this.backdropListener },
-            React.createElement("div", { className: "modal-content" },
+        this.state.active ? className += ' active' : '';
+        return (React.createElement("div", { className: className, onClick: this.backdropListener },
+            React.createElement("div", { ref: this.setModalContentRef, className: "modal-content" },
                 React.createElement("div", { className: "modal-header" },
                     React.createElement("div", { className: "modal-title" }, this.props.title),
                     React.createElement("div", { className: "modal-dismiss", onClick: function () { _this.dismissModal(); } }, "X")),
-                this.props.children)));
+                this.props.children,
+                React.createElement("div", { className: "modal-actions" }, this.props.canConfirm ?
+                    React.createElement("button", { type: "button", onClick: this.confirmModal }, this.props.confirmText ?
+                        this.props.confirmText : 'confirm') : React.createElement("div", null)))));
     };
     return Modal;
 }(React.Component));
@@ -42471,6 +42849,71 @@ var Navbar = (function (_super) {
     return Navbar;
 }(React.Component));
 exports["default"] = react_redux_1.connect(function (state) { return state; })(Navbar);
+
+
+/***/ }),
+
+/***/ "./src/components/Notifications.tsx":
+/*!******************************************!*\
+  !*** ./src/components/Notifications.tsx ***!
+  \******************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    };
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+exports.__esModule = true;
+var React = __webpack_require__(/*! react */ "./node_modules/react/index.js");
+var react_redux_1 = __webpack_require__(/*! react-redux */ "./node_modules/react-redux/es/index.js");
+var notificationsActions_1 = __webpack_require__(/*! ../actions/notificationsActions */ "./src/actions/notificationsActions.ts");
+var Notifications = (function (_super) {
+    __extends(Notifications, _super);
+    function Notifications() {
+        return _super !== null && _super.apply(this, arguments) || this;
+    }
+    Notifications.prototype.render = function () {
+        var _this = this;
+        var errors = [];
+        var infos = [];
+        this.props.errors.forEach(function (err, i) {
+            errors.push(React.createElement("div", { className: "notification notification-error", key: i },
+                err,
+                React.createElement("span", { className: "remove-notification", onClick: function () { return _this.props.removeError(i); } }, "x")));
+        });
+        this.props.infos.forEach(function (info, i) {
+            infos.push(React.createElement("div", { className: "notification notification-info", key: i },
+                info,
+                React.createElement("span", { className: "remove-notification", onClick: function () { return _this.props.removeInfo(i); } }, "x")));
+        });
+        return React.createElement("div", { className: "notifications" },
+            errors,
+            infos);
+    };
+    return Notifications;
+}(React.Component));
+function mapStateToProps(state) {
+    return state.notifications;
+}
+function mapDispatchToProps(dispatch) {
+    return {
+        removeError: function (i) { return dispatch(notificationsActions_1.removeError(i)); },
+        removeInfo: function (i) { return dispatch(notificationsActions_1.removeInfo(i)); }
+    };
+}
+exports["default"] = react_redux_1.connect(mapStateToProps, mapDispatchToProps)(Notifications);
 
 
 /***/ }),
@@ -42597,8 +43040,8 @@ exports.__esModule = true;
 var React = __webpack_require__(/*! react */ "./node_modules/react/index.js");
 var react_redux_1 = __webpack_require__(/*! react-redux */ "./node_modules/react-redux/es/index.js");
 var io = __webpack_require__(/*! socket.io-client */ "./node_modules/socket.io-client/lib/index.js");
-var axios_1 = __webpack_require__(/*! axios */ "./node_modules/axios/index.js");
 var react_router_dom_1 = __webpack_require__(/*! react-router-dom */ "./node_modules/react-router-dom/esm/react-router-dom.js");
+var channelsActions_1 = __webpack_require__(/*! ../actions/channelsActions */ "./src/actions/channelsActions.ts");
 var OnlineUsers_1 = __webpack_require__(/*! ./OnlineUsers */ "./src/components/OnlineUsers.tsx");
 var Chat_1 = __webpack_require__(/*! ./Chat */ "./src/components/Chat.tsx");
 var history_1 = __webpack_require__(/*! ../lib/history */ "./src/lib/history.ts");
@@ -42606,31 +43049,24 @@ var PageDashboard = (function (_super) {
     __extends(PageDashboard, _super);
     function PageDashboard(props) {
         var _this = _super.call(this, props) || this;
-        _this.getChannels = function () {
-            axios_1["default"].get('/api/v1/channels').then(function (res) {
-                _this.setState({ channels: res.data.channels });
-                if (!_this.state.channels.find(function (c) {
-                    return c.name === _this.props.match.params.channel;
-                })) {
-                    var channelName = _this.state.channels[0].name;
-                    history_1["default"].push('/dashboard/' + channelName);
-                    _this.setState({ channel: channelName });
-                }
-            });
-        };
-        _this.updateActiveChannel = function (channelName) {
-            _this.setState({ channel: channelName });
-        };
         _this.componentWillUnmount = function () {
             _this.state.socket.close();
         };
         _this.componentDidMount = function () {
-            _this.getChannels();
+            _this.props.fetchChannels().then(function () {
+                if (_this.props.channelNames.indexOf(_this.props.match.params.channel) > -1) {
+                    _this.setState({ channel: _this.props.match.params.channel });
+                }
+                else {
+                    history_1["default"].push('/dashboard/' + _this.props.channelNames[0]);
+                }
+            });
         };
         _this.state = {
             socket: io(),
             channel: 'general',
-            channels: []
+            channels: [],
+            redirectToChannel: false
         };
         _this.state.socket.on('connect', function () {
             console.log('Connected to websocket server [' + _this.state.socket.id + ']');
@@ -42642,17 +43078,15 @@ var PageDashboard = (function (_super) {
     }
     PageDashboard.prototype.render = function () {
         var _this = this;
-        console.log('Dashboard props', this.props);
-        console.log('Dashboard state', this.state);
         var channels = [];
         var chats = [];
-        this.state.channels.forEach(function (c) {
+        this.props.channelNames.forEach(function (c) {
             var className = 'channel';
-            _this.state.channel === c.name ?
+            _this.state.channel === c ?
                 className += ' active' : '';
-            channels.push(React.createElement(react_router_dom_1.Link, { to: "/dashboard/" + c.name, className: className, key: c['_id'], onClick: function () { return _this.updateActiveChannel(c.name); } }, c.name));
-            chats.push(React.createElement(react_router_dom_1.Route, { key: c.name, path: "/dashboard/" + c.name, render: function () {
-                    return React.createElement(Chat_1["default"], { socket: _this.state.socket, channel: c.name });
+            channels.push(React.createElement(react_router_dom_1.Link, { to: "/dashboard/" + c, className: className, key: c, onClick: function () { return _this.setState({ channel: c }); } }, c));
+            chats.push(React.createElement(react_router_dom_1.Route, { key: c, path: "/dashboard/" + c, render: function () {
+                    return React.createElement(Chat_1["default"], { socket: _this.state.socket, channel: c });
                 } }));
         });
         return (React.createElement(react_router_dom_1.Router, { history: history_1["default"] },
@@ -42665,7 +43099,19 @@ var PageDashboard = (function (_super) {
     };
     return PageDashboard;
 }(React.Component));
-exports["default"] = react_redux_1.connect(function (props) { return props; })(PageDashboard);
+exports["default"] = react_redux_1.connect(function (state) {
+    return {
+        channelNames: state.channels.map(function (c) {
+            return c.name;
+        })
+    };
+}, function (dispatch) {
+    return {
+        fetchChannels: function () {
+            return dispatch(channelsActions_1.fetchChannels());
+        }
+    };
+})(PageDashboard);
 
 
 /***/ }),
@@ -42703,14 +43149,12 @@ var PageLogin = (function (_super) {
         _this.state = {
             email: '',
             password: '',
-            error: false
         };
         return _this;
     }
     PageLogin.prototype.render = function () {
         var _this = this;
         return (React.createElement("div", { className: "page-login" },
-            this.state.error ? React.createElement("div", { className: "notification" }, this.state.error) : '',
             React.createElement("form", { onSubmit: this.handleSubmit.bind(this) },
                 React.createElement("h3", { className: "title" }, "Login"),
                 React.createElement("div", { className: "input-group" },
@@ -42728,11 +43172,11 @@ var PageLogin = (function (_super) {
             email: this.state.email,
             password: this.state.password
         }).then(function (res) {
-            _this.setState({ error: null });
+            _this.props.dispatch({ type: 'CLEAR_ERRORS' });
             _this.props.dispatch({ type: 'SET_EMAIL', data: res.data.email });
             _this.props.dispatch({ type: 'SET_AUTHORIZED', data: true });
         })["catch"](function (err) {
-            _this.setState({ error: err.response.data.error });
+            _this.props.dispatch({ type: 'ADD_ERROR', data: err.response.data.error });
         });
     };
     return PageLogin;
@@ -42822,14 +43266,14 @@ var PageRegister = (function (_super) {
             email: '',
             password: '',
             confirmPassword: '',
-            error: false
+            error: false,
+            success: false
         };
         return _this;
     }
     PageRegister.prototype.render = function () {
         var _this = this;
         return (React.createElement("div", { className: "page-login" },
-            this.state.error ? React.createElement("div", { className: "notification" }, this.state.error) : '',
             React.createElement("form", { onSubmit: this.handleSubmit.bind(this) },
                 React.createElement("h3", { className: "title" }, "Register"),
                 React.createElement("div", { className: "input-group" },
@@ -42847,22 +43291,21 @@ var PageRegister = (function (_super) {
         var _this = this;
         e.preventDefault();
         if (this.state.password !== this.state.confirmPassword)
-            return this.setState({ error: 'Passwords do not match' });
+            return this.props.dispatch({ type: 'ADD_ERROR', data: 'Passwords do not match' });
         axios_1["default"].post('/api/v1/register', {
             email: this.state.email,
             password: this.state.password
         }).then(function (res) {
-            _this.setState({ error: null });
-            _this.props.dispatch({ type: 'SET_EMAIL', data: res.data.email });
-            _this.props.dispatch({ type: 'SET_AUTHORIZED', data: true });
+            _this.props.dispatch({ type: 'CLEAR_ERRORS' });
+            _this.props.dispatch({ type: 'ADD_INFO', data: 'Check your email to verify your account.' });
             return res;
         })["catch"](function (err) {
-            _this.setState({ error: err.response.data.error });
+            _this.props.dispatch({ type: 'ADD_ERROR', data: err.response.data.error });
         });
     };
     return PageRegister;
 }(React.Component));
-exports["default"] = react_redux_1.connect()(PageRegister);
+exports["default"] = react_redux_1.connect(function (state) { return state; })(PageRegister);
 
 
 /***/ }),
@@ -42892,39 +43335,110 @@ var __extends = (this && this.__extends) || (function () {
 exports.__esModule = true;
 var React = __webpack_require__(/*! react */ "./node_modules/react/index.js");
 var react_redux_1 = __webpack_require__(/*! react-redux */ "./node_modules/react-redux/es/index.js");
+var react_router_dom_1 = __webpack_require__(/*! react-router-dom */ "./node_modules/react-router-dom/esm/react-router-dom.js");
+var history_1 = __webpack_require__(/*! ../lib/history */ "./src/lib/history.ts");
+var AccountSettings_1 = __webpack_require__(/*! ./AccountSettings */ "./src/components/AccountSettings.tsx");
+var ChannelsSettings_1 = __webpack_require__(/*! ./ChannelsSettings */ "./src/components/ChannelsSettings.tsx");
 var PageSettings = (function (_super) {
     __extends(PageSettings, _super);
     function PageSettings(props) {
         var _this = _super.call(this, props) || this;
-        _this.handleUpdateEmail = function (e) {
-            e.preventDefault();
+        _this.settings = ['account', 'channels', 'users', 'widget'];
+        _this.componentDidMount = function () {
+            if (!_this.state.currentSettingsPage) {
+                _this.setState({ currentSettingsPage: _this.settings[0] });
+                return history_1["default"].push('/settings/' + _this.settings[0]);
+            }
         };
+        var settingsPage = _this.settings.indexOf(props.match.params.setting) > -1 ?
+            props.match.params.setting : false;
         _this.state = {
             user: {
                 email: _this.props.user.email
-            }
+            },
+            currentSettingsPage: settingsPage
         };
+        console.log('Page settings state', _this.state);
         return _this;
     }
     PageSettings.prototype.render = function () {
         var _this = this;
-        return React.createElement("div", { className: "page-settings" },
-            React.createElement("div", { className: "container" },
-                React.createElement("h3", { className: "title" }, "Settings"),
-                React.createElement("div", { className: "settings-group" },
-                    React.createElement("div", { className: "subtitle" }, "Account"),
-                    React.createElement("div", null,
-                        React.createElement("form", { onSubmit: this.handleUpdateEmail },
-                            React.createElement("div", { className: "input-group" },
-                                React.createElement("label", { htmlFor: "email" }, "email"),
-                                React.createElement("input", { type: "email", id: "emal", value: this.state.user.email, onChange: function (e) { _this.setState({ user: { email: e.currentTarget.value } }); } }),
-                                React.createElement("button", { type: "submit" }, "update email"))),
-                        React.createElement("form", null,
-                            React.createElement("div", null, "password"))))));
+        var settings = [];
+        this.settings.forEach(function (s) {
+            settings.push(React.createElement(react_router_dom_1.Link, { key: s, onClick: function () { return _this.setState({ currentSettingsPage: s }); }, className: s === _this.state.currentSettingsPage ? 'tab active' : 'tab', to: '/settings/' + s }, s));
+        });
+        return React.createElement(react_router_dom_1.Router, { history: history_1["default"] },
+            React.createElement("div", { className: "page-settings" },
+                React.createElement("div", { className: "container" },
+                    React.createElement("h3", { className: "title" }, "Settings"),
+                    React.createElement("div", { className: "tabs" }, settings),
+                    this.state.currentSettingsPage ?
+                        React.createElement("div", { className: "" },
+                            React.createElement(react_router_dom_1.Switch, null,
+                                React.createElement(react_router_dom_1.Route, { path: "/settings/account", component: AccountSettings_1["default"] }),
+                                React.createElement(react_router_dom_1.Route, { path: "/settings/channels", component: ChannelsSettings_1["default"] }))) : React.createElement("div", null))));
     };
     return PageSettings;
 }(React.Component));
 exports["default"] = react_redux_1.connect(function (props) { return props; })(PageSettings);
+
+
+/***/ }),
+
+/***/ "./src/components/VerifyEmail.tsx":
+/*!****************************************!*\
+  !*** ./src/components/VerifyEmail.tsx ***!
+  \****************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    };
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+exports.__esModule = true;
+var React = __webpack_require__(/*! react */ "./node_modules/react/index.js");
+var axios_1 = __webpack_require__(/*! axios */ "./node_modules/axios/index.js");
+var react_router_dom_1 = __webpack_require__(/*! react-router-dom */ "./node_modules/react-router-dom/esm/react-router-dom.js");
+var react_redux_1 = __webpack_require__(/*! react-redux */ "./node_modules/react-redux/es/index.js");
+var VerifyEmail = (function (_super) {
+    __extends(VerifyEmail, _super);
+    function VerifyEmail(props) {
+        var _this = _super.call(this, props) || this;
+        _this.componentDidMount = function () {
+            axios_1["default"].post('/api/v1/verifyEmail', {
+                key: _this.props.match.params.key
+            }).then(function (res) {
+                _this.props.dispatch({ type: 'ADD_INFO', data: 'Email verified, please login' });
+                _this.setState({ success: true });
+                return res;
+            })["catch"](function (err) {
+                _this.props.dispatch({ type: 'ADD_ERROR', data: err.response.data.error });
+            });
+        };
+        _this.state = {
+            success: false
+        };
+        return _this;
+    }
+    VerifyEmail.prototype.render = function () {
+        return (React.createElement("div", { className: "page-verify-email" }, this.state.success ?
+            React.createElement(react_router_dom_1.Redirect, { to: '/login' }) : React.createElement("div", null)));
+    };
+    return VerifyEmail;
+}(React.Component));
+exports["default"] = react_redux_1.connect()(VerifyEmail);
 
 
 /***/ }),
@@ -43018,6 +43532,155 @@ exports["default"] = {
 
 /***/ }),
 
+/***/ "./src/reducers/channels.ts":
+/*!**********************************!*\
+  !*** ./src/reducers/channels.ts ***!
+  \**********************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+exports.__esModule = true;
+var channelsActions_1 = __webpack_require__(/*! ../actions/channelsActions */ "./src/actions/channelsActions.ts");
+var initialState = [];
+exports.channelExists = function (channels, channelName) {
+    var channel = channels.find(function (c) {
+        return c.name === channelName;
+    });
+    if (!channel)
+        return false;
+    return channel;
+};
+function default_1(state, action) {
+    if (state === void 0) { state = initialState; }
+    switch (action.type) {
+        case channelsActions_1.ADD_CHANNELS:
+            return action.data.channels;
+        case channelsActions_1.INCREMENT_CHANNEL_RETRIEVE_MESSAGES_OFFSET: {
+            var channel_1 = exports.channelExists(state, action.data.channel);
+            var increment_1 = action.data.increment;
+            if (!channel_1) {
+                console.log('Unknown channel while incrementing messages offset', action);
+                return state;
+            }
+            var newChannels_1 = state.map(function (c) {
+                if (c.name === channel_1.name) {
+                    c.retrieveMessagesOffset += increment_1;
+                }
+                return c;
+            });
+            return newChannels_1;
+        }
+        case channelsActions_1.SET_CHANNEL_FETCHING_NEW_MESSAGES:
+            var channel = exports.channelExists(state, action.data.channelName);
+            if (!channel) {
+                console.log('Unknown channel while fetching new messages', action);
+                return state;
+            }
+            var newChannels = state.map(function (c) {
+                if (c.name === action.data.channelName) {
+                    c.fetchingNewMessages = action.data.isFetching;
+                }
+                return c;
+            });
+            return newChannels;
+        case channelsActions_1.SET_CHANNEL_HAS_MORE_MESSAGES: {
+            var channel_2 = exports.channelExists(state, action.data.channelName);
+            var hasMore_1 = action.data.hasMore;
+            if (!channel_2) {
+                console.log('Unknown channel while setting hasMore messages', action);
+                return state;
+            }
+            var newChannels_2 = state.map(function (c) {
+                if (c.name === action.data.channelName)
+                    c.hasMoreMessages = hasMore_1;
+                return c;
+            });
+            return newChannels_2;
+        }
+        case channelsActions_1.ADD_RETRIEVED_CHANNEL_MESSAGES: {
+            var retrievedMessages_1 = action.data.messages;
+            var channelName_1 = action.data.channelName;
+            var channel_3 = exports.channelExists(state, channelName_1);
+            if (!channel_3) {
+                console.log('Unknown channel while adding retrieved channel messages', action);
+                return state;
+            }
+            var newChannels_3 = state.map(function (c) {
+                if (c.name === channelName_1)
+                    c.messages = retrievedMessages_1.concat(c.messages);
+                return c;
+            });
+            return newChannels_3;
+        }
+        case channelsActions_1.ADD_RECEIVED_CHANNEL_MESSAGE: {
+            var receivedMessage_1 = action.data.message;
+            var channelName_2 = action.data.channelName;
+            var channel_4 = exports.channelExists(state, channelName_2);
+            if (!channel_4) {
+                console.log('Unknown channel while adding received message', state, action);
+                return state;
+            }
+            var newChannels_4 = state.map(function (c) {
+                if (c.name === channelName_2)
+                    c.messages = c.messages.concat([receivedMessage_1]);
+                return c;
+            });
+            return newChannels_4;
+        }
+        default:
+            return initialState;
+    }
+}
+exports["default"] = default_1;
+
+
+/***/ }),
+
+/***/ "./src/reducers/notifications.ts":
+/*!***************************************!*\
+  !*** ./src/reducers/notifications.ts ***!
+  \***************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+exports.__esModule = true;
+var notificationsActions_1 = __webpack_require__(/*! ../actions/notificationsActions */ "./src/actions/notificationsActions.ts");
+var initialState = {
+    errors: [],
+    infos: []
+};
+function default_1(state, action) {
+    if (state === void 0) { state = initialState; }
+    switch (action.type) {
+        case notificationsActions_1.ADD_ERROR:
+            return Object.assign({}, state, { errors: state.errors.concat([action.data]) });
+        case notificationsActions_1.REMOVE_ERROR:
+            var newErrorsArray = state.errors.slice();
+            newErrorsArray.splice(action.data, 1);
+            return Object.assign({}, state, { errors: newErrorsArray });
+        case notificationsActions_1.CLEAR_ERRORS:
+            return Object.assign({}, state, { errors: [] });
+        case notificationsActions_1.ADD_INFO:
+            return Object.assign({}, state, { infos: state.infos.concat([action.data]) });
+        case notificationsActions_1.REMOVE_INFO:
+            var newInfosArray = state.infos.slice();
+            newInfosArray.splice(action.data, 1);
+            return Object.assign({}, state, { infos: newInfosArray });
+        case notificationsActions_1.CLEAR_INFOS:
+            return Object.assign({}, state, { infos: [] });
+        default:
+            return initialState;
+    }
+}
+exports["default"] = default_1;
+
+
+/***/ }),
+
 /***/ "./src/reducers/user.ts":
 /*!******************************!*\
   !*** ./src/reducers/user.ts ***!
@@ -43080,8 +43743,16 @@ exports["default"] = default_1;
 
 exports.__esModule = true;
 var redux_1 = __webpack_require__(/*! redux */ "./node_modules/redux/es/redux.js");
+var redux_thunk_1 = __webpack_require__(/*! redux-thunk */ "./node_modules/redux-thunk/es/index.js");
 var user_1 = __webpack_require__(/*! ./reducers/user */ "./src/reducers/user.ts");
-exports["default"] = redux_1.createStore(redux_1.combineReducers({ user: user_1["default"] }));
+var channels_1 = __webpack_require__(/*! ./reducers/channels */ "./src/reducers/channels.ts");
+var notifications_1 = __webpack_require__(/*! ./reducers/notifications */ "./src/reducers/notifications.ts");
+var rootReducer = redux_1.combineReducers({
+    user: user_1["default"],
+    channels: channels_1["default"],
+    notifications: notifications_1["default"]
+});
+exports["default"] = redux_1.createStore(rootReducer, redux_1.applyMiddleware(redux_thunk_1["default"]));
 
 
 /***/ }),

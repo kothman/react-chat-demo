@@ -6,7 +6,8 @@ interface State {
     email: string,
     password: string,
     confirmPassword: string,
-    error: string | boolean
+    error: string | boolean,
+    success: string | boolean
 }
 class PageRegister extends React.Component<any, State> {
     constructor(props: any) {
@@ -15,13 +16,13 @@ class PageRegister extends React.Component<any, State> {
             email: '',
             password: '',
             confirmPassword: '',
-            error: false
+            error: false,
+            success: false
         };
     }
     render() {
         return (
             <div className="page-login">
-                {this.state.error ? <div className="notification">{this.state.error}</div> : ''}
                 <form onSubmit={this.handleSubmit.bind(this)}>
                     <h3 className="title">Register</h3>
                     <div className="input-group">
@@ -45,19 +46,18 @@ class PageRegister extends React.Component<any, State> {
     handleSubmit(e: React.FormEvent) {
         e.preventDefault();
         if (this.state.password !== this.state.confirmPassword)
-            return this.setState({error: 'Passwords do not match'});
+            return this.props.dispatch({ type: 'ADD_ERROR', data: 'Passwords do not match'});
         axios.post('/api/v1/register', {
             email: this.state.email,
             password: this.state.password
         }).then((res) => {
-            this.setState({ error: null });
-            this.props.dispatch({ type: 'SET_EMAIL', data: res.data.email });
-            this.props.dispatch({ type: 'SET_AUTHORIZED', data: true });
+            this.props.dispatch({ type: 'CLEAR_ERRORS' });
+            this.props.dispatch({ type: 'ADD_INFO', data: 'Check your email to verify your account.'});
             return res;
         }).catch((err) => {
-            this.setState({ error: err.response.data.error });
+            this.props.dispatch({ type: 'ADD_ERROR', data: err.response.data.error });
         });
     }
 }
 
-export default connect()(PageRegister);
+export default connect(state => state)(PageRegister);

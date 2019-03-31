@@ -55,7 +55,10 @@ MongoClient.connect(env.mongodbConnectionUri, {useNewUrlParser: true}, function(
                 if (user === null || !bcrypt.compareSync(password, user.password)) {
                     return done(false);
                 }
-                let sessionUser: any = {email: user.email};
+                let sessionUser: any = {
+                    email: user.email,
+                    emailVerified: user.emailVerified
+                };
                 req.session.user = sessionUser;
                 return done(sessionUser);
             });

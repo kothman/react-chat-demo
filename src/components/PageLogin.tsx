@@ -5,7 +5,6 @@ import { connect } from 'react-redux';
 interface State {
     email: string,
     password: string,
-    error: string | boolean
 }
 
 class PageLogin extends React.Component<any, State> {
@@ -14,13 +13,11 @@ class PageLogin extends React.Component<any, State> {
         this.state = {
             email: '',
             password: '',
-            error: false
         };
     }
     render() {
         return (
             <div className="page-login">
-                { this.state.error ? <div className="notification">{this.state.error}</div> : '' }
                 <form onSubmit={this.handleSubmit.bind(this)}>
                     <h3 className="title">Login</h3>
 
@@ -44,11 +41,12 @@ class PageLogin extends React.Component<any, State> {
             email: this.state.email,
             password: this.state.password
         }).then((res) => {
-            this.setState({error: null});
+            this.props.dispatch({type: 'CLEAR_ERRORS'});
             this.props.dispatch({ type: 'SET_EMAIL', data: res.data.email });
+            // do this last since it will redirect page
             this.props.dispatch({ type: 'SET_AUTHORIZED', data: true });
         }).catch((err) => {
-            this.setState({error: err.response.data.error});
+            this.props.dispatch({type: 'ADD_ERROR', data: err.response.data.error});
         });
     }
 }

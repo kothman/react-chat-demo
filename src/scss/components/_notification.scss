@@ -1,9 +1,22 @@
-.notification {
-    background: salmon;
-    width: 100%;
-    margin-bottom: 1rem;
-    justify-content: center;
-    display: flex;
-    padding: .5rem;
-    color: white;
+.notifications {
+    .notification {
+        width: 100%;
+        justify-content: center;
+        display: flex;
+        padding: .5rem;
+        color: white;
+
+        &.notification-error {
+            background: salmon;
+        }
+        &.notification-info {
+            background: lighten(blue, 10);
+        }
+
+        .remove-notification {
+            position: absolute;
+            right: 1rem;
+            cursor: pointer;
+        }
+    }
 }

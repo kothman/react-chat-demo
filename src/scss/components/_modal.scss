@@ -45,5 +45,19 @@
                 cursor: pointer;
             }
         }
+
+        .row {
+            margin-bottom: .5rem;
+            display: flex;
+            flex: 1;
+            justify-content: space-evenly;
+
+            .column:not(:last-child) {
+                margin-right: .5rem;
+                text-align: left;
+                display: flex;
+                flex: 1;
+            }
+        }
     }
 }

@@ -4,10 +4,13 @@ import * as io from 'socket.io-client';
 import axios from 'axios';
 import { withRouter, Router, Route, Switch, Link } from 'react-router-dom';
 
+import {fetchChannels} from '../actions/channelsActions';
+
 import OnlineUsers from './OnlineUsers';
 import Chat from './Chat';
 
 import history from '../lib/history';
+import channels from '../server/routes/api/channels';
 
 interface State {
     socket: SocketIOClient.Socket,
@@ -15,7 +18,8 @@ interface State {
     channels: {
         _id: string,
         name: string
-    }[]
+    }[],
+    redirectToChannel: string | boolean
 }
 
  class PageDashboard extends React.Component<any, State> {
@@ -24,7 +28,8 @@ interface State {
         this.state = {
             socket: io(),
             channel: 'general',
-            channels: []
+            channels: [],
+            redirectToChannel: false
         };
         this.state.socket.on('connect', () => {
             console.log('Connected to websocket server [' + this.state.socket.id + ']');
@@ -33,41 +38,34 @@ interface State {
             console.log('Disconnected from websocket server, attempting reconnect');
         });
     }
-    getChannels = () => {
-        axios.get('/api/v1/channels').then((res) => {
-            this.setState({channels: res.data.channels});
-            // Once we retrieve channels, check if current url matches a channel
-            if (!this.state.channels.find((c: any) => {
-                return c.name === this.props.match.params.channel;
-            })) {
-                let channelName: string = this.state.channels[0].name;
-                history.push('/dashboard/' + channelName);
-                this.setState({channel: channelName});
-            }
-        })
-    }
-    updateActiveChannel = (channelName: string) => {
-        this.setState({channel: channelName});
-    }
     componentWillUnmount = () => {
         this.state.socket.close();
     }
     componentDidMount = () => {
-        this.getChannels();
+        this.props.fetchChannels().then(() => {
+            // set current channel to url param channel if exists, otherwise redirect
+            if(this.props.channelNames.indexOf(this.props.match.params.channel) > -1 ) {
+                this.setState({channel: this.props.match.params.channel});
+            } else {
+                history.push('/dashboard/' + this.props.channelNames[0]);
+            }
+        });
     }
     render() {
-        console.log('Dashboard props', this.props);
-        console.log('Dashboard state', this.state);
         let channels: JSX.Element[] = [];
         let chats: JSX.Element[] = [];
-        this.state.channels.forEach((c) => {
+        this.props.channelNames.forEach((c: string) => {
             let className: string = 'channel';
-            this.state.channel === c.name ?
+            this.state.channel === c ?
                 className += ' active': '';
-            channels.push(<Link to={"/dashboard/" + c.name} className={className} key={c['_id']} onClick={() => this.updateActiveChannel(c.name)}>{c.name}</Link>);
+            channels.push(<Link to={"/dashboard/" + c}
+                                className={className}
+                                key={c}
+                                onClick={() => this.setState({channel: c})}>
+                            {c}</Link>);
             chats.push(
-                <Route key={c.name} path={"/dashboard/" + c.name} render={ () =>
-                    <Chat socket={this.state.socket} channel={c.name}/>
+                <Route key={c} path={"/dashboard/" + c} render={ () =>
+                    <Chat socket={this.state.socket} channel={c}/>
                 }/>
             );
         });
@@ -91,4 +89,16 @@ interface State {
         );
     }
 }
-export default connect(props => props)(PageDashboard);
+export default connect((state: any) => {
+    return {
+        channelNames: state.channels.map( (c: any) => {
+            return c.name;
+        })
+    };
+}, (dispatch: any) =>  {
+    return {
+        fetchChannels: () => {
+            return dispatch(fetchChannels())
+        }
+    };
+})(PageDashboard);

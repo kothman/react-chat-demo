@@ -15,6 +15,37 @@
             line-height: 1.5rem;
             margin-bottom: 2rem;
             border-bottom: 1px solid black;
+
+            & + .tabs {
+                margin-top: -2rem;
+            }
+        }
+
+        .tabs {
+            margin-bottom: 2rem;
+            display: flex;
+            justify-content: flex-start;
+
+            .tab {
+                padding: 1rem;
+                background: black;
+                border: 1px solid gray;
+                color: white;
+                border-top: none;
+                cursor: pointer;
+                text-decoration: none;
+
+               &:hover {
+                    background: lighten(black, 20);
+                    border: 1px solid lightgray;
+                    border-top: none;
+                }
+                &.active {
+                    background: lighten(black, 40);
+                    border: 1px solid white;
+                    border-top: none;
+                }
+            }
         }
 
         .subtitle {
@@ -27,6 +58,31 @@
             margin-bottom: .5rem;
             padding-left: 1rem;
             border-left: 4px solid black;
+        }
+
+        .channels-settings {
+            .channels {
+                border: 1px solid gray;
+                background: lightgray;
+
+                .channel:not(:last-child) {
+                    border-bottom: 1px solid gray;
+                }
+                .channel {
+                    padding: 1rem;
+                    display: flex;
+                    flex: 1;
+                    justify-content: space-between;
+                    align-items: center;
+                    &:hover {
+                        background: darken(lightgray, 20);
+                    }
+                    .delete {
+                        cursor: pointer;
+                        
+                    }
+                }
+            }
         }
     }
 
