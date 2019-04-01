@@ -11,6 +11,7 @@ import PageRegister from './PageRegister';
 import PageDashboard from './PageDashboard';
 import PageSettings from './PageSettings';
 import VerifyEmail from './VerifyEmail';
+import LoadingFadeIn from './LoadingFadeIn';
 import Page404 from './Page404';
 
 interface State {
@@ -31,6 +32,7 @@ class App extends React.Component<any, State> {
     checkIfLoggedIn() {
         return axios.get('/api/v1/user').then((response) => {
             this.props.dispatch({ type: 'SET_EMAIL', data: response.data.email });
+            this.props.dispatch({ type: 'SET_NAME', data: response.data.name });
             this.props.dispatch({ type: 'SET_AUTHORIZED', data: true });
         }).catch(() => {});
     }
@@ -49,6 +51,7 @@ class App extends React.Component<any, State> {
 
         return (
         <Router>
+            <LoadingFadeIn active={!this.state.finishedLoading} />
             {this.state.finishedLoading ? 
                 <div id="react-app">
                     <Navbar />
@@ -56,23 +59,7 @@ class App extends React.Component<any, State> {
                     <Switch>
                         {availableViews}
                     </Switch>
-                </div> :
-                <div className="loading loading-fullscreen">
-                    <div className="sk-fading-circle">
-                        <div className="sk-circle1 sk-circle"></div>
-                        <div className="sk-circle2 sk-circle"></div>
-                        <div className="sk-circle3 sk-circle"></div>
-                        <div className="sk-circle4 sk-circle"></div>
-                        <div className="sk-circle5 sk-circle"></div>
-                        <div className="sk-circle6 sk-circle"></div>
-                        <div className="sk-circle7 sk-circle"></div>
-                        <div className="sk-circle8 sk-circle"></div>
-                        <div className="sk-circle9 sk-circle"></div>
-                        <div className="sk-circle10 sk-circle"></div>
-                        <div className="sk-circle11 sk-circle"></div>
-                        <div className="sk-circle12 sk-circle"></div>
-                    </div>
-                </div>
+                </div> : <div></div>
             }
             
         </Router>

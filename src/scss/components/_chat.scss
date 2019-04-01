@@ -3,13 +3,15 @@
     flex-direction: column;
     flex: 1 0 auto;
     height: calc(100% - #{$online-users-height});
-
+    position: relative;
+    
     .chat-history {
         display: flex;
         flex-direction: column;
         flex: 1 0 auto;
         overflow-y: auto;
         height: $chat-history-height;
+        position: relative;
         
         .message {
             border-left: 4px solid white;

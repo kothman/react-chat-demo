@@ -3,6 +3,8 @@ import axios from 'axios';
 import {connect} from 'react-redux';
 
 import Modal from './Modal';
+import LoadingFadeIn from './LoadingFadeIn';
+
 import modalHelpers from '../lib/modalHelpers';
 import { retrieveChannelMessages, incrementChannelRetrieveMessagesOffset, addReceivedChannelMessage } from '../actions/channelsActions';
 import { Channel, Message } from '../reducers/channels';
@@ -175,14 +177,16 @@ class Chat extends React.Component<Props | any, State> {
         
         return (
             <div className="chat-container">
+                <LoadingFadeIn active={this.props.channels.length === 0} />
                 {modal}
                 <div id="chat-history" className="chat-history" ref={this.ref}>
                     { this.props.currentChannel.fetchingNewMessages ?
                         <div className="message message-loading">
-                            <div className="message-content">Loading more messages...</div>
+                            <div className="message-content"><span>Loading more messages...</span></div>
                         </div> : <div></div>
                     }
                     {messages}
+                    <LoadingFadeIn active={messages.length===0} />
                 </div>
                 <form className="chat-input" onSubmit={this.handleSendMessage}>
                     <textarea value={this.state.textareaValue} disabled={!this.state.chatInputEnabled} id="chat-input-textarea" onKeyPress={this.handleKeyPress} onChange={this.handleTextareaChange} />

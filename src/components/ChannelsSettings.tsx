@@ -5,6 +5,7 @@ import {Channel} from '../reducers/channels';
 import {fetchChannels, deleteChannel, addChannel} from '../actions/channelsActions';
 
 import Modal from './Modal';
+import LoadingSpinner from './LoadingSpinner';
 
 interface State {
     promptDeleteChannel: string | boolean,
@@ -106,7 +107,7 @@ class ChannelsSettings extends React.Component<any, State> {
                     <i onClick={() => this.setState({promptNewChannel: true})}
                        className="material-icons add-channel-icon">add_box</i></div>
                 <div className="channels">
-                    {channels}
+                    {channels.length > 0 ? channels : <LoadingSpinner />}
                 </div>
             </div>
         </div>;
@@ -115,7 +116,13 @@ class ChannelsSettings extends React.Component<any, State> {
 
 export default connect((state: any) => {
     return {
-        channels: () => { return state.channels }
+        channels: () => {
+            return state.channels.sort((a: Channel, b: Channel) => {
+                let nameA: string = a.name.toUpperCase();
+                let nameB: string = b.name.toUpperCase();
+                return (nameA < nameB) ? -1 : (nameB < nameA) ? 1 : 0;
+            });
+        }
     };
 }, (dispatch) => {
     return {

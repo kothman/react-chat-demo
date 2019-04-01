@@ -42353,6 +42353,41 @@ exports.clearInfos = function () {
 
 /***/ }),
 
+/***/ "./src/actions/userActions.ts":
+/*!************************************!*\
+  !*** ./src/actions/userActions.ts ***!
+  \************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+exports.__esModule = true;
+exports.SET_AUTHORIZED = 'SET_AUTHORIZED';
+exports.SET_EMAIL = 'SET_EMAIL';
+exports.SET_NAME = 'SET_NAME';
+exports.setAuthorized = function (authorized) {
+    return {
+        type: exports.SET_AUTHORIZED,
+        data: authorized
+    };
+};
+exports.setEmail = function (email) {
+    return {
+        type: exports.SET_EMAIL,
+        data: email
+    };
+};
+exports.setName = function (name) {
+    return {
+        type: exports.SET_NAME,
+        data: name
+    };
+};
+
+
+/***/ }),
+
 /***/ "./src/components/AccountSettings.tsx":
 /*!********************************************!*\
   !*** ./src/components/AccountSettings.tsx ***!
@@ -42385,8 +42420,14 @@ var AccountSettings = (function (_super) {
         _this.handleUpdateEmail = function (e) {
             e.preventDefault();
         };
+        _this.handleUpdateName = function (e) {
+            e.preventDefault();
+        };
         _this.state = {
-            user: { email: props.user.email }
+            user: {
+                email: props.user.email,
+                name: props.user.name
+            }
         };
         return _this;
     }
@@ -42394,15 +42435,36 @@ var AccountSettings = (function (_super) {
         var _this = this;
         return React.createElement("div", { className: "account-settings" },
             React.createElement("div", { className: "settings-group" },
-                React.createElement("div", { className: "subtitle" }, "Change Email"),
-                React.createElement("div", null,
-                    React.createElement("form", { onSubmit: this.handleUpdateEmail },
-                        React.createElement("div", { className: "input-group" },
-                            React.createElement("label", { htmlFor: "email" }, "email"),
-                            React.createElement("input", { type: "email", id: "emal", value: this.state.user.email, onChange: function (e) { _this.setState({ user: { email: e.currentTarget.value } }); } }),
-                            React.createElement("button", { type: "submit" }, "update email"))),
-                    React.createElement("form", null,
-                        React.createElement("div", null, "password")))));
+                React.createElement("div", { className: "subtitle" }, "Name"),
+                React.createElement("form", { onSubmit: this.handleUpdateName },
+                    React.createElement("div", { className: "input-group" },
+                        React.createElement("input", { type: "user-name", value: this.state.user.name, placeholder: "Jane Doe", onChange: function (e) {
+                                _this.setState({ user: { email: _this.state.user.email, name: e.target.value } });
+                            } }),
+                        React.createElement("button", { type: "submit" }, "update name")))),
+            React.createElement("div", { className: "settings-group" },
+                React.createElement("div", { className: "subtitle" }, "Email"),
+                React.createElement("form", { onSubmit: this.handleUpdateEmail },
+                    React.createElement("div", { className: "input-group" },
+                        React.createElement("input", { type: "email", value: this.state.user.email, onChange: function (e) {
+                                _this.setState({ user: { email: e.target.value, name: _this.state.user.name } });
+                            } }),
+                        React.createElement("button", { type: "submit" }, "update email")))),
+            React.createElement("div", { className: "settings-group" },
+                React.createElement("div", { className: "subtitle" }, "Change Password"),
+                React.createElement("form", null,
+                    React.createElement("div", { className: "input-group" },
+                        React.createElement("label", null, "current password"),
+                        React.createElement("input", { type: "password" })),
+                    React.createElement("div", { className: "input-group" },
+                        React.createElement("label", null, "new password"),
+                        React.createElement("input", { type: "password" })),
+                    React.createElement("div", { className: "input-group" },
+                        React.createElement("label", null, "confirm new password"),
+                        React.createElement("input", { type: "password" })),
+                    React.createElement("div", { className: "input-group" },
+                        React.createElement("span", null),
+                        React.createElement("button", { type: "submit" }, "update password")))));
     };
     return AccountSettings;
 }(React.Component));
@@ -42446,6 +42508,7 @@ var PageRegister_1 = __webpack_require__(/*! ./PageRegister */ "./src/components
 var PageDashboard_1 = __webpack_require__(/*! ./PageDashboard */ "./src/components/PageDashboard.tsx");
 var PageSettings_1 = __webpack_require__(/*! ./PageSettings */ "./src/components/PageSettings.tsx");
 var VerifyEmail_1 = __webpack_require__(/*! ./VerifyEmail */ "./src/components/VerifyEmail.tsx");
+var LoadingFadeIn_1 = __webpack_require__(/*! ./LoadingFadeIn */ "./src/components/LoadingFadeIn.tsx");
 var Page404_1 = __webpack_require__(/*! ./Page404 */ "./src/components/Page404.tsx");
 var App = (function (_super) {
     __extends(App, _super);
@@ -42464,6 +42527,7 @@ var App = (function (_super) {
         var _this = this;
         return axios_1["default"].get('/api/v1/user').then(function (response) {
             _this.props.dispatch({ type: 'SET_EMAIL', data: response.data.email });
+            _this.props.dispatch({ type: 'SET_NAME', data: response.data.name });
             _this.props.dispatch({ type: 'SET_AUTHORIZED', data: true });
         })["catch"](function () { });
     };
@@ -42480,25 +42544,13 @@ var App = (function (_super) {
         }
         availableViews.push(React.createElement(react_router_dom_1.Route, { exact: true, path: "/verifyEmail/:key", key: "page-verify-email", component: VerifyEmail_1["default"] }));
         availableViews.push(React.createElement(react_router_dom_1.Route, { key: "catch-all", component: Page404_1["default"] }));
-        return (React.createElement(react_router_dom_1.BrowserRouter, null, this.state.finishedLoading ?
-            React.createElement("div", { id: "react-app" },
-                React.createElement(Navbar_1["default"], null),
-                React.createElement(Notifications_1["default"], null),
-                React.createElement(react_router_dom_1.Switch, null, availableViews)) :
-            React.createElement("div", { className: "loading loading-fullscreen" },
-                React.createElement("div", { className: "sk-fading-circle" },
-                    React.createElement("div", { className: "sk-circle1 sk-circle" }),
-                    React.createElement("div", { className: "sk-circle2 sk-circle" }),
-                    React.createElement("div", { className: "sk-circle3 sk-circle" }),
-                    React.createElement("div", { className: "sk-circle4 sk-circle" }),
-                    React.createElement("div", { className: "sk-circle5 sk-circle" }),
-                    React.createElement("div", { className: "sk-circle6 sk-circle" }),
-                    React.createElement("div", { className: "sk-circle7 sk-circle" }),
-                    React.createElement("div", { className: "sk-circle8 sk-circle" }),
-                    React.createElement("div", { className: "sk-circle9 sk-circle" }),
-                    React.createElement("div", { className: "sk-circle10 sk-circle" }),
-                    React.createElement("div", { className: "sk-circle11 sk-circle" }),
-                    React.createElement("div", { className: "sk-circle12 sk-circle" })))));
+        return (React.createElement(react_router_dom_1.BrowserRouter, null,
+            React.createElement(LoadingFadeIn_1["default"], { active: !this.state.finishedLoading }),
+            this.state.finishedLoading ?
+                React.createElement("div", { id: "react-app" },
+                    React.createElement(Navbar_1["default"], null),
+                    React.createElement(Notifications_1["default"], null),
+                    React.createElement(react_router_dom_1.Switch, null, availableViews)) : React.createElement("div", null)));
     };
     return App;
 }(React.Component));
@@ -42534,6 +42586,7 @@ var React = __webpack_require__(/*! react */ "./node_modules/react/index.js");
 var react_redux_1 = __webpack_require__(/*! react-redux */ "./node_modules/react-redux/es/index.js");
 var channelsActions_1 = __webpack_require__(/*! ../actions/channelsActions */ "./src/actions/channelsActions.ts");
 var Modal_1 = __webpack_require__(/*! ./Modal */ "./src/components/Modal.tsx");
+var LoadingSpinner_1 = __webpack_require__(/*! ./LoadingSpinner */ "./src/components/LoadingSpinner.tsx");
 var ChannelsSettings = (function (_super) {
     __extends(ChannelsSettings, _super);
     function ChannelsSettings(props) {
@@ -42608,13 +42661,19 @@ var ChannelsSettings = (function (_super) {
                 React.createElement("div", { className: "subtitle" },
                     "Add/Remove Channels",
                     React.createElement("i", { onClick: function () { return _this.setState({ promptNewChannel: true }); }, className: "material-icons add-channel-icon" }, "add_box")),
-                React.createElement("div", { className: "channels" }, channels)));
+                React.createElement("div", { className: "channels" }, channels.length > 0 ? channels : React.createElement(LoadingSpinner_1["default"], null))));
     };
     return ChannelsSettings;
 }(React.Component));
 exports["default"] = react_redux_1.connect(function (state) {
     return {
-        channels: function () { return state.channels; }
+        channels: function () {
+            return state.channels.sort(function (a, b) {
+                var nameA = a.name.toUpperCase();
+                var nameB = b.name.toUpperCase();
+                return (nameA < nameB) ? -1 : (nameB < nameA) ? 1 : 0;
+            });
+        }
     };
 }, function (dispatch) {
     return {
@@ -42654,6 +42713,7 @@ var React = __webpack_require__(/*! react */ "./node_modules/react/index.js");
 var axios_1 = __webpack_require__(/*! axios */ "./node_modules/axios/index.js");
 var react_redux_1 = __webpack_require__(/*! react-redux */ "./node_modules/react-redux/es/index.js");
 var Modal_1 = __webpack_require__(/*! ./Modal */ "./src/components/Modal.tsx");
+var LoadingFadeIn_1 = __webpack_require__(/*! ./LoadingFadeIn */ "./src/components/LoadingFadeIn.tsx");
 var channelsActions_1 = __webpack_require__(/*! ../actions/channelsActions */ "./src/actions/channelsActions.ts");
 var Chat = (function (_super) {
     __extends(Chat, _super);
@@ -42797,12 +42857,15 @@ var Chat = (function (_super) {
             });
         }
         return (React.createElement("div", { className: "chat-container" },
+            React.createElement(LoadingFadeIn_1["default"], { active: this.props.channels.length === 0 }),
             modal,
             React.createElement("div", { id: "chat-history", className: "chat-history", ref: this.ref },
                 this.props.currentChannel.fetchingNewMessages ?
                     React.createElement("div", { className: "message message-loading" },
-                        React.createElement("div", { className: "message-content" }, "Loading more messages...")) : React.createElement("div", null),
-                messages),
+                        React.createElement("div", { className: "message-content" },
+                            React.createElement("span", null, "Loading more messages..."))) : React.createElement("div", null),
+                messages,
+                React.createElement(LoadingFadeIn_1["default"], { active: messages.length === 0 })),
             React.createElement("form", { className: "chat-input", onSubmit: this.handleSendMessage },
                 React.createElement("textarea", { value: this.state.textareaValue, disabled: !this.state.chatInputEnabled, id: "chat-input-textarea", onKeyPress: this.handleKeyPress, onChange: this.handleTextareaChange }),
                 React.createElement("button", { disabled: !this.state.chatInputEnabled, type: "submit", className: "chat-send" }, "send"))));
@@ -42829,6 +42892,99 @@ exports["default"] = react_redux_1.connect(function (state, ownProps) {
         }
     };
 })(Chat);
+
+
+/***/ }),
+
+/***/ "./src/components/LoadingFadeIn.tsx":
+/*!******************************************!*\
+  !*** ./src/components/LoadingFadeIn.tsx ***!
+  \******************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    };
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+exports.__esModule = true;
+var React = __webpack_require__(/*! react */ "./node_modules/react/index.js");
+var LoadingFadeIn = (function (_super) {
+    __extends(LoadingFadeIn, _super);
+    function LoadingFadeIn() {
+        return _super !== null && _super.apply(this, arguments) || this;
+    }
+    LoadingFadeIn.prototype.render = function () {
+        var className = "loading loading-fade-in";
+        className += this.props.active ? ' active' : '';
+        return React.createElement("div", { className: className }, this.props.children);
+    };
+    return LoadingFadeIn;
+}(React.Component));
+exports["default"] = LoadingFadeIn;
+
+
+/***/ }),
+
+/***/ "./src/components/LoadingSpinner.tsx":
+/*!*******************************************!*\
+  !*** ./src/components/LoadingSpinner.tsx ***!
+  \*******************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    };
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+exports.__esModule = true;
+var React = __webpack_require__(/*! react */ "./node_modules/react/index.js");
+var LoadingSpinner = (function (_super) {
+    __extends(LoadingSpinner, _super);
+    function LoadingSpinner() {
+        return _super !== null && _super.apply(this, arguments) || this;
+    }
+    LoadingSpinner.prototype.render = function () {
+        return React.createElement("div", { className: "loading" },
+            React.createElement("div", { className: "sk-fading-circle" },
+                React.createElement("div", { className: "sk-circle1 sk-circle" }),
+                React.createElement("div", { className: "sk-circle2 sk-circle" }),
+                React.createElement("div", { className: "sk-circle3 sk-circle" }),
+                React.createElement("div", { className: "sk-circle4 sk-circle" }),
+                React.createElement("div", { className: "sk-circle5 sk-circle" }),
+                React.createElement("div", { className: "sk-circle6 sk-circle" }),
+                React.createElement("div", { className: "sk-circle7 sk-circle" }),
+                React.createElement("div", { className: "sk-circle8 sk-circle" }),
+                React.createElement("div", { className: "sk-circle9 sk-circle" }),
+                React.createElement("div", { className: "sk-circle10 sk-circle" }),
+                React.createElement("div", { className: "sk-circle11 sk-circle" }),
+                React.createElement("div", { className: "sk-circle12 sk-circle" })));
+    };
+    return LoadingSpinner;
+}(React.Component));
+exports["default"] = LoadingSpinner;
 
 
 /***/ }),
@@ -43161,6 +43317,7 @@ var react_router_dom_1 = __webpack_require__(/*! react-router-dom */ "./node_mod
 var channelsActions_1 = __webpack_require__(/*! ../actions/channelsActions */ "./src/actions/channelsActions.ts");
 var OnlineUsers_1 = __webpack_require__(/*! ./OnlineUsers */ "./src/components/OnlineUsers.tsx");
 var Chat_1 = __webpack_require__(/*! ./Chat */ "./src/components/Chat.tsx");
+var LoadingFadeIn_1 = __webpack_require__(/*! ./LoadingFadeIn */ "./src/components/LoadingFadeIn.tsx");
 var history_1 = __webpack_require__(/*! ../lib/history */ "./src/lib/history.ts");
 var PageDashboard = (function (_super) {
     __extends(PageDashboard, _super);
@@ -43182,7 +43339,7 @@ var PageDashboard = (function (_super) {
         };
         _this.state = {
             socket: io(),
-            channel: 'general',
+            channel: '',
             channels: [],
             redirectToChannel: false
         };
@@ -43210,7 +43367,9 @@ var PageDashboard = (function (_super) {
         return (React.createElement(react_router_dom_1.Router, { history: history_1["default"] },
             React.createElement("div", { className: "page-dashboard" },
                 React.createElement("div", { className: "sidebar" },
-                    React.createElement("div", { className: "channels" }, channels)),
+                    React.createElement("div", { className: "channels" },
+                        React.createElement(LoadingFadeIn_1["default"], { active: channels.length === 0 }),
+                        channels)),
                 React.createElement("div", { className: "content" },
                     React.createElement(OnlineUsers_1["default"], { socket: this.state.socket }),
                     React.createElement(react_router_dom_1.Switch, null, chats)))));
@@ -43221,6 +43380,10 @@ exports["default"] = react_redux_1.connect(function (state) {
     return {
         channelNames: state.channels.map(function (c) {
             return c.name;
+        }).sort(function (a, b) {
+            var nameA = a.toUpperCase();
+            var nameB = b.toUpperCase();
+            return (nameA < nameB) ? -1 : (nameB < nameA) ? 1 : 0;
         })
     };
 }, function (dispatch) {
@@ -43781,18 +43944,15 @@ exports["default"] = default_1;
 "use strict";
 
 exports.__esModule = true;
+var userActions_1 = __webpack_require__(/*! ../actions/userActions */ "./src/actions/userActions.ts");
 var initialState = {
     authorized: false,
     email: false
 };
-var Actions = {
-    SET_AUTHORIZED: 'SET_AUTHORIZED',
-    SET_EMAIL: 'SET_EMAIL'
-};
 function default_1(state, action) {
     if (state === void 0) { state = initialState; }
     switch (action.type) {
-        case Actions.SET_AUTHORIZED:
+        case userActions_1.SET_AUTHORIZED:
             if (typeof action.data !== 'boolean') {
                 console.error('Data must be boolean for SET_AUTHORIZED action');
                 return state;
@@ -43800,8 +43960,10 @@ function default_1(state, action) {
             if (action.data === false)
                 return Object.assign({}, state, { authorized: false, email: false });
             return Object.assign({}, state, { authorized: action.data });
-        case Actions.SET_EMAIL:
+        case userActions_1.SET_EMAIL:
             return Object.assign({}, state, { email: action.data });
+        case userActions_1.SET_NAME:
+            return Object.assign({}, state, { name: action.data });
         default:
             return state;
     }

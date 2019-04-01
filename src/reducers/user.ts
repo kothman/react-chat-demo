@@ -1,3 +1,5 @@
+import {SET_AUTHORIZED, SET_EMAIL, SET_NAME} from '../actions/userActions';
+
 interface State {
     authorized: boolean,
     email: string | boolean
@@ -12,14 +14,10 @@ let initialState : State = {
     email: false
 }
 
-let Actions = {
-    SET_AUTHORIZED: 'SET_AUTHORIZED',
-    SET_EMAIL: 'SET_EMAIL'
-}
 
 export default function(state: State = initialState, action: Action) {
     switch (action.type) {
-        case Actions.SET_AUTHORIZED:
+        case SET_AUTHORIZED:
             if (typeof action.data !== 'boolean') {
                 console.error('Data must be boolean for SET_AUTHORIZED action');
                 return state;
@@ -27,8 +25,10 @@ export default function(state: State = initialState, action: Action) {
             if (action.data === false)
                 return Object.assign({}, state, {authorized: false, email: false});
             return Object.assign({}, state, {authorized: action.data});
-        case Actions.SET_EMAIL:
+        case SET_EMAIL:
             return Object.assign({}, state, {email: action.data});
+        case SET_NAME:
+            return Object.assign({}, state, {name: action.data});
         default:
             return state;
     }

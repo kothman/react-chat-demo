@@ -8,6 +8,7 @@ import {fetchChannels} from '../actions/channelsActions';
 
 import OnlineUsers from './OnlineUsers';
 import Chat from './Chat';
+import LoadingFadeIn from './LoadingFadeIn';
 
 import history from '../lib/history';
 import channels from '../server/routes/api/channels';
@@ -27,7 +28,7 @@ interface State {
         super(props);
         this.state = {
             socket: io(),
-            channel: 'general',
+            channel: '',
             channels: [],
             redirectToChannel: false
         };
@@ -76,6 +77,7 @@ interface State {
                 <div className="page-dashboard">
                     <div className="sidebar">
                         <div className="channels">
+                            <LoadingFadeIn active={channels.length === 0} />
                             {channels}
                         </div>
                     </div>
@@ -94,6 +96,10 @@ export default connect((state: any) => {
     return {
         channelNames: state.channels.map( (c: any) => {
             return c.name;
+        }).sort((a: string, b: string) => {
+            let nameA: string = a.toUpperCase();
+            let nameB: string = b.toUpperCase();
+            return (nameA < nameB) ? -1 : (nameB < nameA) ? 1 : 0;
         })
     };
 }, (dispatch: any) =>  {

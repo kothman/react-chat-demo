@@ -57,7 +57,8 @@ MongoClient.connect(env.mongodbConnectionUri, {useNewUrlParser: true}, function(
                 }
                 let sessionUser: any = {
                     email: user.email,
-                    emailVerified: user.emailVerified
+                    emailVerified: user.emailVerified,
+                    name: user.name
                 };
                 req.session.user = sessionUser;
                 return done(sessionUser);
