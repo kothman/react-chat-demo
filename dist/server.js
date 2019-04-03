@@ -97,7 +97,8 @@ module.exports = {
     // https://docs.mongodb.com/manual/reference/connection-string/
     mongodbConnectionUri: process.env.MONGODB_URI,
     mailgunApiKey: process.env.MAILGUN_API_KEY,
-    mailgunDomain: process.env.MAILGUN_DOMAIN
+    mailgunDomain: process.env.MAILGUN_DOMAIN,
+    baseUrl: process.env.BASE_URL ? process.env.BASE_URL : 'http://localhost:5000'
 }
 
 
@@ -372,6 +373,15 @@ function default_1(app) {
                 } });
         });
     });
+    app.post('/api/v1/user/update/email', function (req, res) {
+    });
+    app.post('/api/v1/user/update/name', function (req, res) {
+    });
+    app.post('/api/v1/user/update/email', function (req, res) {
+    });
+    app.post('/api/v1/user/reset_password', function (req, res) {
+    });
+    app.post('/api/v1/user/resend_email_verification');
 }
 exports["default"] = default_1;
 
@@ -389,11 +399,38 @@ exports["default"] = default_1;
 
 exports.__esModule = true;
 var index_1 = __webpack_require__(/*! ./api/index */ "./src/server/routes/api/index.ts");
+var widget_1 = __webpack_require__(/*! ./widget */ "./src/server/routes/widget.ts");
 function default_1(app) {
+    widget_1["default"](app);
     index_1["default"](app);
 }
 exports["default"] = default_1;
 
+
+/***/ }),
+
+/***/ "./src/server/routes/widget.ts":
+/*!*************************************!*\
+  !*** ./src/server/routes/widget.ts ***!
+  \*************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+/* WEBPACK VAR INJECTION */(function(__dirname) {
+exports.__esModule = true;
+var path = __webpack_require__(/*! path */ "path");
+function default_1(app) {
+    app.get('/widget', function (req, res) {
+        res.render(path.resolve(__dirname, '../../../dist/public/widget/index.html'));
+    });
+    app.get('/widget/demo', function (req, res) {
+        res.render(path.resolve(__dirname, '../../../dist/public/widget/demo.html'));
+    });
+}
+exports["default"] = default_1;
+
+/* WEBPACK VAR INJECTION */}.call(this, "src/server/routes"))
 
 /***/ }),
 

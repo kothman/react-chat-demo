@@ -20,4 +20,17 @@ export default function(app: any) {
                 }})
             });
     });
+    app.post('/api/v1/user/update/email', function(req: any, res: any) {
+
+    });
+    app.post('/api/v1/user/update/name', function (req: any, res: any) {
+
+    });
+    app.post('/api/v1/user/update/email', function (req: any, res: any) {
+
+    });
+    app.post('/api/v1/user/reset_password', function(req: any, res: any) {
+
+    });
+    app.post('/api/v1/user/resend_email_verification')
 }

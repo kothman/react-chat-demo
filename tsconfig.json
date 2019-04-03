@@ -9,5 +9,11 @@
     },
     "exclude": [
         "node_modules"
+    ],
+    "files": [
+        "src/index.tsx"
+    ],
+    "include": [
+        "**/*"
     ]
 }

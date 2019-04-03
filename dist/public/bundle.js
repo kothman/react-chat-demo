@@ -33609,7 +33609,7 @@ function warning(message) {
 /*!***************************************************************!*\
   !*** ./node_modules/react-router-dom/esm/react-router-dom.js ***!
   \***************************************************************/
-/*! exports provided: MemoryRouter, Prompt, Redirect, Route, Router, StaticRouter, Switch, generatePath, matchPath, withRouter, __RouterContext, BrowserRouter, HashRouter, Link, NavLink */
+/*! exports provided: BrowserRouter, HashRouter, Link, NavLink, MemoryRouter, Prompt, Redirect, Route, Router, StaticRouter, Switch, generatePath, matchPath, withRouter, __RouterContext */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -42363,6 +42363,7 @@ exports.clearInfos = function () {
 "use strict";
 
 exports.__esModule = true;
+var axios_1 = __webpack_require__(/*! axios */ "./node_modules/axios/index.js");
 exports.SET_AUTHORIZED = 'SET_AUTHORIZED';
 exports.SET_EMAIL = 'SET_EMAIL';
 exports.SET_NAME = 'SET_NAME';
@@ -42382,6 +42383,27 @@ exports.setName = function (name) {
     return {
         type: exports.SET_NAME,
         data: name
+    };
+};
+exports.updateName = function (name) {
+    return function (dispatch) {
+        return axios_1["default"].post('/api/v1/user/update', {}).then(function (res) {
+        })["catch"](function (err) {
+        });
+    };
+};
+exports.updateEmail = function (email) {
+    return function (dispatch) {
+        return axios_1["default"].post('/api/v1/user/update', {}).then(function (res) {
+        })["catch"](function (err) {
+        });
+    };
+};
+exports.updatePassword = function (password) {
+    return function (dispatch) {
+        return axios_1["default"].post('/api/v1/user/update', {}).then(function (res) {
+        })["catch"](function (err) {
+        });
     };
 };
 
@@ -42413,6 +42435,7 @@ var __extends = (this && this.__extends) || (function () {
 exports.__esModule = true;
 var React = __webpack_require__(/*! react */ "./node_modules/react/index.js");
 var react_redux_1 = __webpack_require__(/*! react-redux */ "./node_modules/react-redux/es/index.js");
+var userActions_1 = __webpack_require__(/*! ../actions/userActions */ "./src/actions/userActions.ts");
 var AccountSettings = (function (_super) {
     __extends(AccountSettings, _super);
     function AccountSettings(props) {
@@ -42468,7 +42491,17 @@ var AccountSettings = (function (_super) {
     };
     return AccountSettings;
 }(React.Component));
-exports["default"] = react_redux_1.connect(function (props) { return props; })(AccountSettings);
+exports["default"] = react_redux_1.connect(function (props) {
+    return {
+        user: props.user,
+    };
+}, function (dispatch) {
+    return {
+        updateName: function (name) {
+            return dispatch(userActions_1.updateName(name));
+        }
+    };
+})(AccountSettings);
 
 
 /***/ }),

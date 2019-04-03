@@ -1,6 +1,8 @@
 import * as React from 'react';
 import { connect } from 'react-redux';
 
+import { updateName } from '../actions/userActions';
+
 interface State {
     user: {
         email: string,
@@ -75,4 +77,14 @@ class AccountSettings extends React.Component<any, State> {
     }
 }
 
-export default connect(props => props)(AccountSettings);
+export default connect((props: any) => {
+    return {
+        user: props.user,
+    };
+}, (dispatch: any) => {
+    return {
+        updateName: (name: string) => {
+            return dispatch(updateName(name));
+        }
+    };
+})(AccountSettings);

@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+        <title>React Chat Widget Demo</title>
+        <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+        <link rel="stylesheet" href="/widget/widget.css" >
+    </head>
+
+    <body>
+        <div id="kothman-react-chat-widget-container" class="loading" ></div>
+        <script src="/widget/embed-widget.js"></script>
+        <script>
+            ReactChatWidget.updateProps({
+                id: 'YOUR_ID',
+                email: 'abkothman@gmail.com',
+                emailHash: 'email_hash'
+            });
+            ReactChatWidget.render('#kothman-react-chat-widget-container');
+        </script>
+    </body>
+    <style>
+    </style>
+
+</html>

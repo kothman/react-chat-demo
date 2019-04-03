@@ -1,0 +1,67 @@
+* {
+    box-sizing: border-box;
+}
+
+html, body, #app, #react-app {
+    height: 100%;
+    width: 300px;
+    max-width: 100%;
+    background: transparent;
+    padding: 0;
+    margin: 0;
+    color: white;
+    position: relative;
+    display: flex;
+    justify-content: flex-end;
+    align-items: flex-end;
+}
+#widget-closed {
+    border: none;
+    background: coral;
+    width: 60px;
+    height: 60px;
+    max-width: 100%;
+    max-height: 100%;
+    border-radius: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    cursor: pointer;
+    transition: all .2s ease-in-out;
+
+    &:hover {
+        background: darken(coral, 10);
+    }
+}
+
+#widget-open {
+    height: 100%;
+    width: 300px;
+    border-left: 1px solid gray;
+    background: lightgray;
+    display: flex;
+    flex-direction: column;
+    color: black;
+
+    .row {
+        display: flex;
+        flex-direction: row;
+        padding: 1rem;
+
+    }
+
+    .header-row {
+        font-size: 1.5rem;
+        justify-content: space-between;
+        border-bottom: 1px solid gray;
+        .close-widget {
+            cursor: pointer;
+            transition: all .2s ease-in-out;
+
+            &:hover {
+                color: lighten(black, 30);
+            }
+        }
+    }
+}
