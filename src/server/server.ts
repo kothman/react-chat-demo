@@ -95,3 +95,5 @@ MongoClient.connect(env.mongodbConnectionUri, {useNewUrlParser: true}, function(
         console.log(`Listening on port ${port}!`);
     });
 });
+
+export default app;

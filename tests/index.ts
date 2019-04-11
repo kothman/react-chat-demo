@@ -1,0 +1,2 @@
+require('./testStore');
+require('./testAsyncActions');

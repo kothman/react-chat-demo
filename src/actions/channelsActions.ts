@@ -1,5 +1,4 @@
 import {State, Channel, Message} from '../reducers/channels';
-import { ReactReduxContext } from 'react-redux';
 import axios, { AxiosResponse, AxiosError } from 'axios';
 
 import {addError, addInfo} from '../actions/notificationsActions';
