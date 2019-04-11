@@ -1,5 +1,6 @@
 {
   "devDependencies": {
+    "@ionic/core": "^4.2.0",
     "@types/bcryptjs": "^2.4.2",
     "@types/connect-mongo": "^0.0.41",
     "@types/cookie-parser": "^1.4.1",
@@ -56,6 +57,7 @@
   "dependencies": {
     "@types/helmet": "^0.0.43",
     "@types/mailgun-js": "^0.16.3",
+    "@types/shortid": "^0.0.29",
     "axios": "^0.18.0",
     "bcryptjs": "^2.4.3",
     "body-parser": "^1.18.3",
@@ -70,6 +72,7 @@
     "mailgun-js": "^0.22.0",
     "mongodb": "^3.2.2",
     "mustache-express": "^1.2.8",
+    "shortid": "^2.2.14",
     "socket.io": "^2.2.0",
     "validator": "^10.11.0"
   },

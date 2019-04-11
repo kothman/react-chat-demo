@@ -1,0 +1,23 @@
+.user-settings-search {
+    margin-bottom: 1rem;
+    display: flex;
+    flex-direction: row;
+
+    .user-settings-search-form {
+        display: flex;
+        flex-grow: 1;
+        background: $color-white;
+        padding: 1rem;
+        border: $border;
+        border-radius: 5px;
+
+        fieldset:last-child {
+            margin-bottom: 0;
+        }
+
+        input#user-search {
+            display: flex;
+            flex-grow: 1;
+        }
+    }
+}

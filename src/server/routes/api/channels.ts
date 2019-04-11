@@ -1,10 +1,12 @@
 import authorizedMiddleware from '../../middleware/authorized';
+import adminMiddleware from '../../middleware/admin';
 import { Collection } from 'mongodb';
 import * as validator from 'validator';
+import { App, Request, Response } from '../../../types/express';
 
-export default function (app: any) {
+export default function (app: App) {
     app.get('/api/v1/channel*', authorizedMiddleware);
-    app.get('/api/v1/channels', function (req: any, res: any) {
+    app.get('/api/v1/channels', function (req: Request, res: Response) {
         req.db.collection('channels', (e: Error, coll: Collection) => {
             let p = new Promise((resolve) => {
                 coll.find({}).count((e, count: number) => {
@@ -24,7 +26,7 @@ export default function (app: any) {
             })
         });
     });
-    app.get('/api/v1/channel/delete/:channel', function (req: any, res: any) {
+    app.get('/api/v1/channel/delete/:channel', adminMiddleware, function (req: Request, res: Response) {
         if (validator.isEmpty(req.params.channel)) {
             return res.status(400).json({error: 'Invalid channel name'});
         }
@@ -48,7 +50,7 @@ export default function (app: any) {
             return p;
         });
     });
-    app.post('/api/v1/channel/create', function (req: any, res: any) {
+    app.post('/api/v1/channel/create', adminMiddleware, function (req: Request, res: Response) {
         if (validator.isEmpty(req.body.channelName)) {
             return res.status(400).json({ error: 'Invalid channel name' });
         }

@@ -10,8 +10,8 @@ export const SET_CHANNEL_HAS_MORE_MESSAGES = 'SET_CHANNEL_HAS_MORE_MESSAGE';
 export const ADD_RECEIVED_CHANNEL_MESSAGE = 'ADD_RECEIVED_CHANNEL_MESSAGE';
 export const ADD_RETRIEVED_CHANNEL_MESSAGES = 'ADD_RETRIEVED_CHANNEL_MESSAGES';
 export const INCREMENT_CHANNEL_RETRIEVE_MESSAGES_OFFSET = 'INCREMENT_CHANNEL_RETRIEVE_MESSAGES_OFFSET';
-
 export const RETRIEVE_CHANNEL_MESSAGES = 'RETRIEVE_CHANNEL_MESSAGES';
+export const CLEAR_CHANNELS_DATA = 'CLEAR_CHANNELS_DATA';
 
 export const addChannels = (channelNames: string[]) => {
     let channels: State = [];
@@ -69,6 +69,12 @@ export const addRetrievedChannelMessages = (channelName: string, messages: Messa
         type: ADD_RETRIEVED_CHANNEL_MESSAGES,
         data: {channelName: channelName, messages: messages}
     };
+}
+
+export const clearChannelsData = () => {
+    return {
+        type: CLEAR_CHANNELS_DATA
+    }
 }
 
 /* Async Actions */

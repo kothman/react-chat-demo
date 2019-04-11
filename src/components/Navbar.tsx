@@ -1,41 +1,38 @@
 import * as React from 'react';
 import { Link } from 'react-router-dom';
 import { connect } from 'react-redux';
+import { Dispatch } from 'redux';
+import { toggleSidebarOpen } from '../actions/sidebarActions';
+import { State as StoreState } from '../store';
 
 class Navbar extends React.Component<any, any> {
-    navLinks = {
-        authorized: [
-            {text: 'Settings', to: '/settings'},
-            {text: 'Logout', to: '/logout'}
-        ],
-        unauthorized: [
-            {text: 'Login', to: '/login'},
-            {text: 'Register', to: '/register'}
-        ]
-    }
+
     constructor(props: any) {
         super(props);
     }
     render() {
         let nav: any[] = [];
-        if (this.props.user.authorized) {
-            this.navLinks.authorized.forEach((e) => {
-                nav.push(<Link to={e.to} className="navbar-item" key={e.text}>{e.text}</Link>)
-            });
-        } else {
-            this.navLinks.unauthorized.forEach((e) => {
-                nav.push(<Link to={e.to} className="navbar-item" key={e.text}>{e.text}</Link>)
-            });
-        }
         return (
         <nav className="navbar">
-                <Link to="/" className="navbar-brand">React Chat</Link>
-            <div className="navbar-nav">
-                {nav}
+            <div className="navbar-container">
+                {this.props.loggedIn ?
+                    <div className="hamburger" onClick={() => this.props.toggle()}><i className="material-icons">dehaze</i></div> :
+                    <div></div>
+                }
+                <Link to="/" className="navbar-brand">OpenChat</Link>
+                <div></div>
             </div>
         </nav>
         );
     }
 }
 
-export default connect(state => state)(Navbar);
+export default connect((state: StoreState) => {
+    return {
+        loggedIn: state.user.authorized
+    }
+}, (dispatch: Dispatch) => {
+    return {
+        toggle: () => dispatch(toggleSidebarOpen())
+    }
+})(Navbar);

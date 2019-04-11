@@ -10,7 +10,7 @@
     align-items: center;
     justify-content: center;
     z-index: -500;
-    background: rgba(255, 255, 255, .2);
+    background: rgba(0, 0, 0, 0.4);
 
     &.active {
         display: flex;
@@ -20,7 +20,8 @@
 
     .modal-content {
         padding: 2rem;
-        border: 1px solid lightgray;
+        border: $border-dark;
+        border-radius: 5px;
         background: white;
         position: relative;
 
@@ -51,9 +52,9 @@
             justify-content: flex-end;
             
             button {
-                background: $main-background;
+                background: white;
                 &:hover {
-                    background: darken($main-background, 10);
+                    background: darken(white, 10);
                 }
             }
         }

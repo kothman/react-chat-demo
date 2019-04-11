@@ -33609,7 +33609,7 @@ function warning(message) {
 /*!***************************************************************!*\
   !*** ./node_modules/react-router-dom/esm/react-router-dom.js ***!
   \***************************************************************/
-/*! exports provided: BrowserRouter, HashRouter, Link, NavLink, MemoryRouter, Prompt, Redirect, Route, Router, StaticRouter, Switch, generatePath, matchPath, withRouter, __RouterContext */
+/*! exports provided: MemoryRouter, Prompt, Redirect, Route, Router, StaticRouter, Switch, generatePath, matchPath, withRouter, __RouterContext, BrowserRouter, HashRouter, Link, NavLink */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -42179,6 +42179,7 @@ exports.ADD_RECEIVED_CHANNEL_MESSAGE = 'ADD_RECEIVED_CHANNEL_MESSAGE';
 exports.ADD_RETRIEVED_CHANNEL_MESSAGES = 'ADD_RETRIEVED_CHANNEL_MESSAGES';
 exports.INCREMENT_CHANNEL_RETRIEVE_MESSAGES_OFFSET = 'INCREMENT_CHANNEL_RETRIEVE_MESSAGES_OFFSET';
 exports.RETRIEVE_CHANNEL_MESSAGES = 'RETRIEVE_CHANNEL_MESSAGES';
+exports.CLEAR_CHANNELS_DATA = 'CLEAR_CHANNELS_DATA';
 exports.addChannels = function (channelNames) {
     var channels = [];
     channelNames.forEach(function (name) {
@@ -42229,6 +42230,11 @@ exports.addRetrievedChannelMessages = function (channelName, messages) {
     return {
         type: exports.ADD_RETRIEVED_CHANNEL_MESSAGES,
         data: { channelName: channelName, messages: messages }
+    };
+};
+exports.clearChannelsData = function () {
+    return {
+        type: exports.CLEAR_CHANNELS_DATA
     };
 };
 exports.fetchChannels = function () {
@@ -42301,6 +42307,74 @@ exports.addChannel = function (channelName) {
 
 /***/ }),
 
+/***/ "./src/actions/chatUsersActions.ts":
+/*!*****************************************!*\
+  !*** ./src/actions/chatUsersActions.ts ***!
+  \*****************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+exports.__esModule = true;
+var axios_1 = __webpack_require__(/*! axios */ "./node_modules/axios/index.js");
+var notificationsActions_1 = __webpack_require__(/*! ./notificationsActions */ "./src/actions/notificationsActions.ts");
+exports.UPDATE_CHAT_USERS = 'UPDATE_CHAT_USERS';
+exports.ADD_CHAT_USER = 'ADD_USER';
+exports.REMOVE_CHAT_USER = 'REMOVE_USER';
+exports.updateUsers = function (users) {
+    return {
+        type: exports.UPDATE_CHAT_USERS,
+        data: {
+            users: users
+        }
+    };
+};
+exports.addUser = function (user) {
+    return {
+        type: exports.ADD_CHAT_USER,
+        data: {
+            user: user
+        }
+    };
+};
+exports.removeUser = function (email) {
+    return {
+        type: exports.REMOVE_CHAT_USER,
+        data: {
+            email: email
+        }
+    };
+};
+exports.fetchAllUsers = function () {
+    return function (dispatch) {
+        axios_1["default"].get('/api/v1/users').then(function (res) {
+            var users = {};
+            res.data.users.forEach(function (u) {
+                users[u.email] = {
+                    role: u.role,
+                    name: u.name
+                };
+            });
+            dispatch(exports.updateUsers(users));
+            return res;
+        })["catch"](function (err) {
+            dispatch(notificationsActions_1.addError('Fetching all users failed'));
+            console.log(err);
+            return err;
+        });
+    };
+};
+exports.createNewUser = function (user) {
+};
+exports.editUser = function (email, user) {
+};
+exports.deleteUser = function (email) {
+};
+
+
+/***/ }),
+
 /***/ "./src/actions/notificationsActions.ts":
 /*!*********************************************!*\
   !*** ./src/actions/notificationsActions.ts ***!
@@ -42353,6 +42427,79 @@ exports.clearInfos = function () {
 
 /***/ }),
 
+/***/ "./src/actions/sidebarActions.ts":
+/*!***************************************!*\
+  !*** ./src/actions/sidebarActions.ts ***!
+  \***************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+exports.__esModule = true;
+exports.TOGGLE_SIDEBAR_OPEN = 'TOGGLE_SIDEBAR_OPEN';
+exports.toggleSidebarOpen = function () {
+    return {
+        type: exports.TOGGLE_SIDEBAR_OPEN
+    };
+};
+
+
+/***/ }),
+
+/***/ "./src/actions/socketActions.ts":
+/*!**************************************!*\
+  !*** ./src/actions/socketActions.ts ***!
+  \**************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+exports.__esModule = true;
+var io = __webpack_require__(/*! socket.io-client */ "./node_modules/socket.io-client/lib/index.js");
+exports.INIT_WEBSOCKET = 'INIT_WEBSOCKET';
+exports.SET_SOCKET_CONNECTED = 'SET_SOCKET_CONNECTED';
+exports.SET_SOCKET_CONNECTED_USERS = 'SET_SOCKET_CONNECTED_USERS';
+exports.initWebsocket = function (io) {
+    return {
+        type: exports.INIT_WEBSOCKET,
+        data: { io: io }
+    };
+};
+exports.setSocketConnected = function (connected) {
+    return {
+        type: exports.SET_SOCKET_CONNECTED,
+        data: { connected: connected }
+    };
+};
+exports.setSocketConnectedUsers = function (userEmails) {
+    return {
+        type: exports.SET_SOCKET_CONNECTED_USERS,
+        data: { userEmails: userEmails }
+    };
+};
+exports.init = function () {
+    return function (dispatch) {
+        var ioSocket = io();
+        ioSocket.on('connect', function () {
+            dispatch(exports.setSocketConnected(true));
+            console.log('Connected to websocket server [' + ioSocket.id + ']');
+        });
+        ioSocket.on('disconnect', function () {
+            dispatch(exports.setSocketConnected(false));
+            console.log('Disconnected from websocket server, attempting reconnect');
+        });
+        ioSocket.on('connected users', function (userEmails) {
+            dispatch(exports.setSocketConnectedUsers(userEmails));
+        });
+        return dispatch(exports.initWebsocket(ioSocket));
+    };
+};
+
+
+/***/ }),
+
 /***/ "./src/actions/userActions.ts":
 /*!************************************!*\
   !*** ./src/actions/userActions.ts ***!
@@ -42364,45 +42511,80 @@ exports.clearInfos = function () {
 
 exports.__esModule = true;
 var axios_1 = __webpack_require__(/*! axios */ "./node_modules/axios/index.js");
+var channelsActions_1 = __webpack_require__(/*! ./channelsActions */ "./src/actions/channelsActions.ts");
+var notificationsActions_1 = __webpack_require__(/*! ./notificationsActions */ "./src/actions/notificationsActions.ts");
 exports.SET_AUTHORIZED = 'SET_AUTHORIZED';
-exports.SET_EMAIL = 'SET_EMAIL';
-exports.SET_NAME = 'SET_NAME';
+exports.SET_USER = 'SET_USER';
+exports.LOGOUT_USER = 'LOGOUT_USER';
 exports.setAuthorized = function (authorized) {
     return {
         type: exports.SET_AUTHORIZED,
         data: authorized
     };
 };
-exports.setEmail = function (email) {
+exports.setUser = function (user) {
     return {
-        type: exports.SET_EMAIL,
-        data: email
+        type: exports.SET_USER,
+        data: user
     };
 };
-exports.setName = function (name) {
+exports.logoutUser = function () {
     return {
-        type: exports.SET_NAME,
-        data: name
+        type: exports.LOGOUT_USER
     };
 };
-exports.updateName = function (name) {
+exports.logout = function () {
     return function (dispatch) {
-        return axios_1["default"].post('/api/v1/user/update', {}).then(function (res) {
+        dispatch(exports.logoutUser());
+        return dispatch(channelsActions_1.clearChannelsData());
+    };
+};
+exports.updateName = function (name, onSuccess) {
+    return function (dispatch) {
+        return axios_1["default"].post('/api/v1/user/update/name', {
+            name: name
+        }).then(function (res) {
+            dispatch(notificationsActions_1.addInfo('Name updated'));
+            if (onSuccess)
+                onSuccess();
         })["catch"](function (err) {
+            if (err.response && err.response.data.error)
+                return dispatch(notificationsActions_1.addError(err.response.data.error));
+            console.log('Something went wrong updating user name', err);
+            dispatch(notificationsActions_1.addError('Something went wrong while trying to update your name.'));
         });
     };
 };
-exports.updateEmail = function (email) {
+exports.updateEmail = function (email, onSuccess) {
     return function (dispatch) {
-        return axios_1["default"].post('/api/v1/user/update', {}).then(function (res) {
+        return axios_1["default"].post('/api/v1/user/update/email', {
+            email: email
+        }).then(function (res) {
+            dispatch(notificationsActions_1.addInfo('Email updated'));
+            if (onSuccess)
+                onSuccess();
         })["catch"](function (err) {
+            if (err.response && err.response.data.error)
+                return dispatch(notificationsActions_1.addError(err.response.data.error));
+            console.log('Something went wrong updating user email', err);
+            dispatch(notificationsActions_1.addError('Something went wrong while trying to update your email.'));
         });
     };
 };
-exports.updatePassword = function (password) {
+exports.updatePassword = function (oldPass, newPass, onSuccess) {
     return function (dispatch) {
-        return axios_1["default"].post('/api/v1/user/update', {}).then(function (res) {
+        return axios_1["default"].post('/api/v1/user/update/password', {
+            oldPass: oldPass,
+            newPass: newPass
+        }).then(function (res) {
+            dispatch(notificationsActions_1.addInfo('Password updated'));
+            if (onSuccess)
+                onSuccess();
         })["catch"](function (err) {
+            if (err.response && err.response.data.error)
+                return dispatch(notificationsActions_1.addError(err.response.data.error));
+            console.log('Something went wrong updating user password', err);
+            dispatch(notificationsActions_1.addError('Something went wrong while trying to update your password.'));
         });
     };
 };
@@ -42436,21 +42618,70 @@ exports.__esModule = true;
 var React = __webpack_require__(/*! react */ "./node_modules/react/index.js");
 var react_redux_1 = __webpack_require__(/*! react-redux */ "./node_modules/react-redux/es/index.js");
 var userActions_1 = __webpack_require__(/*! ../actions/userActions */ "./src/actions/userActions.ts");
+var notificationsActions_1 = __webpack_require__(/*! ../actions/notificationsActions */ "./src/actions/notificationsActions.ts");
 var AccountSettings = (function (_super) {
     __extends(AccountSettings, _super);
     function AccountSettings(props) {
         var _this = _super.call(this, props) || this;
+        _this.handleEmailChange = function (e) {
+            _this.setState({ user: { email: e.target.value, name: _this.state.user.name } });
+        };
         _this.handleUpdateEmail = function (e) {
             e.preventDefault();
+            _this.setState({ updatingEmail: true });
+            _this.props.updateEmail(_this.state.user.email, function () {
+                _this.props.setUser({ email: _this.state.user.email });
+            }).then(function () {
+                _this.setState({ updatingEmail: false });
+            });
+        };
+        _this.handleNameChange = function (e) {
+            _this.setState({ user: { email: _this.state.user.email, name: e.target.value } });
         };
         _this.handleUpdateName = function (e) {
             e.preventDefault();
+            _this.setState({ updatingName: true });
+            _this.props.updateName(_this.state.user.name, function () {
+                _this.props.setUser({ name: _this.state.user.name });
+            }).then(function () {
+                _this.setState({ updatingName: false });
+            });
+        };
+        _this.handleCurrentPasswordChange = function (e) {
+            _this.setState({ currentPassword: e.target.value });
+        };
+        _this.handleNewPasswordChange = function (e) {
+            _this.setState({ newPassword: e.target.value });
+        };
+        _this.handleConfirmNewPasswordChange = function (e) {
+            _this.setState({ confirmNewPassword: e.target.value });
+        };
+        _this.handleUpdatePassword = function (e) {
+            e.preventDefault();
+            if (_this.state.currentPassword === '')
+                return _this.props.addError('Current password can\'t be blank');
+            if (_this.state.newPassword === '' || _this.state.confirmNewPassword === '')
+                return _this.props.addError('New password and confirm new password fields can\'t be blank');
+            if (_this.state.newPassword !== _this.state.confirmNewPassword)
+                return _this.props.addError('New passwords do not match');
+            _this.setState({ updatingPassword: true });
+            _this.props.updatePassword(_this.state.currentPassword, _this.state.newPassword, function () {
+                _this.setState({ currentPassword: '', newPassword: '', confirmNewPassword: '' });
+            }).then(function () {
+                _this.setState({ updatingPassword: false });
+            });
         };
         _this.state = {
             user: {
                 email: props.user.email,
                 name: props.user.name
-            }
+            },
+            currentPassword: '',
+            newPassword: '',
+            confirmNewPassword: '',
+            updatingPassword: false,
+            updatingName: false,
+            updatingEmail: false,
         };
         return _this;
     }
@@ -42458,36 +42689,40 @@ var AccountSettings = (function (_super) {
         var _this = this;
         return React.createElement("div", { className: "account-settings" },
             React.createElement("div", { className: "settings-group" },
-                React.createElement("div", { className: "subtitle" }, "Name"),
-                React.createElement("form", { onSubmit: this.handleUpdateName },
-                    React.createElement("div", { className: "input-group" },
-                        React.createElement("input", { type: "user-name", value: this.state.user.name, placeholder: "Jane Doe", onChange: function (e) {
-                                _this.setState({ user: { email: _this.state.user.email, name: e.target.value } });
-                            } }),
-                        React.createElement("button", { type: "submit" }, "update name")))),
+                React.createElement("p", null,
+                    "Role: ",
+                    this.props.user.role),
+                this.props.user.role !== 'admin' ?
+                    React.createElement("p", null, "An admin can update user roles under Settings -> Users") : React.createElement("p", null)),
             React.createElement("div", { className: "settings-group" },
-                React.createElement("div", { className: "subtitle" }, "Email"),
+                React.createElement("form", { onSubmit: this.handleUpdateName },
+                    React.createElement("fieldset", null,
+                        React.createElement("label", { htmlFor: "user-name" }, "Display Name"),
+                        React.createElement("input", { disabled: this.state.updatingName, type: "text", id: "user-name", value: this.state.user.name, placeholder: "Jane Doe", onChange: this.handleNameChange })),
+                    React.createElement("fieldset", null,
+                        React.createElement("button", { disabled: this.state.updatingName, type: "submit" }, "update name"))),
                 React.createElement("form", { onSubmit: this.handleUpdateEmail },
-                    React.createElement("div", { className: "input-group" },
-                        React.createElement("input", { type: "email", value: this.state.user.email, onChange: function (e) {
+                    React.createElement("fieldset", null,
+                        React.createElement("label", { htmlFor: "user-email" }, "Email"),
+                        React.createElement("input", { disabled: this.state.updatingEmail, type: "email", id: "user-email", value: this.state.user.email, onChange: function (e) {
                                 _this.setState({ user: { email: e.target.value, name: _this.state.user.name } });
-                            } }),
-                        React.createElement("button", { type: "submit" }, "update email")))),
+                            } })),
+                    React.createElement("fieldset", null,
+                        React.createElement("button", { disabled: this.state.updatingEmail, type: "submit" }, "update email")))),
             React.createElement("div", { className: "settings-group" },
                 React.createElement("div", { className: "subtitle" }, "Change Password"),
-                React.createElement("form", null,
-                    React.createElement("div", { className: "input-group" },
+                React.createElement("form", { onSubmit: this.handleUpdatePassword },
+                    React.createElement("fieldset", null,
                         React.createElement("label", null, "current password"),
-                        React.createElement("input", { type: "password" })),
-                    React.createElement("div", { className: "input-group" },
+                        React.createElement("input", { disabled: this.state.updatingPassword, type: "password", value: this.state.currentPassword, onChange: this.handleCurrentPasswordChange })),
+                    React.createElement("fieldset", null,
                         React.createElement("label", null, "new password"),
-                        React.createElement("input", { type: "password" })),
-                    React.createElement("div", { className: "input-group" },
+                        React.createElement("input", { disabled: this.state.updatingPassword, type: "password", value: this.state.newPassword, onChange: this.handleNewPasswordChange })),
+                    React.createElement("fieldset", null,
                         React.createElement("label", null, "confirm new password"),
-                        React.createElement("input", { type: "password" })),
-                    React.createElement("div", { className: "input-group" },
-                        React.createElement("span", null),
-                        React.createElement("button", { type: "submit" }, "update password")))));
+                        React.createElement("input", { disabled: this.state.updatingPassword, type: "password", value: this.state.confirmNewPassword, onChange: this.handleConfirmNewPasswordChange })),
+                    React.createElement("fieldset", null,
+                        React.createElement("button", { type: "submit", disabled: this.state.updatingPassword }, "update password")))));
     };
     return AccountSettings;
 }(React.Component));
@@ -42497,9 +42732,13 @@ exports["default"] = react_redux_1.connect(function (props) {
     };
 }, function (dispatch) {
     return {
-        updateName: function (name) {
-            return dispatch(userActions_1.updateName(name));
-        }
+        updateName: function (name, onSuccess) { return dispatch(userActions_1.updateName(name, onSuccess)); },
+        updateEmail: function (email, onSuccess) { return dispatch(userActions_1.updateEmail(email, onSuccess)); },
+        updatePassword: function (oldPass, newPass, onSuccess) { return dispatch(userActions_1.updatePassword(oldPass, newPass, onSuccess)); },
+        addError: function (err) { return dispatch(notificationsActions_1.addError(err)); },
+        addInfo: function (info) { return dispatch(notificationsActions_1.addInfo(info)); },
+        clearErrors: function () { return dispatch(notificationsActions_1.clearErrors()); },
+        setUser: function (user) { return dispatch(userActions_1.setUser(user)); },
     };
 })(AccountSettings);
 
@@ -42536,13 +42775,13 @@ var react_redux_1 = __webpack_require__(/*! react-redux */ "./node_modules/react
 var Navbar_1 = __webpack_require__(/*! ./Navbar */ "./src/components/Navbar.tsx");
 var Notifications_1 = __webpack_require__(/*! ./Notifications */ "./src/components/Notifications.tsx");
 var PageLogin_1 = __webpack_require__(/*! ./PageLogin */ "./src/components/PageLogin.tsx");
-var PageLogout_1 = __webpack_require__(/*! ./PageLogout */ "./src/components/PageLogout.tsx");
 var PageRegister_1 = __webpack_require__(/*! ./PageRegister */ "./src/components/PageRegister.tsx");
 var PageDashboard_1 = __webpack_require__(/*! ./PageDashboard */ "./src/components/PageDashboard.tsx");
-var PageSettings_1 = __webpack_require__(/*! ./PageSettings */ "./src/components/PageSettings.tsx");
 var VerifyEmail_1 = __webpack_require__(/*! ./VerifyEmail */ "./src/components/VerifyEmail.tsx");
 var LoadingFadeIn_1 = __webpack_require__(/*! ./LoadingFadeIn */ "./src/components/LoadingFadeIn.tsx");
 var Page404_1 = __webpack_require__(/*! ./Page404 */ "./src/components/Page404.tsx");
+var userActions_1 = __webpack_require__(/*! ../actions/userActions */ "./src/actions/userActions.ts");
+var history_1 = __webpack_require__(/*! ../lib/history */ "./src/lib/history.ts");
 var App = (function (_super) {
     __extends(App, _super);
     function App(props) {
@@ -42558,18 +42797,19 @@ var App = (function (_super) {
     }
     App.prototype.checkIfLoggedIn = function () {
         var _this = this;
-        return axios_1["default"].get('/api/v1/user').then(function (response) {
-            _this.props.dispatch({ type: 'SET_EMAIL', data: response.data.email });
-            _this.props.dispatch({ type: 'SET_NAME', data: response.data.name });
-            _this.props.dispatch({ type: 'SET_AUTHORIZED', data: true });
+        return axios_1["default"].get('/api/v1/user').then(function (res) {
+            _this.props.setUser({
+                authorized: true,
+                email: res.data.email,
+                name: res.data.name || '',
+                role: res.data.role
+            });
         })["catch"](function () { });
     };
     App.prototype.render = function () {
         var availableViews = [];
-        if (this.props.user.authorized) {
-            availableViews.push(React.createElement(react_router_dom_1.Route, { exact: true, path: "/dashboard/:channel?", key: "page-dashboard", component: PageDashboard_1["default"] }));
-            availableViews.push(React.createElement(react_router_dom_1.Route, { exact: true, path: "/logout", key: "page-logout", component: PageLogout_1["default"] }));
-            availableViews.push(React.createElement(react_router_dom_1.Route, { exact: true, path: "/settings/:setting?", key: "page-settings", component: PageSettings_1["default"] }));
+        if (this.props.authorized) {
+            availableViews.push(React.createElement(react_router_dom_1.Route, { key: "page-dashboard", component: PageDashboard_1["default"] }));
         }
         else {
             availableViews.push(React.createElement(react_router_dom_1.Route, { exact: true, path: "/login", key: "page-login", component: PageLogin_1["default"] }));
@@ -42577,7 +42817,7 @@ var App = (function (_super) {
         }
         availableViews.push(React.createElement(react_router_dom_1.Route, { exact: true, path: "/verifyEmail/:key", key: "page-verify-email", component: VerifyEmail_1["default"] }));
         availableViews.push(React.createElement(react_router_dom_1.Route, { key: "catch-all", component: Page404_1["default"] }));
-        return (React.createElement(react_router_dom_1.BrowserRouter, null,
+        return (React.createElement(react_router_dom_1.Router, { history: history_1["default"] },
             React.createElement(LoadingFadeIn_1["default"], { active: !this.state.finishedLoading }),
             this.state.finishedLoading ?
                 React.createElement("div", { id: "react-app" },
@@ -42587,15 +42827,23 @@ var App = (function (_super) {
     };
     return App;
 }(React.Component));
-exports["default"] = react_redux_1.connect(function (state) { return state; })(App);
+exports["default"] = react_redux_1.connect(function (state) {
+    return {
+        authorized: state.user.authorized
+    };
+}, function (dispatch) {
+    return {
+        setUser: function (user) { return dispatch(userActions_1.setUser(user)); }
+    };
+})(App);
 
 
 /***/ }),
 
-/***/ "./src/components/ChannelsSettings.tsx":
-/*!*********************************************!*\
-  !*** ./src/components/ChannelsSettings.tsx ***!
-  \*********************************************/
+/***/ "./src/components/ChannelSettings.tsx":
+/*!********************************************!*\
+  !*** ./src/components/ChannelSettings.tsx ***!
+  \********************************************/
 /*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -42620,9 +42868,9 @@ var react_redux_1 = __webpack_require__(/*! react-redux */ "./node_modules/react
 var channelsActions_1 = __webpack_require__(/*! ../actions/channelsActions */ "./src/actions/channelsActions.ts");
 var Modal_1 = __webpack_require__(/*! ./Modal */ "./src/components/Modal.tsx");
 var LoadingSpinner_1 = __webpack_require__(/*! ./LoadingSpinner */ "./src/components/LoadingSpinner.tsx");
-var ChannelsSettings = (function (_super) {
-    __extends(ChannelsSettings, _super);
-    function ChannelsSettings(props) {
+var ChannelSettings = (function (_super) {
+    __extends(ChannelSettings, _super);
+    function ChannelSettings(props) {
         var _this = _super.call(this, props) || this;
         _this.handleUpdateEmail = function (e) {
             e.preventDefault();
@@ -42660,7 +42908,7 @@ var ChannelsSettings = (function (_super) {
         };
         return _this;
     }
-    ChannelsSettings.prototype.render = function () {
+    ChannelSettings.prototype.render = function () {
         var _this = this;
         var channels = [];
         this.props.channels().forEach(function (c) {
@@ -42696,7 +42944,7 @@ var ChannelsSettings = (function (_super) {
                     React.createElement("i", { onClick: function () { return _this.setState({ promptNewChannel: true }); }, className: "material-icons add-channel-icon" }, "add_box")),
                 React.createElement("div", { className: "channels" }, channels.length > 0 ? channels : React.createElement(LoadingSpinner_1["default"], null))));
     };
-    return ChannelsSettings;
+    return ChannelSettings;
 }(React.Component));
 exports["default"] = react_redux_1.connect(function (state) {
     return {
@@ -42714,7 +42962,7 @@ exports["default"] = react_redux_1.connect(function (state) {
         addChannel: function (name) { return dispatch(channelsActions_1.addChannel(name)); },
         removeChannel: function (name) { return dispatch(channelsActions_1.deleteChannel(name)); }
     };
-})(ChannelsSettings);
+})(ChannelSettings);
 
 
 /***/ }),
@@ -42746,6 +42994,7 @@ var React = __webpack_require__(/*! react */ "./node_modules/react/index.js");
 var axios_1 = __webpack_require__(/*! axios */ "./node_modules/axios/index.js");
 var react_redux_1 = __webpack_require__(/*! react-redux */ "./node_modules/react-redux/es/index.js");
 var Modal_1 = __webpack_require__(/*! ./Modal */ "./src/components/Modal.tsx");
+var OnlineUsers_1 = __webpack_require__(/*! ./OnlineUsers */ "./src/components/OnlineUsers.tsx");
 var LoadingFadeIn_1 = __webpack_require__(/*! ./LoadingFadeIn */ "./src/components/LoadingFadeIn.tsx");
 var channelsActions_1 = __webpack_require__(/*! ../actions/channelsActions */ "./src/actions/channelsActions.ts");
 var Chat = (function (_super) {
@@ -42754,8 +43003,7 @@ var Chat = (function (_super) {
         var _this = _super.call(this, props) || this;
         _this.handleSendMessage = function (e) {
             e.preventDefault();
-            var textarea = document.querySelector('#chat-input-textarea');
-            _this.props.socket.emit('message', { text: textarea.value, channel: _this.props.channel });
+            _this.props.socket.emit('message', { text: _this.textareaRef.current.value, channel: _this.props.channel });
             _this.setState(Object.assign({}, _this.state, { chatInputEnabled: false }));
         };
         _this.handleReceiveMessage = function (message) {
@@ -42779,7 +43027,7 @@ var Chat = (function (_super) {
             _this.setState({ textareaValue: '' });
         };
         _this.scrollChatHistory = function () {
-            var chatDiv = _this.ref.current;
+            var chatDiv = _this.chatHistoryRef.current;
             chatDiv.scrollTop = chatDiv.scrollHeight;
         };
         _this.handleUserScroll = function (e) {
@@ -42823,10 +43071,10 @@ var Chat = (function (_super) {
             console.log(_this.props);
             if (_this.props.currentChannel.messages.length === 0 &&
                 !_this.props.currentChannel.fetchingNewMessages &&
-                _this.ref && _this.ref.current) {
+                _this.chatHistoryRef && _this.chatHistoryRef.current) {
                 _this.props.retrieveMessages().then(function () {
                     _this.scrollChatHistory();
-                    _this.ref.current.addEventListener('scroll', _this.handleUserScroll);
+                    _this.chatHistoryRef.current.addEventListener('scroll', _this.handleUserScroll);
                 });
             }
             else {
@@ -42834,7 +43082,7 @@ var Chat = (function (_super) {
             }
         };
         _this.componentWillUnmount = function () {
-            _this.ref.current.removeEventListener('scroll', _this.handleUserScroll);
+            _this.chatHistoryRef.current.removeEventListener('scroll', _this.handleUserScroll);
             _this.props.socket.removeEventListener('message', _this.handleReceiveMessage);
             _this.props.socket.removeEventListener('message received', _this.enableChatInput);
             if (_this.state.scrollingTimeout)
@@ -42851,56 +43099,55 @@ var Chat = (function (_super) {
             userDetails: {},
             currentMessage: false
         };
-        _this.ref = React.createRef();
+        _this.chatHistoryRef = React.createRef();
+        _this.textareaRef = React.createRef();
         return _this;
     }
     Chat.prototype.render = function () {
         var _this = this;
-        var modal = React.createElement("div", null);
-        if (this.state.currentMessage !== false) {
-            var m = this.state.currentMessage;
-            var date = new Date(m.created);
-            modal = React.createElement(Modal_1["default"], { title: "Message Details", onDismiss: function () { return _this.setState({ currentMessage: false }); } },
-                React.createElement("div", null,
-                    React.createElement("div", { className: "row" },
-                        React.createElement("span", { className: "column" }, "message id:"),
-                        React.createElement("span", null, m['_id'])),
-                    React.createElement("div", { className: "row" },
-                        React.createElement("span", { className: "column" }, "user id:"),
-                        React.createElement("span", { className: "column" }, this.state.userDetails[m.userEmail]['_id'])),
-                    React.createElement("div", { className: "row" },
-                        React.createElement("span", { className: "column" }, "email:"),
-                        React.createElement("span", { className: "column" }, m.userEmail)),
-                    React.createElement("div", { className: "row" },
-                        React.createElement("span", { className: "column" }, "timestamp:"),
-                        React.createElement("span", { className: "column" },
-                            date.toLocaleDateString(),
-                            " ",
-                            date.toLocaleTimeString()))));
-        }
+        var m = this.state.currentMessage;
+        var date = new Date(m.created);
+        var modal = React.createElement(Modal_1["default"], { title: "Message Details", onDismiss: function () { return _this.setState({ currentMessage: false }); }, active: m !== false }, m !== false &&
+            React.createElement("div", null,
+                React.createElement("div", { className: "row" },
+                    React.createElement("span", { className: "column" }, "message id:"),
+                    React.createElement("span", null, m['_id'])),
+                React.createElement("div", { className: "row" },
+                    React.createElement("span", { className: "column" }, "user id:"),
+                    React.createElement("span", { className: "column" }, this.state.userDetails[m.userEmail]['_id'])),
+                React.createElement("div", { className: "row" },
+                    React.createElement("span", { className: "column" }, "email:"),
+                    React.createElement("span", { className: "column" }, m.userEmail)),
+                React.createElement("div", { className: "row" },
+                    React.createElement("span", { className: "column" }, "timestamp:"),
+                    React.createElement("span", { className: "column" },
+                        date.toLocaleDateString(),
+                        " ",
+                        date.toLocaleTimeString()))));
         var messages = [];
         if (this.props.currentChannel && this.props.currentChannel.messages) {
             this.props.currentChannel.messages.forEach(function (m) {
                 var date = new Date(m.created);
-                var messageId = 'message-' + m['_id'];
                 messages.push(React.createElement("div", { key: m['_id'], className: "message" },
-                    React.createElement("span", { className: "message-email", onClick: function () { _this.handleDisplayUserDetails(m); } }, m.userEmail),
-                    React.createElement("span", { className: "message-content" }, m.text),
-                    React.createElement("span", { className: "message-date" }, date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }))));
+                    React.createElement("div", { className: "message-header row" },
+                        React.createElement("span", { className: "message-email", onClick: function () { _this.handleDisplayUserDetails(m); } }, m.userEmail),
+                        React.createElement("span", { className: "message-date" }, date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }))),
+                    React.createElement("span", { className: "message-content" }, m.text)));
             });
         }
         return (React.createElement("div", { className: "chat-container" },
             React.createElement(LoadingFadeIn_1["default"], { active: this.props.channels.length === 0 }),
             modal,
-            React.createElement("div", { id: "chat-history", className: "chat-history", ref: this.ref },
-                this.props.currentChannel.fetchingNewMessages ?
+            React.createElement(OnlineUsers_1["default"], null),
+            React.createElement("div", { id: "chat-history", className: "chat-history", ref: this.chatHistoryRef },
+                this.props.currentChannel.fetchingNewMessages &&
                     React.createElement("div", { className: "message message-loading" },
                         React.createElement("div", { className: "message-content" },
-                            React.createElement("span", null, "Loading more messages..."))) : React.createElement("div", null),
+                            React.createElement("span", null, "Loading more messages..."))),
                 messages,
                 React.createElement(LoadingFadeIn_1["default"], { active: messages.length === 0 })),
             React.createElement("form", { className: "chat-input", onSubmit: this.handleSendMessage },
-                React.createElement("textarea", { value: this.state.textareaValue, disabled: !this.state.chatInputEnabled, id: "chat-input-textarea", onKeyPress: this.handleKeyPress, onChange: this.handleTextareaChange }),
+                React.createElement("textarea", { value: this.state.textareaValue, disabled: !this.state.chatInputEnabled, ref: this.textareaRef, onKeyPress: this.handleKeyPress, onChange: this.handleTextareaChange }),
                 React.createElement("button", { disabled: !this.state.chatInputEnabled, type: "submit", className: "chat-send" }, "send"))));
     };
     return Chat;
@@ -42910,7 +43157,8 @@ exports["default"] = react_redux_1.connect(function (state, ownProps) {
         channels: state.channels,
         currentChannel: state.channels.find(function (c) {
             return c.name === ownProps.channel;
-        })
+        }),
+        socket: state.socket.io
     };
 }, function (dispatch, ownProps) {
     return {
@@ -42925,6 +43173,138 @@ exports["default"] = react_redux_1.connect(function (state, ownProps) {
         }
     };
 })(Chat);
+
+
+/***/ }),
+
+/***/ "./src/components/Dropdown.tsx":
+/*!*************************************!*\
+  !*** ./src/components/Dropdown.tsx ***!
+  \*************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    };
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+exports.__esModule = true;
+var React = __webpack_require__(/*! react */ "./node_modules/react/index.js");
+var initialState = {
+    open: false
+};
+var Dropdown = (function (_super) {
+    __extends(Dropdown, _super);
+    function Dropdown(props) {
+        var _this = _super.call(this, props) || this;
+        _this.toggleDropdownOpen = function () {
+            _this.setState({ open: !_this.state.open });
+        };
+        _this.state = initialState;
+        return _this;
+    }
+    Dropdown.prototype.render = function () {
+        var className = 'dropdown';
+        className += this.props.className ? ' ' + this.props.className : '';
+        className += this.state.open ? ' open' : '';
+        return React.createElement("div", { className: className, onClick: this.toggleDropdownOpen }, this.props.children);
+    };
+    return Dropdown;
+}(React.Component));
+exports["default"] = Dropdown;
+
+
+/***/ }),
+
+/***/ "./src/components/DropdownMenu.tsx":
+/*!*****************************************!*\
+  !*** ./src/components/DropdownMenu.tsx ***!
+  \*****************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    };
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+exports.__esModule = true;
+var React = __webpack_require__(/*! react */ "./node_modules/react/index.js");
+var DropdownMenu = (function (_super) {
+    __extends(DropdownMenu, _super);
+    function DropdownMenu() {
+        return _super !== null && _super.apply(this, arguments) || this;
+    }
+    DropdownMenu.prototype.render = function () {
+        var className = 'dropdown-menu';
+        className += this.props.className ? ' ' + this.props.className : '';
+        return React.createElement("div", { className: className }, this.props.children);
+    };
+    return DropdownMenu;
+}(React.Component));
+exports["default"] = DropdownMenu;
+
+
+/***/ }),
+
+/***/ "./src/components/DropdownMenuItem.tsx":
+/*!*********************************************!*\
+  !*** ./src/components/DropdownMenuItem.tsx ***!
+  \*********************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    };
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+exports.__esModule = true;
+var React = __webpack_require__(/*! react */ "./node_modules/react/index.js");
+var DropdownMenuItem = (function (_super) {
+    __extends(DropdownMenuItem, _super);
+    function DropdownMenuItem() {
+        return _super !== null && _super.apply(this, arguments) || this;
+    }
+    DropdownMenuItem.prototype.render = function () {
+        var className = 'dropdown-menu-item';
+        className += this.props.className ? ' ' + this.props.className : '';
+        return React.createElement("div", { className: className }, this.props.children);
+    };
+    return DropdownMenuItem;
+}(React.Component));
+exports["default"] = DropdownMenuItem;
 
 
 /***/ }),
@@ -43056,8 +43436,8 @@ var Modal = (function (_super) {
                 _this.props.onDismiss();
         };
         _this.confirmModal = function (e) {
-            _this.setState({ active: false });
             _this.props.onConfirm();
+            _this.setState({ active: false });
         };
         _this.backdropListener = function (e) {
             if (_this.state.modalContentRef && !_this.state.modalContentRef.contains(e.target)) {
@@ -43076,7 +43456,10 @@ var Modal = (function (_super) {
     Modal.prototype.render = function () {
         var _this = this;
         var className = 'modal';
-        this.state.active ? className += ' active' : '';
+        var active = (this.props.active)
+            || (this.state.active && this.props.active)
+            || (this.state.active && this.props.active === undefined);
+        active ? className += ' active' : '';
         return (React.createElement("div", { className: className, onClick: this.backdropListener },
             React.createElement("div", { ref: this.setModalContentRef, className: "modal-content" },
                 React.createElement("div", { className: "modal-header" },
@@ -43120,41 +43503,35 @@ exports.__esModule = true;
 var React = __webpack_require__(/*! react */ "./node_modules/react/index.js");
 var react_router_dom_1 = __webpack_require__(/*! react-router-dom */ "./node_modules/react-router-dom/esm/react-router-dom.js");
 var react_redux_1 = __webpack_require__(/*! react-redux */ "./node_modules/react-redux/es/index.js");
+var sidebarActions_1 = __webpack_require__(/*! ../actions/sidebarActions */ "./src/actions/sidebarActions.ts");
 var Navbar = (function (_super) {
     __extends(Navbar, _super);
     function Navbar(props) {
-        var _this = _super.call(this, props) || this;
-        _this.navLinks = {
-            authorized: [
-                { text: 'Settings', to: '/settings' },
-                { text: 'Logout', to: '/logout' }
-            ],
-            unauthorized: [
-                { text: 'Login', to: '/login' },
-                { text: 'Register', to: '/register' }
-            ]
-        };
-        return _this;
+        return _super.call(this, props) || this;
     }
     Navbar.prototype.render = function () {
+        var _this = this;
         var nav = [];
-        if (this.props.user.authorized) {
-            this.navLinks.authorized.forEach(function (e) {
-                nav.push(React.createElement(react_router_dom_1.Link, { to: e.to, className: "navbar-item", key: e.text }, e.text));
-            });
-        }
-        else {
-            this.navLinks.unauthorized.forEach(function (e) {
-                nav.push(React.createElement(react_router_dom_1.Link, { to: e.to, className: "navbar-item", key: e.text }, e.text));
-            });
-        }
         return (React.createElement("nav", { className: "navbar" },
-            React.createElement(react_router_dom_1.Link, { to: "/", className: "navbar-brand" }, "React Chat"),
-            React.createElement("div", { className: "navbar-nav" }, nav)));
+            React.createElement("div", { className: "navbar-container" },
+                this.props.loggedIn ?
+                    React.createElement("div", { className: "hamburger", onClick: function () { return _this.props.toggle(); } },
+                        React.createElement("i", { className: "material-icons" }, "dehaze")) :
+                    React.createElement("div", null),
+                React.createElement(react_router_dom_1.Link, { to: "/", className: "navbar-brand" }, "OpenChat"),
+                React.createElement("div", null))));
     };
     return Navbar;
 }(React.Component));
-exports["default"] = react_redux_1.connect(function (state) { return state; })(Navbar);
+exports["default"] = react_redux_1.connect(function (state) {
+    return {
+        loggedIn: state.user.authorized
+    };
+}, function (dispatch) {
+    return {
+        toggle: function () { return dispatch(sidebarActions_1.toggleSidebarOpen()); }
+    };
+})(Navbar);
 
 
 /***/ }),
@@ -43248,31 +43625,42 @@ var __extends = (this && this.__extends) || (function () {
 })();
 exports.__esModule = true;
 var React = __webpack_require__(/*! react */ "./node_modules/react/index.js");
+var react_redux_1 = __webpack_require__(/*! react-redux */ "./node_modules/react-redux/es/index.js");
+var Modal_1 = __webpack_require__(/*! ./Modal */ "./src/components/Modal.tsx");
 var OnlineUsers = (function (_super) {
     __extends(OnlineUsers, _super);
     function OnlineUsers(props) {
         var _this = _super.call(this, props) || this;
-        _this.updateConnectedUsers = function (userEmails) {
-            console.log('connected user emails', userEmails);
-            _this.setState(Object.assign({}, _this.state, { connectedUserEmails: userEmails }));
+        _this.handleClick = function (e) {
+            e.preventDefault();
+            _this.setState({ displayConnectedUsers: true });
         };
         _this.state = {
-            connectedUserEmails: []
+            displayConnectedUsers: false
         };
-        _this.props.socket.on('connected users', _this.updateConnectedUsers);
         return _this;
     }
     OnlineUsers.prototype.render = function () {
+        var _this = this;
         return (React.createElement("div", { className: "online-users" },
-            React.createElement("a", { className: "online-users-count", href: "#", onClick: function () { } },
-                this.state.connectedUserEmails.length,
+            React.createElement("a", { className: "online-users-count", onClick: this.handleClick },
+                this.props.connectedUserEmails.length,
                 " user",
-                this.state.connectedUserEmails.length !== 1 ? 's' : '',
-                " online")));
+                this.props.connectedUserEmails.length !== 1 ? 's' : '',
+                " online"),
+            React.createElement(Modal_1["default"], { title: "Online Users", active: this.state.displayConnectedUsers, onDismiss: function () {
+                    _this.setState({ displayConnectedUsers: false });
+                } }, this.props.connectedUserEmails.map(function (email) {
+                return React.createElement("div", { className: "row" }, email);
+            }))));
     };
     return OnlineUsers;
 }(React.Component));
-exports["default"] = OnlineUsers;
+exports["default"] = react_redux_1.connect(function (state) {
+    return {
+        connectedUserEmails: state.socket.connectedUserEmails
+    };
+})(OnlineUsers);
 
 
 /***/ }),
@@ -43309,13 +43697,15 @@ var Page404 = (function (_super) {
         return _super !== null && _super.apply(this, arguments) || this;
     }
     Page404.prototype.render = function () {
-        return (this.props.user.authorized ?
-            React.createElement(react_router_dom_1.Redirect, { to: "/dashboard" }) :
-            React.createElement(react_router_dom_1.Redirect, { to: "/login" }));
+        return (this.props.authorized ?
+            React.createElement(react_router_dom_1.Redirect, { push: true, to: "/dashboard" }) :
+            React.createElement(react_router_dom_1.Redirect, { push: true, to: "/login" }));
     };
     return Page404;
 }(React.Component));
-exports["default"] = react_redux_1.connect(function (state) { return state; })(Page404);
+exports["default"] = react_redux_1.connect(function (state) { return ({
+    authorized: state.user.authorized
+}); })(Page404);
 
 
 /***/ }),
@@ -43345,67 +43735,83 @@ var __extends = (this && this.__extends) || (function () {
 exports.__esModule = true;
 var React = __webpack_require__(/*! react */ "./node_modules/react/index.js");
 var react_redux_1 = __webpack_require__(/*! react-redux */ "./node_modules/react-redux/es/index.js");
-var io = __webpack_require__(/*! socket.io-client */ "./node_modules/socket.io-client/lib/index.js");
 var react_router_dom_1 = __webpack_require__(/*! react-router-dom */ "./node_modules/react-router-dom/esm/react-router-dom.js");
 var channelsActions_1 = __webpack_require__(/*! ../actions/channelsActions */ "./src/actions/channelsActions.ts");
-var OnlineUsers_1 = __webpack_require__(/*! ./OnlineUsers */ "./src/components/OnlineUsers.tsx");
+var socketActions_1 = __webpack_require__(/*! ../actions/socketActions */ "./src/actions/socketActions.ts");
 var Chat_1 = __webpack_require__(/*! ./Chat */ "./src/components/Chat.tsx");
 var LoadingFadeIn_1 = __webpack_require__(/*! ./LoadingFadeIn */ "./src/components/LoadingFadeIn.tsx");
+var PageLogout_1 = __webpack_require__(/*! ./PageLogout */ "./src/components/PageLogout.tsx");
+var PageSettings_1 = __webpack_require__(/*! ./PageSettings */ "./src/components/PageSettings.tsx");
+var Dropdown_1 = __webpack_require__(/*! ./Dropdown */ "./src/components/Dropdown.tsx");
+var DropdownMenu_1 = __webpack_require__(/*! ./DropdownMenu */ "./src/components/DropdownMenu.tsx");
+var DropdownMenuItem_1 = __webpack_require__(/*! ./DropdownMenuItem */ "./src/components/DropdownMenuItem.tsx");
 var history_1 = __webpack_require__(/*! ../lib/history */ "./src/lib/history.ts");
 var PageDashboard = (function (_super) {
     __extends(PageDashboard, _super);
     function PageDashboard(props) {
         var _this = _super.call(this, props) || this;
-        _this.componentWillUnmount = function () {
-            _this.state.socket.close();
+        _this.componentDidUpdate = function (prevProps) {
+            if (_this.props.location.pathname.indexOf('/dashboard') === 0 &&
+                _this.props.channelNames.length > 0 &&
+                _this.state.channel === '') {
+                _this.setState({ channel: _this.props.channelNames[0] });
+            }
         };
         _this.componentDidMount = function () {
             _this.props.fetchChannels().then(function () {
-                if (_this.props.channelNames.indexOf(_this.props.match.params.channel) > -1) {
-                    _this.setState({ channel: _this.props.match.params.channel });
-                }
-                else {
-                    _this.setState({ channel: _this.props.channelNames[0] });
-                    history_1["default"].push('/dashboard/' + _this.props.channelNames[0]);
-                }
             });
         };
         _this.state = {
-            socket: io(),
             channel: '',
             channels: [],
             redirectToChannel: false
         };
-        _this.state.socket.on('connect', function () {
-            console.log('Connected to websocket server [' + _this.state.socket.id + ']');
-        });
-        _this.state.socket.on('disconnect', function () {
-            console.log('Disconnected from websocket server, attempting reconnect');
-        });
+        _this.props.initWebsocket();
         return _this;
     }
     PageDashboard.prototype.render = function () {
         var _this = this;
         var channels = [];
-        var chats = [];
+        var dashboardRoutes = [];
         this.props.channelNames.forEach(function (c) {
             var className = 'channel';
             _this.state.channel === c ?
                 className += ' active' : '';
             channels.push(React.createElement(react_router_dom_1.Link, { to: "/dashboard/" + c, className: className, key: c, onClick: function () { return _this.setState({ channel: c }); } }, c));
-            chats.push(React.createElement(react_router_dom_1.Route, { key: c, path: "/dashboard/" + c, render: function () {
-                    return React.createElement(Chat_1["default"], { socket: _this.state.socket, channel: c });
+            dashboardRoutes.push(React.createElement(react_router_dom_1.Route, { key: c, path: "/dashboard/" + c, render: function () {
+                    return React.createElement(Chat_1["default"], { channel: c });
                 } }));
         });
         return (React.createElement(react_router_dom_1.Router, { history: history_1["default"] },
             React.createElement("div", { className: "page-dashboard" },
-                React.createElement("div", { className: "sidebar" },
+                React.createElement("div", { className: this.props.open ? "sidebar open" : "sidebar" },
+                    React.createElement(Dropdown_1["default"], { className: "sidebar-item account-dropdown" },
+                        this.props.userEmail,
+                        React.createElement("i", { className: "material-icons" }, "keyboard_arrow_down"),
+                        React.createElement(DropdownMenu_1["default"], null,
+                            React.createElement(DropdownMenuItem_1["default"], null,
+                                React.createElement(react_router_dom_1.Link, { to: "/settings/account" },
+                                    React.createElement("i", { className: "material-icons" }, "settings"),
+                                    "settings")),
+                            React.createElement(DropdownMenuItem_1["default"], null,
+                                React.createElement(react_router_dom_1.Link, { to: "/logout" },
+                                    React.createElement("i", { className: "material-icons" }, "exit_to_app"),
+                                    "logout")))),
+                    React.createElement("div", { className: "sidebar-item" }, "Channels"),
                     React.createElement("div", { className: "channels" },
                         React.createElement(LoadingFadeIn_1["default"], { active: channels.length === 0 }),
                         channels)),
                 React.createElement("div", { className: "content" },
-                    React.createElement(OnlineUsers_1["default"], { socket: this.state.socket }),
-                    React.createElement(react_router_dom_1.Switch, null, chats)))));
+                    React.createElement(react_router_dom_1.Switch, null,
+                        React.createElement(react_router_dom_1.Route, { exact: true, path: "/logout", key: "page-logout", component: PageLogout_1["default"] }),
+                        React.createElement(react_router_dom_1.Route, { exact: true, path: "/settings/:setting?", key: "page-settings", component: PageSettings_1["default"] }),
+                        dashboardRoutes,
+                        React.createElement(react_router_dom_1.Route, { render: function (props) {
+                                console.log('redirect dashboard');
+                                if (_this.props.channelNames.length === 0)
+                                    return React.createElement("div", null);
+                                return React.createElement(react_router_dom_1.Redirect, { to: "/dashboard/" + _this.props.channelNames[0] });
+                            } }))))));
     };
     return PageDashboard;
 }(React.Component));
@@ -43417,13 +43823,16 @@ exports["default"] = react_redux_1.connect(function (state) {
             var nameA = a.toUpperCase();
             var nameB = b.toUpperCase();
             return (nameA < nameB) ? -1 : (nameB < nameA) ? 1 : 0;
-        })
+        }),
+        userEmail: state.user.email,
+        open: state.sidebar.open,
     };
 }, function (dispatch) {
     return {
         fetchChannels: function () {
             return dispatch(channelsActions_1.fetchChannels());
-        }
+        },
+        initWebsocket: function () { return dispatch(socketActions_1.init()); }
     };
 })(PageDashboard);
 
@@ -43456,6 +43865,8 @@ exports.__esModule = true;
 var React = __webpack_require__(/*! react */ "./node_modules/react/index.js");
 var axios_1 = __webpack_require__(/*! axios */ "./node_modules/axios/index.js");
 var react_redux_1 = __webpack_require__(/*! react-redux */ "./node_modules/react-redux/es/index.js");
+var notificationsActions_1 = __webpack_require__(/*! ../actions/notificationsActions */ "./src/actions/notificationsActions.ts");
+var userActions_1 = __webpack_require__(/*! ../actions/userActions */ "./src/actions/userActions.ts");
 var PageLogin = (function (_super) {
     __extends(PageLogin, _super);
     function PageLogin(props) {
@@ -43469,15 +43880,15 @@ var PageLogin = (function (_super) {
     PageLogin.prototype.render = function () {
         var _this = this;
         return (React.createElement("div", { className: "page-login" },
-            React.createElement("form", { onSubmit: this.handleSubmit.bind(this) },
-                React.createElement("h3", { className: "title" }, "Login"),
-                React.createElement("div", { className: "input-group" },
+            React.createElement("form", { onSubmit: this.handleSubmit.bind(this), className: "" },
+                React.createElement("h4", null, "Login"),
+                React.createElement("fieldset", null,
                     React.createElement("label", { htmlFor: "email" }, "email"),
                     React.createElement("input", { type: "email", id: "email", value: this.state.email, onChange: function (e) { _this.setState({ email: e.currentTarget.value }); } })),
-                React.createElement("div", { className: "input-group" },
+                React.createElement("fieldset", null,
                     React.createElement("label", { htmlFor: "password" }, "password"),
                     React.createElement("input", { type: "password", id: "password", value: this.state.password, onChange: function (e) { _this.setState({ password: e.currentTarget.value }); } })),
-                React.createElement("button", { type: "submit" }, "login"))));
+                React.createElement("button", { type: "submit", className: "pure-button button-large" }, "login"))));
     };
     PageLogin.prototype.handleSubmit = function (e) {
         var _this = this;
@@ -43486,16 +43897,26 @@ var PageLogin = (function (_super) {
             email: this.state.email,
             password: this.state.password
         }).then(function (res) {
-            _this.props.dispatch({ type: 'CLEAR_ERRORS' });
-            _this.props.dispatch({ type: 'SET_EMAIL', data: res.data.email });
-            _this.props.dispatch({ type: 'SET_AUTHORIZED', data: true });
+            _this.props.clearErrors();
+            _this.props.setUser({
+                authorized: true,
+                email: res.data.email,
+                name: res.data.name || '',
+                role: res.data.role
+            });
         })["catch"](function (err) {
-            _this.props.dispatch({ type: 'ADD_ERROR', data: err.response.data.error });
+            _this.props.addError(err.response.data.error);
         });
     };
     return PageLogin;
 }(React.Component));
-exports["default"] = react_redux_1.connect()(PageLogin);
+exports["default"] = react_redux_1.connect(null, function (dispatch) {
+    return {
+        clearErrors: function () { return dispatch(notificationsActions_1.clearErrors()); },
+        addError: function (err) { return dispatch(notificationsActions_1.addError(err)); },
+        setUser: function (user) { return dispatch(userActions_1.setUser(user)); },
+    };
+})(PageLogin);
 
 
 /***/ }),
@@ -43526,13 +43947,13 @@ exports.__esModule = true;
 var React = __webpack_require__(/*! react */ "./node_modules/react/index.js");
 var react_redux_1 = __webpack_require__(/*! react-redux */ "./node_modules/react-redux/es/index.js");
 var axios_1 = __webpack_require__(/*! axios */ "./node_modules/axios/index.js");
+var userActions_1 = __webpack_require__(/*! ../actions/userActions */ "./src/actions/userActions.ts");
 var PageLogout = (function (_super) {
     __extends(PageLogout, _super);
     function PageLogout(props) {
         var _this = _super.call(this, props) || this;
         axios_1["default"].get('/api/v1/logout').then(function (response) {
-            _this.props.dispatch({ type: 'SET_EMAIL', data: false });
-            _this.props.dispatch({ type: 'SET_AUTHORIZED', data: false });
+            _this.props.logout();
         });
         return _this;
     }
@@ -43541,7 +43962,11 @@ var PageLogout = (function (_super) {
     };
     return PageLogout;
 }(React.Component));
-exports["default"] = react_redux_1.connect()(PageLogout);
+exports["default"] = react_redux_1.connect(null, function (dispatch) {
+    return {
+        logout: function () { return dispatch(userActions_1.logout()); }
+    };
+})(PageLogout);
 
 
 /***/ }),
@@ -43572,6 +43997,8 @@ exports.__esModule = true;
 var React = __webpack_require__(/*! react */ "./node_modules/react/index.js");
 var axios_1 = __webpack_require__(/*! axios */ "./node_modules/axios/index.js");
 var react_redux_1 = __webpack_require__(/*! react-redux */ "./node_modules/react-redux/es/index.js");
+var react_router_dom_1 = __webpack_require__(/*! react-router-dom */ "./node_modules/react-router-dom/esm/react-router-dom.js");
+var notificationsActions_1 = __webpack_require__(/*! ../actions/notificationsActions */ "./src/actions/notificationsActions.ts");
 var PageRegister = (function (_super) {
     __extends(PageRegister, _super);
     function PageRegister(props) {
@@ -43580,23 +44007,23 @@ var PageRegister = (function (_super) {
             email: '',
             password: '',
             confirmPassword: '',
-            error: false,
-            success: false
+            redirectToLogin: false,
         };
         return _this;
     }
     PageRegister.prototype.render = function () {
         var _this = this;
         return (React.createElement("div", { className: "page-login" },
+            this.state.redirectToLogin ? React.createElement(react_router_dom_1.Redirect, { to: "/login" }) : React.createElement("div", null),
             React.createElement("form", { onSubmit: this.handleSubmit.bind(this) },
                 React.createElement("h3", { className: "title" }, "Register"),
-                React.createElement("div", { className: "input-group" },
+                React.createElement("fieldset", null,
                     React.createElement("label", { htmlFor: "email" }, "email"),
                     React.createElement("input", { type: "email", id: "email", value: this.state.email, onChange: function (e) { _this.setState({ email: e.currentTarget.value }); } })),
-                React.createElement("div", { className: "input-group" },
+                React.createElement("fieldset", null,
                     React.createElement("label", { htmlFor: "password" }, "password"),
                     React.createElement("input", { type: "password", id: "password", value: this.state.password, onChange: function (e) { _this.setState({ password: e.currentTarget.value }); } })),
-                React.createElement("div", { className: "input-group" },
+                React.createElement("fieldset", null,
                     React.createElement("label", { htmlFor: "confirm-password" }, "confirm password"),
                     React.createElement("input", { type: "password", id: "confirm-password", value: this.state.confirmPassword, onChange: function (e) { _this.setState({ confirmPassword: e.currentTarget.value }); } })),
                 React.createElement("button", { type: "submit" }, "register"))));
@@ -43605,21 +44032,28 @@ var PageRegister = (function (_super) {
         var _this = this;
         e.preventDefault();
         if (this.state.password !== this.state.confirmPassword)
-            return this.props.dispatch({ type: 'ADD_ERROR', data: 'Passwords do not match' });
+            return this.props.addError('Passwords do not match');
         axios_1["default"].post('/api/v1/register', {
             email: this.state.email,
             password: this.state.password
         }).then(function (res) {
-            _this.props.dispatch({ type: 'CLEAR_ERRORS' });
-            _this.props.dispatch({ type: 'ADD_INFO', data: 'Check your email to verify your account.' });
+            _this.props.clearErrors();
+            _this.props.addInfo('Account created, please login.');
+            _this.setState({ redirectToLogin: true });
             return res;
         })["catch"](function (err) {
-            _this.props.dispatch({ type: 'ADD_ERROR', data: err.response.data.error });
+            _this.props.addError(err.response.data.error);
         });
     };
     return PageRegister;
 }(React.Component));
-exports["default"] = react_redux_1.connect(function (state) { return state; })(PageRegister);
+exports["default"] = react_redux_1.connect(null, function (dispatch) {
+    return {
+        addError: function (err) { return dispatch(notificationsActions_1.addError(err)); },
+        addInfo: function (info) { return dispatch(notificationsActions_1.addInfo(info)); },
+        clearErrors: function () { return dispatch(notificationsActions_1.clearErrors()); },
+    };
+})(PageRegister);
 
 
 /***/ }),
@@ -43650,51 +44084,223 @@ exports.__esModule = true;
 var React = __webpack_require__(/*! react */ "./node_modules/react/index.js");
 var react_redux_1 = __webpack_require__(/*! react-redux */ "./node_modules/react-redux/es/index.js");
 var react_router_dom_1 = __webpack_require__(/*! react-router-dom */ "./node_modules/react-router-dom/esm/react-router-dom.js");
-var history_1 = __webpack_require__(/*! ../lib/history */ "./src/lib/history.ts");
 var AccountSettings_1 = __webpack_require__(/*! ./AccountSettings */ "./src/components/AccountSettings.tsx");
-var ChannelsSettings_1 = __webpack_require__(/*! ./ChannelsSettings */ "./src/components/ChannelsSettings.tsx");
+var ChannelSettings_1 = __webpack_require__(/*! ./ChannelSettings */ "./src/components/ChannelSettings.tsx");
+var UserSettings_1 = __webpack_require__(/*! ./UserSettings */ "./src/components/UserSettings.tsx");
 var PageSettings = (function (_super) {
     __extends(PageSettings, _super);
     function PageSettings(props) {
         var _this = _super.call(this, props) || this;
-        _this.settings = ['account', 'channels', 'users', 'widget'];
+        _this.settings = [
+            { name: 'account', restrictToAdmin: false, component: AccountSettings_1["default"] },
+            { name: 'channels', restrictToAdmin: true, component: ChannelSettings_1["default"] },
+            { name: 'users', restrictToAdmin: true, component: UserSettings_1["default"] },
+        ];
         _this.componentDidMount = function () {
-            if (!_this.state.currentSettingsPage) {
-                _this.setState({ currentSettingsPage: _this.settings[0] });
-                return history_1["default"].push('/settings/' + _this.settings[0]);
-            }
+            var settingsPage = _this.settings.find(function (s) { return _this.props.match.params.setting === s.name; });
+            if (settingsPage)
+                _this.setState({ currentSettingsPage: settingsPage.name });
         };
-        var settingsPage = _this.settings.indexOf(props.match.params.setting) > -1 ?
-            props.match.params.setting : false;
         _this.state = {
             user: {
-                email: _this.props.user.email
+                role: _this.props.user.role
             },
-            currentSettingsPage: settingsPage
+            currentSettingsPage: '',
         };
-        console.log('Page settings state', _this.state);
         return _this;
     }
     PageSettings.prototype.render = function () {
         var _this = this;
         var settings = [];
+        var settingsRoutes = [];
         this.settings.forEach(function (s) {
-            settings.push(React.createElement(react_router_dom_1.Link, { key: s, onClick: function () { return _this.setState({ currentSettingsPage: s }); }, className: s === _this.state.currentSettingsPage ? 'tab active' : 'tab', to: '/settings/' + s }, s));
+            if (s.restrictToAdmin && _this.props.user.role !== 'admin')
+                return;
+            settings.push(React.createElement(react_router_dom_1.Link, { key: s.name, onClick: function () { return _this.setState({ currentSettingsPage: s.name }); }, className: s.name === _this.state.currentSettingsPage ? 'tab active' : 'tab', to: '/settings/' + s.name }, s.name));
+            if (s.component)
+                settingsRoutes.push(React.createElement(react_router_dom_1.Route, { path: '/settings/' + s.name, key: s.name, component: s.component }));
         });
-        return React.createElement(react_router_dom_1.Router, { history: history_1["default"] },
+        return (React.createElement(react_router_dom_1.BrowserRouter, null,
             React.createElement("div", { className: "page-settings" },
                 React.createElement("div", { className: "container" },
                     React.createElement("h3", { className: "title" }, "Settings"),
                     React.createElement("div", { className: "tabs" }, settings),
-                    this.state.currentSettingsPage ?
-                        React.createElement("div", { className: "" },
-                            React.createElement(react_router_dom_1.Switch, null,
-                                React.createElement(react_router_dom_1.Route, { path: "/settings/account", component: AccountSettings_1["default"] }),
-                                React.createElement(react_router_dom_1.Route, { path: "/settings/channels", component: ChannelsSettings_1["default"] }))) : React.createElement("div", null))));
+                    React.createElement(react_router_dom_1.Switch, null, settingsRoutes)))));
     };
     return PageSettings;
 }(React.Component));
-exports["default"] = react_redux_1.connect(function (props) { return props; })(PageSettings);
+exports["default"] = react_redux_1.connect(function (props) {
+    return {
+        user: { role: props.user.role }
+    };
+})(PageSettings);
+
+
+/***/ }),
+
+/***/ "./src/components/UserSettings.tsx":
+/*!*****************************************!*\
+  !*** ./src/components/UserSettings.tsx ***!
+  \*****************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    };
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+exports.__esModule = true;
+var React = __webpack_require__(/*! react */ "./node_modules/react/index.js");
+var axios_1 = __webpack_require__(/*! axios */ "./node_modules/axios/index.js");
+var react_redux_1 = __webpack_require__(/*! react-redux */ "./node_modules/react-redux/es/index.js");
+var UserSettingsSearch_1 = __webpack_require__(/*! ./UserSettingsSearch */ "./src/components/UserSettingsSearch.tsx");
+var notificationsActions_1 = __webpack_require__(/*! ../actions/notificationsActions */ "./src/actions/notificationsActions.ts");
+var Modal_1 = __webpack_require__(/*! ./Modal */ "./src/components/Modal.tsx");
+var UserSettings = (function (_super) {
+    __extends(UserSettings, _super);
+    function UserSettings(props) {
+        var _this = _super.call(this, props) || this;
+        _this.componentDidMount = function () {
+            axios_1["default"].get('/api/v1/users').then(function (res) {
+                _this.setState({ users: res.data.users });
+            })["catch"](function (err) {
+                _this.props.addError('Something went wrong trying to fetch the list of users');
+                console.log(err);
+            }).then(function () {
+                _this.setState({ loading: false });
+            });
+        };
+        _this.handleCreateNewUser = function () {
+        };
+        _this.handleEditUser = function () {
+        };
+        _this.handleDeleteUser = function () {
+        };
+        _this.state = {
+            loading: true,
+            users: [],
+            displayNewUserModal: false,
+            isCreatingNewUser: false,
+            newUserName: '',
+            newUserEmail: '',
+            newUserRole: 'user',
+            displayEditUserModal: false,
+            isEditingUser: false,
+            displayDeleteUserModal: false,
+            isDeletingUser: false,
+        };
+        return _this;
+    }
+    UserSettings.prototype.render = function () {
+        var _this = this;
+        var users = [];
+        this.state.users.forEach(function (user) {
+            users.push(React.createElement("div", { key: user.email, className: "user" },
+                React.createElement("div", { className: "edit-user" },
+                    React.createElement("i", { className: "material-icons" }, "edit")),
+                React.createElement("div", { className: "user-name" }, user.name),
+                React.createElement("div", { className: "user-email" }, user.email),
+                React.createElement("div", { className: "user-role" }, user.role),
+                React.createElement("div", { className: "delete-user" },
+                    React.createElement("i", { className: "material-icons" }, "delete"))));
+        });
+        return React.createElement("div", { className: "user-settings" },
+            React.createElement(Modal_1["default"], { title: "New User", active: this.state.displayNewUserModal, onDismiss: function () { return _this.setState({ displayNewUserModal: false }); }, canConfirm: true, confirmText: 'send invitation', onConfirm: this.handleCreateNewUser, confirming: this.state.isCreatingNewUser },
+                React.createElement("form", { className: "new-user" },
+                    React.createElement("fieldset", null,
+                        React.createElement("label", { htmlFor: "new-user-name" }, "Name"),
+                        React.createElement("input", { type: "text", id: "new-user-name", value: this.state.newUserName, onChange: function (e) { return _this.setState({ newUserName: e.target.value }); } })),
+                    React.createElement("fieldset", { className: "required" },
+                        React.createElement("label", { htmlFor: "new-user-email" }, "Email"),
+                        React.createElement("input", { type: "email", id: "new-user-email" })),
+                    React.createElement("fieldset", { className: "required" },
+                        React.createElement("label", { htmlFor: "new-user-role" }, "Role"),
+                        React.createElement("select", { id: "new-user-role" },
+                            React.createElement("option", { value: "user" }, "user"),
+                            React.createElement("option", { value: "admin" }, "admin"))))),
+            React.createElement(Modal_1["default"], { title: "Edit User", active: this.state.displayEditUserModal, onDismiss: function () { return _this.setState({ displayEditUserModal: false }); }, canConfirm: true, confirmText: 'submit changes', onConfirm: this.handleEditUser, confirming: this.state.isEditingUser },
+                React.createElement("form", { className: "edit-user" })),
+            React.createElement(Modal_1["default"], { title: "Delete User", active: this.state.displayDeleteUserModal, onDismiss: function () { return _this.setState({ displayDeleteUserModal: false }); }, canConfirm: true, confirmText: 'delete user', onConfirm: this.handleDeleteUser, confirming: this.state.isDeletingUser },
+                React.createElement(React.Fragment, null, "Are you sure you want to delete this user?")),
+            React.createElement("div", { className: "add-user btn", onClick: function () { return _this.setState({ displayNewUserModal: true }); } },
+                React.createElement("i", { className: "material-icons" }, "add_box"),
+                React.createElement("span", { className: "add-user-text" }, "New User")),
+            React.createElement(UserSettingsSearch_1["default"], null),
+            React.createElement("div", { className: "user-details" }, users));
+    };
+    return UserSettings;
+}(React.Component));
+exports["default"] = react_redux_1.connect(null, function (dispatch) { return ({
+    addError: function (err) { return dispatch(notificationsActions_1.addError(err)); },
+}); })(UserSettings);
+
+
+/***/ }),
+
+/***/ "./src/components/UserSettingsSearch.tsx":
+/*!***********************************************!*\
+  !*** ./src/components/UserSettingsSearch.tsx ***!
+  \***********************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    };
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+exports.__esModule = true;
+var React = __webpack_require__(/*! react */ "./node_modules/react/index.js");
+var UserSettingsSearch = (function (_super) {
+    __extends(UserSettingsSearch, _super);
+    function UserSettingsSearch() {
+        var _this = _super !== null && _super.apply(this, arguments) || this;
+        _this.handleSearch = function (e) {
+            e.preventDefault();
+        };
+        return _this;
+    }
+    UserSettingsSearch.prototype.render = function () {
+        return React.createElement("div", { className: "user-settings-search" },
+            React.createElement("form", { className: "user-settings-search-form", onSubmit: this.handleSearch },
+                React.createElement("fieldset", { className: "inline" },
+                    React.createElement("label", { htmlFor: "" }, "search field"),
+                    React.createElement("select", null,
+                        React.createElement("option", { value: "email" }, "email"),
+                        React.createElement("option", { value: "name" }, "name"),
+                        React.createElement("option", { value: "role" }, "role")),
+                    React.createElement("label", { htmlFor: "" }, "sort by"),
+                    React.createElement("select", null,
+                        React.createElement("option", { value: "field" }, "search field"),
+                        React.createElement("option", { value: "date" }, "date created"))),
+                React.createElement("fieldset", { className: "inline" },
+                    React.createElement("input", { id: "user-search", type: "text", placeholder: "search query" }),
+                    React.createElement("button", { type: "submit" }, "search"))));
+    };
+    return UserSettingsSearch;
+}(React.Component));
+exports["default"] = UserSettingsSearch;
 
 
 /***/ }),
@@ -43915,6 +44521,45 @@ function default_1(state, action) {
             });
             return newChannels_4;
         }
+        case channelsActions_1.CLEAR_CHANNELS_DATA:
+            return [];
+        default:
+            return state;
+    }
+}
+exports["default"] = default_1;
+
+
+/***/ }),
+
+/***/ "./src/reducers/chatUsers.ts":
+/*!***********************************!*\
+  !*** ./src/reducers/chatUsers.ts ***!
+  \***********************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+exports.__esModule = true;
+var chatUsersActions_1 = __webpack_require__(/*! ../actions/chatUsersActions */ "./src/actions/chatUsersActions.ts");
+var initialState = {};
+function default_1(state, action) {
+    if (state === void 0) { state = initialState; }
+    var _a;
+    switch (action.type) {
+        case chatUsersActions_1.UPDATE_CHAT_USERS:
+            return action.data.users;
+        case chatUsersActions_1.ADD_CHAT_USER:
+            return Object.assign({}, state, (_a = {},
+                _a[action.data.user.email] = {
+                    role: action.data.user.role,
+                    name: action.data.user.name,
+                },
+                _a));
+        case chatUsersActions_1.REMOVE_CHAT_USER:
+            var clone = Object.assign({}, state);
+            delete clone[action.data.email];
         default:
             return state;
     }
@@ -43967,6 +44612,68 @@ exports["default"] = default_1;
 
 /***/ }),
 
+/***/ "./src/reducers/sidebar.ts":
+/*!*********************************!*\
+  !*** ./src/reducers/sidebar.ts ***!
+  \*********************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+exports.__esModule = true;
+var sidebarActions_1 = __webpack_require__(/*! ../actions/sidebarActions */ "./src/actions/sidebarActions.ts");
+var initialState = {
+    open: true
+};
+function default_1(state, action) {
+    if (state === void 0) { state = initialState; }
+    switch (action.type) {
+        case sidebarActions_1.TOGGLE_SIDEBAR_OPEN:
+            return Object.assign({}, state, { open: !state.open });
+        default:
+            return state;
+    }
+}
+exports["default"] = default_1;
+
+
+/***/ }),
+
+/***/ "./src/reducers/socket.ts":
+/*!********************************!*\
+  !*** ./src/reducers/socket.ts ***!
+  \********************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+exports.__esModule = true;
+var socketActions_1 = __webpack_require__(/*! ../actions/socketActions */ "./src/actions/socketActions.ts");
+var initialState = {
+    io: null,
+    connected: false,
+    connectedUserEmails: []
+};
+function default_1(state, action) {
+    if (state === void 0) { state = initialState; }
+    switch (action.type) {
+        case socketActions_1.INIT_WEBSOCKET:
+            return Object.assign({}, state, { io: action.data.io });
+        case socketActions_1.SET_SOCKET_CONNECTED:
+            return Object.assign({}, state, { connected: action.data.connected });
+        case socketActions_1.SET_SOCKET_CONNECTED_USERS:
+            return Object.assign({}, state, { connectedUserEmails: action.data.userEmails });
+        default:
+            return state;
+    }
+}
+exports["default"] = default_1;
+
+
+/***/ }),
+
 /***/ "./src/reducers/user.ts":
 /*!******************************!*\
   !*** ./src/reducers/user.ts ***!
@@ -43980,7 +44687,9 @@ exports.__esModule = true;
 var userActions_1 = __webpack_require__(/*! ../actions/userActions */ "./src/actions/userActions.ts");
 var initialState = {
     authorized: false,
-    email: false
+    email: false,
+    name: false,
+    role: false,
 };
 function default_1(state, action) {
     if (state === void 0) { state = initialState; }
@@ -43993,10 +44702,15 @@ function default_1(state, action) {
             if (action.data === false)
                 return Object.assign({}, state, { authorized: false, email: false });
             return Object.assign({}, state, { authorized: action.data });
-        case userActions_1.SET_EMAIL:
-            return Object.assign({}, state, { email: action.data });
-        case userActions_1.SET_NAME:
-            return Object.assign({}, state, { name: action.data });
+        case userActions_1.SET_USER:
+            return Object.assign({}, state, action.data);
+        case userActions_1.LOGOUT_USER:
+            return {
+                authorized: false,
+                name: false,
+                email: false,
+                role: false
+            };
         default:
             return state;
     }
@@ -44033,10 +44747,16 @@ var redux_logger_1 = __webpack_require__(/*! redux-logger */ "./node_modules/red
 var user_1 = __webpack_require__(/*! ./reducers/user */ "./src/reducers/user.ts");
 var channels_1 = __webpack_require__(/*! ./reducers/channels */ "./src/reducers/channels.ts");
 var notifications_1 = __webpack_require__(/*! ./reducers/notifications */ "./src/reducers/notifications.ts");
+var sidebar_1 = __webpack_require__(/*! ./reducers/sidebar */ "./src/reducers/sidebar.ts");
+var socket_1 = __webpack_require__(/*! ./reducers/socket */ "./src/reducers/socket.ts");
+var chatUsers_1 = __webpack_require__(/*! ./reducers/chatUsers */ "./src/reducers/chatUsers.ts");
 var rootReducer = redux_1.combineReducers({
     user: user_1["default"],
     channels: channels_1["default"],
-    notifications: notifications_1["default"]
+    notifications: notifications_1["default"],
+    sidebar: sidebar_1["default"],
+    socket: socket_1["default"],
+    chatUsers: chatUsers_1["default"],
 });
 exports["default"] = redux_1.createStore(rootReducer, redux_1.applyMiddleware(redux_thunk_1["default"], redux_logger_1.createLogger()));
 

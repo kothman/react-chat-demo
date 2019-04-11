@@ -1,0 +1,55 @@
+$sidebar-background: $color-black;
+
+.sidebar {
+    background: $sidebar-background;
+    display: flex;
+    flex-direction: column;
+    overflow-y: scroll;
+    position: relative;
+    height: 100%;
+    overflow-y: scroll;
+    max-width: 0px;
+    width: 0px;
+    min-width: 0px;
+    transition: all .4s ease-in-out;
+    overflow-x: hidden;
+    
+    &.open {
+        min-width: 210px;
+        width: 210px;
+        max-width: 210px;
+    }
+    .sidebar-item {
+        margin: 1rem;
+        color: white;
+    }
+
+    .account-dropdown {
+        display: flex;
+        align-items: center;
+        justify-content: flex-start;
+        color: darken(white, 20);
+        font-size: .9rem;
+        cursor: pointer;
+        &:hover {
+            color: white;
+
+        }
+    }
+
+    .channel {
+        display: flex;
+        padding: 1rem;
+        border-left: 1px solid white;
+        text-decoration: none;
+        color: white;
+        cursor: pointer;
+        
+        &.active, &:hover {
+            background: lighten($sidebar-background, 10)
+        }
+        &.active {
+            border-left: 4px solid white;
+        }
+    }
+}

@@ -2,7 +2,8 @@ import * as React from 'react';
 import modalHelpers from '../lib/modalHelpers';
 
 interface Props {
-    children: JSX.Element
+    active?: boolean,
+    children: JSX.Element | JSX.Element[]
     title: string,
     onDismiss?: Function,
     onConfirm?: Function,
@@ -30,8 +31,8 @@ class Modal extends React.Component<Props, State> {
             this.props.onDismiss();
     }
     confirmModal = (e: React.MouseEvent) => {
-        this.setState({ active: false })
         this.props.onConfirm();
+        this.setState({ active: false })
     }
     backdropListener = (e: React.MouseEvent) => {
         if (this.state.modalContentRef && !this.state.modalContentRef.contains(e.target)) {
@@ -43,7 +44,10 @@ class Modal extends React.Component<Props, State> {
     }
     render() {
         let className: string = 'modal';
-        this.state.active ? className += ' active' : '';
+        let active: boolean = (this.props.active)
+            || (this.state.active && this.props.active)
+            || (this.state.active && this.props.active === undefined);
+        active ? className += ' active' : '';
         return (            
             <div className={className} onClick={this.backdropListener}>
                 <div ref={this.setModalContentRef} className="modal-content">

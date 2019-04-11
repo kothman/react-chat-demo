@@ -14,11 +14,12 @@ const mustacheExpress = require('mustache-express');
 
 import Routes from './routes/index';
 import websocket from './socket.io/index';
+import { App, Request, Response } from '../types/express';
 const env = require('../../env');
 
-const app = express();
-const port = process.env.PORT || 3000;
-const csurfMiddleware = csurf();
+const app: App = express();
+const port: string | number = process.env.PORT || 3000;
+const csurfMiddleware: express.RequestHandler = csurf();
 
 app.engine('html', mustacheExpress());
 app.set('view engine', 'html');
@@ -27,7 +28,7 @@ MongoClient.connect(env.mongodbConnectionUri, {useNewUrlParser: true}, function(
     if (err) return console.error(err);
     let db: Db = client.db();
     // add DB to each req via middleware
-    app.use((req: any, res: any, next: Function) => {
+    app.use((req: Request, res: Response, next: Function) => {
         req.db = db;
         return next();
     });
@@ -48,20 +49,20 @@ MongoClient.connect(env.mongodbConnectionUri, {useNewUrlParser: true}, function(
     app.use(csurfMiddleware);
     app.use(helmet());
     // Setup local strategy for passport authentication
-    app.use((req: any, res: any, next: Function) => {
+    app.use((req: Request, res: Response, next: Function) => {
         req.authenticate = (username: string, password: string, done: Function) => {
             let users: Collection = db.collection('users');
             users.findOne({ email: username }).then((user) => {
                 if (user === null || !bcrypt.compareSync(password, user.password)) {
                     return done(false);
                 }
-                let sessionUser: any = {
+                let userDetails: any = {
                     email: user.email,
-                    emailVerified: user.emailVerified,
-                    name: user.name
+                    name: user.name,
+                    role: user.role
                 };
-                req.session.user = sessionUser;
-                return done(sessionUser);
+                req.session.user = userDetails;
+                return done(userDetails);
             });
         }
         req.logout = () => {
@@ -72,7 +73,7 @@ MongoClient.connect(env.mongodbConnectionUri, {useNewUrlParser: true}, function(
 
     Routes(app);
 
-    app.get('/', function (req: any, res: any) {
+    app.get('/', function (req: Request, res: Response) {
         res.render(
             path.resolve(__dirname, '../../dist/public/index.html'),
             { csrfToken: req.csrfToken() }
@@ -81,14 +82,14 @@ MongoClient.connect(env.mongodbConnectionUri, {useNewUrlParser: true}, function(
     // Serve static files from dist/public
     app.use(express.static(path.resolve(__dirname, '../../dist/public/')));
     // Display index.html if unknown path, and let React-Router handle the 404
-    app.get('*', function (req: any, res: any) {
+    app.get('*', function (req: Request, res: Response) {
         res.render(
             path.resolve(__dirname, '../../dist/public/index.html'),
             {csrfToken: req.csrfToken()}    
         );
     });
 
-    const server = http.createServer(app);
+    const server: http.Server = http.createServer(app);
     websocket(server, db, sessionMiddleware);
     server.listen(port, () => {
         console.log(`Listening on port ${port}!`);

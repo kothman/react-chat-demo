@@ -2,42 +2,65 @@ form {
     display: flex;
     flex-direction: column;
 
-    .input-group {
-        display: flex;
-        flex-direction: row;
-        justify-content: space-between;
+    input, textarea, select {
+        @include small;
+    }
+
+    h1, h2, h3, h4, h5, h6 {
         margin-bottom: 1rem;
-
-
-
-        label {
-            margin-right: 1rem;
-        }
-    }
-
-    @include mobile {
-        .input-group {
-            flex-direction: column;
-            label {
-                margin-bottom: .5rem;
-                margin-right: 0;
-            }
-            button {
-                margin-left: auto;
-                margin-top: .5rem;
-            }
-        }
-    }
-
-    input {
-        border: 1px solid lightgray;
-        padding: .25rem;
-        font-size: 1rem;
-        line-height: 1rem;
+        border-bottom: $border;
     }
 
     label {
+        margin-bottom: .5rem;
         display: flex;
         align-items: center;
+        font-weight: 300;
+    }
+
+    input, select {
+        border-radius: 3px;
+        border: $border-dark;
+        padding: .25rem;
+        font-size: 100%;
+        max-width: 100%;
+    }
+
+    select {
+        -webkit-appearance: none;
+        -moz-appearance: none;
+    }
+
+    fieldset {
+        display: flex;
+        flex-direction: column;
+        margin-bottom: 1rem;
+        max-width: 100%;
+
+        input {
+            width: 100%;
+        }
+
+        &.inline {
+            @include mobile {
+                input, select {
+                    margin-bottom: .5rem;
+                }
+            }
+            @include desktop {
+                flex-direction: row;
+                label, select {
+                    margin-right: 1rem;
+                    margin-bottom: 0;
+                }
+
+                input + button, input + .btn {
+                    border-top-left-radius: 0;
+                    border-bottom-left-radius: 0;
+                    z-index: 1;
+                    margin-left: -5px;
+                }
+            }
+        }
     }
 }

@@ -2,8 +2,8 @@
     
 
     &.loading-fade-in {
-        background: $main-background;
-        color: darkgray;
+        background: white;
+        color: white;
         opacity: 0;
         position: absolute;
         left: 0;
@@ -16,9 +16,6 @@
         z-index: -500;
         transition: all .4s ease-in-out;
 
-        &.black {
-            background: black;
-        }
         &.gray {
             background: gray;
         }

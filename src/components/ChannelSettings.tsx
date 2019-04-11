@@ -15,7 +15,7 @@ interface State {
     newChannelName: string,
 }
 
-class ChannelsSettings extends React.Component<any, State> {
+class ChannelSettings extends React.Component<any, State> {
     constructor(props: any) {
         super(props);
         this.state = {
@@ -130,4 +130,4 @@ export default connect((state: any) => {
         addChannel: (name: string) => { return dispatch<any>(addChannel(name)); },
         removeChannel: (name: string) => { return dispatch<any>(deleteChannel(name)); }
     };
-})(ChannelsSettings);
+})(ChannelSettings);

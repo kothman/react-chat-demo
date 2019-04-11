@@ -1,10 +1,15 @@
-button {
-    border: 1px solid black;
-    border-radius: 0;
+button, .btn {
+    border: $border-dark;
+    border-radius: 3px;
     padding: .5rem;
-    background: white;
+    background: $color-white;
+    margin-right: auto;
     cursor: pointer;
-    &:hover {
-        background: darken(white, 10);
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+
+    &:hover, &:focus {
+        background: darken($color-white, 10);
     }
 }

@@ -3,3 +3,48 @@
         @content;
     }
 }
+
+@mixin desktop {
+    @media (min-width: $mobile-breakpoint + 1) {
+        @content;
+    }
+}
+
+@mixin title {
+    font-family: $font-family-title;
+    font-size: $font-size-title;
+    line-height: $line-height-title;
+}
+
+@mixin subtitle {
+    font-family: $font-family-title;
+    font-size: $font-size-subtitle;
+    line-height: $line-height-subtitle;
+}
+
+@mixin body {
+    font-family: $font-family-body;
+    font-size: $font-size-body;
+    line-height: $line-height-body;
+}
+
+@mixin small {
+    font-weight: $font-weight-small;
+    font-family: $font-family-body;
+    font-size: $font-size-small;
+}
+
+@mixin bold {
+    font-weight: $font-weight-bold;
+}
+
+.mx-auto {
+    margin-left: auto !important;
+    margin-right: auto !important;
+}
+.ml-auto {
+    margin-left: auto !important;
+}
+.mr-auto {
+    margin-right: auto !important;
+}

@@ -104,6 +104,27 @@ module.exports = {
 
 /***/ }),
 
+/***/ "./src/server/middleware/admin.ts":
+/*!****************************************!*\
+  !*** ./src/server/middleware/admin.ts ***!
+  \****************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+exports.__esModule = true;
+function default_1(req, res, next) {
+    if (req.session.user && req.session.user.role === 'admin') {
+        return next();
+    }
+    return res.status(401).json({ error: 'Not authorized as admin' });
+}
+exports["default"] = default_1;
+
+
+/***/ }),
+
 /***/ "./src/server/middleware/authorized.ts":
 /*!*********************************************!*\
   !*** ./src/server/middleware/authorized.ts ***!
@@ -136,6 +157,7 @@ exports["default"] = default_1;
 
 exports.__esModule = true;
 var authorized_1 = __webpack_require__(/*! ../../middleware/authorized */ "./src/server/middleware/authorized.ts");
+var admin_1 = __webpack_require__(/*! ../../middleware/admin */ "./src/server/middleware/admin.ts");
 var validator = __webpack_require__(/*! validator */ "validator");
 function default_1(app) {
     app.get('/api/v1/channel*', authorized_1["default"]);
@@ -158,7 +180,7 @@ function default_1(app) {
             });
         });
     });
-    app.get('/api/v1/channel/delete/:channel', function (req, res) {
+    app.get('/api/v1/channel/delete/:channel', admin_1["default"], function (req, res) {
         if (validator.isEmpty(req.params.channel)) {
             return res.status(400).json({ error: 'Invalid channel name' });
         }
@@ -181,7 +203,7 @@ function default_1(app) {
             return p;
         });
     });
-    app.post('/api/v1/channel/create', function (req, res) {
+    app.post('/api/v1/channel/create', admin_1["default"], function (req, res) {
         if (validator.isEmpty(req.body.channelName)) {
             return res.status(400).json({ error: 'Invalid channel name' });
         }
@@ -224,10 +246,7 @@ var validator = __webpack_require__(/*! validator */ "validator");
 var users_1 = __webpack_require__(/*! ./users */ "./src/server/routes/api/users.ts");
 var messages_1 = __webpack_require__(/*! ./messages */ "./src/server/routes/api/messages.ts");
 var channels_1 = __webpack_require__(/*! ./channels */ "./src/server/routes/api/channels.ts");
-var crypto = __webpack_require__(/*! crypto */ "crypto");
-var env = __webpack_require__(/*! ../../../../env.js */ "./env.js");
-var mailgun = __webpack_require__(/*! mailgun-js */ "mailgun-js")({ apiKey: env.mailgunApiKey, domain: env.mailgunDomain });
-;
+var shortid_1 = __webpack_require__(/*! shortid */ "shortid");
 function default_1(app) {
     app.use(function (req, res, next) {
         res.set('new-csrf-token', req.csrfToken());
@@ -244,13 +263,14 @@ function default_1(app) {
             return res.status(400).json({ error: 'Not a valid email address' });
         }
         req.authenticate(req.body.email, req.body.password, function (user) {
-            console.log(user);
             if (!user)
                 return res.status(401).json({ error: 'Invalid email or password' });
-            if (!user.emailVerified) {
-                return res.status(400).json({ error: 'Email not verified' });
-            }
-            return res.json({ success: true, email: req.session.user.email });
+            return res.json({
+                success: true,
+                email: req.session.user.email,
+                role: req.session.user.role,
+                name: req.session.user.name
+            });
         });
     });
     app.post('/api/v1/register', function (req, res) {
@@ -266,26 +286,24 @@ function default_1(app) {
             if (user !== null) {
                 return res.status(401).json({ error: 'Email address already in use' });
             }
-            var verifyKey = crypto.randomBytes(48).toString('hex');
-            users.insertOne({
-                email: req.body.email,
-                password: passwordHash,
-                emailVerified: false,
-                verifyKey: verifyKey
-            }, function (err) {
-                var emailHtml = '<a href="';
-                emailHtml += process.env.BASE_URL ? process.env.BASE_URL : 'http://localhost:3000';
-                emailHtml += '/verifyEmail/' + verifyKey + '">Click here</a> to verify your email address.';
-                mailgun.messages().send({
-                    to: req.body.email,
-                    from: process.env.FROM_EMAIL ? process.env.FROM_EMAIL : 'adrian@sandbox3786eaf2000b4a839664faae2fb3faf5.mailgun.org',
-                    subject: 'Verify your email address',
-                    html: emailHtml
+            users.countDocuments().then(function (count) {
+                var role = 'user';
+                if (count === 0) {
+                    role = 'admin';
+                    var widgets = req.db.collection('widgets');
+                    widgets.insertOne({
+                        shortId: shortid_1.generate(),
+                        domain: 'http://localhost:4000',
+                    });
+                }
+                users.insertOne({
+                    email: req.body.email,
+                    password: passwordHash,
+                    emailVerified: false,
+                    role: role
                 }, function (err) {
-                    if (err)
-                        console.log(err);
+                    return res.json({ success: true });
                 });
-                return res.json({ success: true });
             });
         });
     });
@@ -327,9 +345,11 @@ var mongodb_1 = __webpack_require__(/*! mongodb */ "mongodb");
 function default_1(app) {
     app.get('/api/v1/messages?', authorized_1["default"]);
     app.get('/api/v1/messages/:channel/:offset', function (req, res) {
-        req.db.collection('messages').find({ channel: req.params.channel }, { skip: parseInt(req.params.offset), sort: [['_id', -1]], limit: 20 }, function (err, messages) {
+        var messages = req.db.collection('messages');
+        messages.find({ channel: req.params.channel }, { skip: parseInt(req.params.offset), sort: [['_id', -1]], limit: 20 })
+            .toArray(function (err, messages) {
             if (!messages)
-                return res.state(400).json({ json: err });
+                return res.status(400).json({ json: err });
             messages.toArray(function (err, msgArray) {
                 return res.json({ messages: msgArray.map(function (m) {
                         var objID = new mongodb_1.ObjectID(m['_id']);
@@ -356,11 +376,30 @@ exports["default"] = default_1;
 "use strict";
 
 exports.__esModule = true;
+var bcrypt = __webpack_require__(/*! bcryptjs */ "bcryptjs");
+var validator = __webpack_require__(/*! validator */ "validator");
 var authorized_1 = __webpack_require__(/*! ../../middleware/authorized */ "./src/server/middleware/authorized.ts");
 function default_1(app) {
     app.get('/api/v1/user*', authorized_1["default"]);
     app.get('/api/v1/user', function (req, res) {
         res.send(req.session.user);
+    });
+    app.get('/api/v1/users', function (req, res) {
+        var usersColl = req.db.collection('users');
+        var users = [];
+        usersColl.find({}).forEach(function (userDoc) {
+            users.push({
+                name: userDoc.name || '',
+                email: userDoc.email,
+                role: userDoc.role
+            });
+        }, function (err) {
+            if (err) {
+                console.log(err);
+                return res.status(500).json({ error: 'Something went wrong retrieving users' });
+            }
+            return res.status(200).json({ success: true, users: users });
+        });
     });
     app.get('/api/v1/user/:user', function (req, res) {
         req.db.collection('users').findOne({ email: req.params.user }, function (err, user) {
@@ -374,10 +413,56 @@ function default_1(app) {
         });
     });
     app.post('/api/v1/user/update/email', function (req, res) {
+        if (!validator.isEmail(req.body.email))
+            return res.status(400).json({ error: 'Not a valid email' });
+        var users = req.db.collection('users');
+        return users.countDocuments({ email: req.body.email }, function (err, count) {
+            if (err) {
+                console.log(err);
+                return res.status(500).json({ error: 'Something went wrong counting users with email ' + req.body.email });
+            }
+            if (count !== 0)
+                return res.status(400).json({ error: 'Email address already in use' });
+            users.updateOne({ email: req.session.user.email }, { $set: { email: req.body.email } }, function (err, user) {
+                if (err || !user) {
+                    console.log(err, user);
+                    return res.status(500).json({ error: 'Something went wrong trying to update user\'s email' });
+                }
+                req.session.user.email = req.body.email;
+                return res.status(200).json({ success: true });
+            });
+        });
     });
     app.post('/api/v1/user/update/name', function (req, res) {
+        var users = req.db.collection('users');
+        users.updateOne({ email: req.session.user.email }, { $set: { name: req.body.name } }, function (err, user) {
+            if (err || !user) {
+                console.log(err, user);
+                return res.status(500).json({ error: 'Something went wrong trying to update user\'s name' });
+            }
+            req.session.user.name = req.body.name;
+            return res.status(200).json({ success: true });
+        });
     });
-    app.post('/api/v1/user/update/email', function (req, res) {
+    app.post('/api/v1/user/update/password', function (req, res) {
+        var users = req.db.collection('users');
+        if (validator.isEmpty(req.body.newPass) || validator.isEmpty(req.body.oldPass))
+            return res.status(400).json({ error: 'Must supply the current and new password' });
+        return users.findOne({ email: req.session.user.email }, function (err, user) {
+            if (err || !user) {
+                console.log(err);
+                return res.status(500).json({ error: 'Something went wrong trying to retrieve the logged in user' });
+            }
+            if (!bcrypt.compareSync(req.body.oldPass, user.password))
+                return res.status(400).json({ error: 'Invalid password' });
+            users.updateOne({ email: req.session.user.email }, { $set: { password: bcrypt.hashSync(req.body.newPass) } }, function (err, user) {
+                if (err) {
+                    console.log(err);
+                    return res.status(500).json({ error: 'Something went wrong trying to update the logged in user\'s password' });
+                }
+                return res.status(200).json({ success: true });
+            });
+        });
     });
     app.post('/api/v1/user/reset_password', function (req, res) {
     });
@@ -492,13 +577,13 @@ mongodb_1.MongoClient.connect(env.mongodbConnectionUri, { useNewUrlParser: true 
                 if (user === null || !bcrypt.compareSync(password, user.password)) {
                     return done(false);
                 }
-                var sessionUser = {
+                var userDetails = {
                     email: user.email,
-                    emailVerified: user.emailVerified,
-                    name: user.name
+                    name: user.name,
+                    role: user.role
                 };
-                req.session.user = sessionUser;
-                return done(sessionUser);
+                req.session.user = userDetails;
+                return done(userDetails);
             });
         };
         req.logout = function () {
@@ -616,17 +701,6 @@ module.exports = require("connect-mongo");
 
 /***/ }),
 
-/***/ "crypto":
-/*!*************************!*\
-  !*** external "crypto" ***!
-  \*************************/
-/*! no static exports found */
-/***/ (function(module, exports) {
-
-module.exports = require("crypto");
-
-/***/ }),
-
 /***/ "csurf":
 /*!************************!*\
   !*** external "csurf" ***!
@@ -682,17 +756,6 @@ module.exports = require("http");
 
 /***/ }),
 
-/***/ "mailgun-js":
-/*!*****************************!*\
-  !*** external "mailgun-js" ***!
-  \*****************************/
-/*! no static exports found */
-/***/ (function(module, exports) {
-
-module.exports = require("mailgun-js");
-
-/***/ }),
-
 /***/ "mongodb":
 /*!**************************!*\
   !*** external "mongodb" ***!
@@ -723,6 +786,17 @@ module.exports = require("mustache-express");
 /***/ (function(module, exports) {
 
 module.exports = require("path");
+
+/***/ }),
+
+/***/ "shortid":
+/*!**************************!*\
+  !*** external "shortid" ***!
+  \**************************/
+/*! no static exports found */
+/***/ (function(module, exports) {
+
+module.exports = require("shortid");
 
 /***/ }),
 

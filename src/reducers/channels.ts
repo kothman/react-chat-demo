@@ -3,7 +3,8 @@ import {ADD_CHANNELS,
         SET_CHANNEL_HAS_MORE_MESSAGES,
         ADD_RECEIVED_CHANNEL_MESSAGE,
         ADD_RETRIEVED_CHANNEL_MESSAGES,
-        INCREMENT_CHANNEL_RETRIEVE_MESSAGES_OFFSET}
+        INCREMENT_CHANNEL_RETRIEVE_MESSAGES_OFFSET,
+        CLEAR_CHANNELS_DATA}
     from '../actions/channelsActions';
 
 export interface Message {
@@ -116,6 +117,8 @@ export default function (state: State = initialState, action: Action) {
             })
             return newChannels;
         }
+        case CLEAR_CHANNELS_DATA:
+            return [];
         default:
             return state;
     }

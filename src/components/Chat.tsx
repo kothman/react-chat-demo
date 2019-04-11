@@ -3,14 +3,15 @@ import axios from 'axios';
 import {connect} from 'react-redux';
 
 import Modal from './Modal';
+import OnlineUsers from './OnlineUsers';
 import LoadingFadeIn from './LoadingFadeIn';
 
-import modalHelpers from '../lib/modalHelpers';
 import { retrieveChannelMessages, incrementChannelRetrieveMessagesOffset, addReceivedChannelMessage } from '../actions/channelsActions';
 import { Channel, Message } from '../reducers/channels';
+import { State as StoreState } from '../store';
 
 interface Props {
-    socket: SocketIOClient.Socket,
+    socket?: SocketIOClient.Socket,
     channel: string,
 }
 
@@ -34,7 +35,9 @@ interface ScrollEvent extends Event {
 }
 
 class Chat extends React.Component<Props | any, State> {
-    private ref: React.RefObject<HTMLDivElement>;
+    private chatHistoryRef: React.RefObject<HTMLDivElement>;
+    private textareaRef: React.RefObject<HTMLTextAreaElement>;
+
     constructor(props: Props) {
         super(props);
 
@@ -50,12 +53,12 @@ class Chat extends React.Component<Props | any, State> {
             userDetails: {},
             currentMessage: false
         }
-        this.ref = React.createRef();
+        this.chatHistoryRef = React.createRef();
+        this.textareaRef = React.createRef();
     }
     handleSendMessage = (e: React.FormEvent | React.KeyboardEvent) => {
         e.preventDefault();
-        let textarea: any = document.querySelector('#chat-input-textarea');
-        this.props.socket.emit('message', { text: textarea.value, channel: this.props.channel })
+        this.props.socket.emit('message', { text: this.textareaRef.current.value, channel: this.props.channel })
         this.setState(Object.assign({}, this.state, {chatInputEnabled: false}));
     }
     handleReceiveMessage = (message: Message) => {
@@ -79,7 +82,7 @@ class Chat extends React.Component<Props | any, State> {
         this.setState({ textareaValue: '' });
     }
     scrollChatHistory = () => {
-        let chatDiv: HTMLDivElement = this.ref.current;
+        let chatDiv: HTMLDivElement = this.chatHistoryRef.current;
         chatDiv.scrollTop = chatDiv.scrollHeight;
     }
     handleUserScroll = (e: ScrollEvent) => {
@@ -124,53 +127,55 @@ class Chat extends React.Component<Props | any, State> {
         console.log(this.props);
         if(this.props.currentChannel.messages.length === 0 &&
            !this.props.currentChannel.fetchingNewMessages &&
-           this.ref && this.ref.current) {
+           this.chatHistoryRef && this.chatHistoryRef.current) {
             this.props.retrieveMessages().then(() => {
                 this.scrollChatHistory();
-                this.ref.current.addEventListener('scroll', this.handleUserScroll);
+                this.chatHistoryRef.current.addEventListener('scroll', this.handleUserScroll);
             });
         } else {
             this.scrollChatHistory();
         }
     }
     componentWillUnmount = () => {
-        this.ref.current.removeEventListener('scroll', this.handleUserScroll);
+        this.chatHistoryRef.current.removeEventListener('scroll', this.handleUserScroll);
         this.props.socket.removeEventListener('message', this.handleReceiveMessage);
         this.props.socket.removeEventListener('message received', this.enableChatInput);
         if (this.state.scrollingTimeout) clearTimeout(this.state.scrollingTimeout);
     }
     render() {
-        let modal: JSX.Element = <div></div>;
-        if (this.state.currentMessage !== false) {
-            let m: Message = this.state.currentMessage;
-            let date: Date = new Date(m.created);
-            modal = <Modal title="Message Details"
-                           onDismiss={() => this.setState({currentMessage: false})}>
-                <div>
-                    <div className="row">
-                        <span className="column">message id:</span>
-                        <span>{m['_id']}</span></div>
-                    <div className="row">
-                        <span className="column">user id:</span>
-                        <span className="column">{this.state.userDetails[m.userEmail]['_id']}</span></div>
-                    <div className="row">
-                        <span className="column">email:</span>
-                        <span className="column">{m.userEmail}</span></div>
-                    <div className="row">
-                        <span className="column">timestamp:</span>
-                        <span className="column">{date.toLocaleDateString()} {date.toLocaleTimeString()}</span></div>
-                </div>
-            </Modal>
-        }
+
+        let m: Message & false = this.state.currentMessage;
+        let date: Date = new Date(m.created);
+        let modal: JSX.Element =
+            <Modal title="Message Details"
+                           onDismiss={() => this.setState({currentMessage: false})}
+                           active={m !== false}>
+                { m !== false &&
+                    <div>
+                        <div className="row">
+                            <span className="column">message id:</span>
+                            <span>{m['_id']}</span></div>
+                        <div className="row">
+                            <span className="column">user id:</span>
+                            <span className="column">{this.state.userDetails[m.userEmail]['_id']}</span></div>
+                        <div className="row">
+                            <span className="column">email:</span>
+                            <span className="column">{m.userEmail}</span></div>
+                        <div className="row">
+                            <span className="column">timestamp:</span>
+                            <span className="column">{date.toLocaleDateString()} {date.toLocaleTimeString()}</span></div>
+                    </div> }
+            </Modal>;
         let messages: JSX.Element[] = [];
         if (this.props.currentChannel && this.props.currentChannel.messages) {
             this.props.currentChannel.messages.forEach((m: Message) => {
                 let date: Date = new Date(m.created);
-                let messageId = 'message-' + m['_id'];
                 messages.push(<div key={m['_id']} className="message" >
-                    <span className="message-email" onClick={() => { this.handleDisplayUserDetails(m) }}>{m.userEmail}</span>
+                    <div className="message-header row">
+                        <span className="message-email" onClick={() => { this.handleDisplayUserDetails(m) }}>{m.userEmail}</span>
+                        <span className="message-date">{date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                    </div>
                     <span className="message-content">{m.text}</span>
-                    <span className="message-date">{date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                 </div>);
             });
         }
@@ -179,17 +184,17 @@ class Chat extends React.Component<Props | any, State> {
             <div className="chat-container">
                 <LoadingFadeIn active={this.props.channels.length === 0} />
                 {modal}
-                <div id="chat-history" className="chat-history" ref={this.ref}>
-                    { this.props.currentChannel.fetchingNewMessages ?
+                <OnlineUsers/>
+                <div id="chat-history" className="chat-history" ref={this.chatHistoryRef}>
+                    { this.props.currentChannel.fetchingNewMessages &&
                         <div className="message message-loading">
                             <div className="message-content"><span>Loading more messages...</span></div>
-                        </div> : <div></div>
-                    }
+                        </div> }
                     {messages}
                     <LoadingFadeIn active={messages.length===0} />
                 </div>
                 <form className="chat-input" onSubmit={this.handleSendMessage}>
-                    <textarea value={this.state.textareaValue} disabled={!this.state.chatInputEnabled} id="chat-input-textarea" onKeyPress={this.handleKeyPress} onChange={this.handleTextareaChange} />
+                    <textarea value={this.state.textareaValue} disabled={!this.state.chatInputEnabled} ref={this.textareaRef} onKeyPress={this.handleKeyPress} onChange={this.handleTextareaChange} />
                     <button disabled={!this.state.chatInputEnabled} type="submit" className="chat-send">send</button>
                 </form>
             </div>
@@ -198,12 +203,13 @@ class Chat extends React.Component<Props | any, State> {
 }
 
 export default connect(
-    (state: any, ownProps: Props) => {
+    (state: StoreState, ownProps: Props) => {
         return {
             channels: state.channels,
             currentChannel: state.channels.find( (c: Channel) => {
                 return c.name === ownProps.channel;
-            })
+            }),
+            socket: state.socket.io
         };
     }, (dispatch, ownProps: Props) => {
         return {

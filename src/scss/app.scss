@@ -1,3 +1,4 @@
+
 @import 'components/reset';
 
 @import 'components/variables';
@@ -9,13 +10,16 @@
 
 @import 'components/online-users';
 @import 'components/chat';
-@import 'components/channels';
+@import 'components/sidebar';
 @import 'components/modal';
 @import 'components/notification';
 @import 'components/navbar';
 @import 'components/form';
 @import 'components/button';
 @import 'components/loading';
+@import 'components/heading';
+@import 'components/dropdown';
+@import 'components/grid';
 
 // https://github.com/tobiasahlin/SpinKit
 @import '~spinkit/scss/spinkit';
@@ -23,6 +27,9 @@
 html, body, #app, #react-app {
     height: 100%;
     width: 100%;
+    font-family: $font-family-body;
+    font-size: $font-size-body;
+    line-height: $line-height-body;
 }
 
 #react-app {
@@ -32,4 +39,5 @@ html, body, #app, #react-app {
 
 * {
     transition: all .2s ease-in-out;
+    box-sizing: border-box;
 }

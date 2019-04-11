@@ -1,5 +1,37 @@
+/* Colors */
+$color-main: aquamarine;
+$color-info: lighten(blue, 10);
+$color-danger: salmon;
+$color-white: white;
+$color-light-gray: lightgray;
+$color-gray: gray;
+$color-black: lighten(black, 10);
+
+/* Fonts */
+$font-family-title: 'Roboto', sans-serif;
+$font-family-body: 'Roboto', sans-serif;
+
+$font-size-title: 1.6rem;
+$font-size-subtitle: 1.2rem;
+$font-size-body: 1rem;
+$font-size-small: .9rem;
+
+$line-height-title: $font-size-title;
+$line-height-subtitle: $font-size-subtitle;
+$line-height-body: $font-size-body;
+$line-height-small: $font-size-small;
+
+$font-weight-small: 300;
+$font-weight-bold: 700;
+
+/* Main app variables */
 $mobile-breakpoint: 800px;
-$main-background: aquamarine;
+$main-background: $color-main;
+
+$border: 1px solid $color-light-gray;
+$border-dark: 1px solid $color-gray;
+$border-black: 1px solid $color-black;
+$border-white: 1px solid $color-white;
 
 /* Navbar */
 $vertical-padding: 1rem;

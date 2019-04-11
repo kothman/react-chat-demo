@@ -1,26 +1,42 @@
 
 .navbar {
-    background: white;
-    padding: 0 8rem;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+    background: $color-black;
+    color: $color-light-gray;
     width: 100%;
-    max-width: $navbar-max-width;
-    margin: 0 auto;
     height: $navbar-height;
 
-    @include mobile {
-        padding: 0 2rem;
+    .navbar-container {
+        display: flex;
+        justify-content: flex-start;
+        align-items: center;
+        width: 100%;
+        height: $navbar-height;
+        margin: 0 auto;
+
+    }
+
+    .hamburger {
+        cursor: pointer;
+        padding: 1rem;
+        height: $navbar-height;
+        display: flex;
+        align-items: center;
+
+        &:hover {
+            background: lighten($color-black, 10);
+            color: lighten($color-light-gray, 10);
+        }
     }
 
     .navbar-brand {
-        font-size: 1.5rem;
+        @include title;
+        margin-left: 1rem;
     }
     .navbar-nav {
         display: flex;
         
         .navbar-item {
+            @include subtitle;
             padding: $vertical-padding 1rem;
             height: $navbar-height;
             display: flex;
@@ -28,13 +44,14 @@
             justify-content: center;
 
             &:hover {
-                background: darken(white, 10);
+                background: lighten($color-black, 10);
+                color: lighten($color-light-gray, 10);
             }
         }
     }
 
     a {
         text-decoration: none;
-        color: black;
+        color: $color-light-gray;
     }
 }

@@ -1,20 +1,22 @@
 import * as React from 'react';
 import {connect} from 'react-redux';
-import * as io from 'socket.io-client';
-import axios from 'axios';
-import { withRouter, Router, Route, Switch, Link } from 'react-router-dom';
+import { Router, Route, Switch, Link, RouteComponentProps, Redirect } from 'react-router-dom';
 
 import {fetchChannels} from '../actions/channelsActions';
+import {init as initWebsocket} from '../actions/socketActions';
 
 import OnlineUsers from './OnlineUsers';
 import Chat from './Chat';
 import LoadingFadeIn from './LoadingFadeIn';
+import PageLogout from './PageLogout';
+import PageSettings from './PageSettings';
+import Dropdown from './Dropdown';
+import DropdownMenu from './DropdownMenu';
+import DropdownMenuItem from './DropdownMenuItem';
 
 import history from '../lib/history';
-import channels from '../server/routes/api/channels';
 
 interface State {
-    socket: SocketIOClient.Socket,
     channel: string,
     channels: {
         _id: string,
@@ -27,35 +29,27 @@ interface State {
     constructor(props: any) {
         super(props);
         this.state = {
-            socket: io(),
             channel: '',
             channels: [],
             redirectToChannel: false
         };
-        this.state.socket.on('connect', () => {
-            console.log('Connected to websocket server [' + this.state.socket.id + ']');
-        });
-        this.state.socket.on('disconnect', () => {
-            console.log('Disconnected from websocket server, attempting reconnect');
-        });
+        this.props.initWebsocket();
     }
-    componentWillUnmount = () => {
-        this.state.socket.close();
+    componentDidUpdate = (prevProps: any) => {
+        if (this.props.location.pathname.indexOf('/dashboard') === 0 &&
+            this.props.channelNames.length > 0 &&
+            this.state.channel === '') {
+            this.setState({ channel: this.props.channelNames[0] });
+        }
     }
     componentDidMount = () => {
         this.props.fetchChannels().then(() => {
-            // set current channel to url param channel if exists, otherwise redirect
-            if(this.props.channelNames.indexOf(this.props.match.params.channel) > -1 ) {
-                this.setState({channel: this.props.match.params.channel});
-            } else {
-                this.setState({channel: this.props.channelNames[0]});
-                history.push('/dashboard/' + this.props.channelNames[0]);
-            }
+
         });
     }
     render() {
         let channels: JSX.Element[] = [];
-        let chats: JSX.Element[] = [];
+        let dashboardRoutes: JSX.Element[] = [];
         this.props.channelNames.forEach((c: string) => {
             let className: string = 'channel';
             this.state.channel === c ?
@@ -65,26 +59,52 @@ interface State {
                                 key={c}
                                 onClick={() => this.setState({channel: c})}>
                             {c}</Link>);
-            chats.push(
+            dashboardRoutes.push(
                 <Route key={c} path={"/dashboard/" + c} render={ () =>
-                    <Chat socket={this.state.socket} channel={c}/>
+                    <Chat channel={c}/>
                 }/>
             );
         });
-        
+
         return (
             <Router history={history}>
                 <div className="page-dashboard">
-                    <div className="sidebar">
+                    <div className={ this.props.open ? "sidebar open" : "sidebar"}>
+                        <Dropdown className="sidebar-item account-dropdown">
+                            {this.props.userEmail}
+                            <i className="material-icons">keyboard_arrow_down</i>
+                            <DropdownMenu>
+                                <DropdownMenuItem>
+                                     <Link to="/settings/account">
+                                        <i className="material-icons">settings</i>
+                                        settings
+                                     </Link>
+                                </DropdownMenuItem>
+                                <DropdownMenuItem>
+                                    <Link to="/logout">
+                                        <i className="material-icons">exit_to_app</i>
+                                        logout
+                                    </Link>
+                                </DropdownMenuItem>
+                            </DropdownMenu>
+                        </Dropdown>
+                        <div className="sidebar-item">Channels</div>
                         <div className="channels">
                             <LoadingFadeIn active={channels.length === 0} />
                             {channels}
                         </div>
                     </div>
                     <div className="content">
-                        <OnlineUsers socket={this.state.socket} />
                         <Switch>
-                            {chats}
+                            <Route exact path="/logout" key="page-logout" component={PageLogout} />
+                            <Route exact path="/settings/:setting?" key="page-settings" component={PageSettings} />
+                            {dashboardRoutes}
+                            <Route render={(props: RouteComponentProps<any>): React.ReactNode => {
+                                console.log('redirect dashboard');
+                                if (this.props.channelNames.length === 0)
+                                    return <div></div>
+                                return <Redirect to={"/dashboard/" + this.props.channelNames[0] } />
+                            }}/>
                         </Switch>
                     </div>
                 </div>
@@ -100,12 +120,16 @@ export default connect((state: any) => {
             let nameA: string = a.toUpperCase();
             let nameB: string = b.toUpperCase();
             return (nameA < nameB) ? -1 : (nameB < nameA) ? 1 : 0;
-        })
+        }),
+        userEmail: state.user.email,
+        open: state.sidebar.open,
+
     };
 }, (dispatch: any) =>  {
     return {
         fetchChannels: () => {
             return dispatch(fetchChannels())
-        }
+        },
+        initWebsocket: () => dispatch(initWebsocket())
     };
 })(PageDashboard);

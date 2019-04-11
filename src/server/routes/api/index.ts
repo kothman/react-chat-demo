@@ -5,19 +5,19 @@ import * as validator from 'validator';
 import UserRoutes from './users';
 import MessageRoutes from './messages';
 import ChannelRoutes from './channels';
-import * as crypto from 'crypto';
-const env = require('../../../../env.js')
-const mailgun = require('mailgun-js')({ apiKey: env.mailgunApiKey, domain: env.mailgunDomain });;
+import {generate as shortid} from 'shortid';
 
-export default function(app: any) {
-    app.use(function(req: any, res: any, next: Function) {
+import { App, Request, Response } from '../../../types/express';
+
+export default function(app: App) {
+    app.use(function(req: Request, res: Response, next: Function) {
         res.set('new-csrf-token', req.csrfToken());
         return next();
     });
     UserRoutes(app);
     MessageRoutes(app);
     ChannelRoutes(app);
-    app.post('/api/v1/login', (req: any, res: any) => {
+    app.post('/api/v1/login', (req: Request, res: Response) => {
         if (validator.isEmpty(req.body.email) || validator.isEmpty(req.body.password)) {
             return res.status(400).json({ error: 'Please supply an email and password' });
         }
@@ -25,16 +25,17 @@ export default function(app: any) {
             return res.status(400).json({error: 'Not a valid email address'});
         }
         req.authenticate(req.body.email, req.body.password, (user: any | boolean) => {
-            console.log(user);
             if (!user)
                 return res.status(401).json({error: 'Invalid email or password'});
-            if (!user.emailVerified) {
-                return res.status(400).json({ error: 'Email not verified' });
-            }
-            return res.json({ success: true, email: req.session.user.email });
+            return res.json({
+                success: true,
+                email: req.session.user.email,
+                role: req.session.user.role,
+                name: req.session.user.name
+            });
         })
     });
-    app.post('/api/v1/register', function(req: any, res: any) {
+    app.post('/api/v1/register', function(req: Request, res: Response) {
         if (validator.isEmpty(req.body.email) || validator.isEmpty(req.body.password)) {
             return res.status(400).json({ error: 'Please supply an email and password' });
         }
@@ -43,35 +44,38 @@ export default function(app: any) {
         }
         let passwordHash = bcrypt.hashSync(req.body.password);
         let users: Collection = req.db.collection('users');
+
         users.findOne({email: req.body.email}).then((user: any) => {
             if (user !== null) {
                 return res.status(401).json({error: 'Email address already in use'});
             }
-            let verifyKey: string = crypto.randomBytes(48).toString('hex');
-            users.insertOne(
-                {
+            // If no users exist, the created user should be an admin (role: 'admin'), and
+            // a widget document created.
+            users.countDocuments().then((count) => {
+                let role: string = 'user';
+                if (count === 0) {
+                    role = 'admin';
+                    let widgets: Collection = req.db.collection('widgets');
+                    // don't need to check short id since this should be the first widget created
+                    widgets.insertOne({
+                        shortId: shortid(),
+                        domain: 'http://localhost:4000',
+                    });
+                }
+                users.insertOne({
                     email: req.body.email,
                     password: passwordHash,
                     emailVerified: false,
-                    verifyKey: verifyKey
+                    role: role
                 }, (err) => {
-                    let emailHtml: string = '<a href="';
-                    // BASE_URL should not have trailing slash
-                    emailHtml += process.env.BASE_URL ? process.env.BASE_URL : 'http://localhost:3000';
-                    emailHtml += '/verifyEmail/' + verifyKey + '">Click here</a> to verify your email address.';
-                    mailgun.messages().send({
-                        to: req.body.email,
-                        from: process.env.FROM_EMAIL ? process.env.FROM_EMAIL : 'adrian@sandbox3786eaf2000b4a839664faae2fb3faf5.mailgun.org',
-                        subject: 'Verify your email address',
-                        html: emailHtml
-                    }, (err: any) => {
-                        if (err) console.log(err);
-                    });
                     return res.json({ success: true });
-            });
+                });
+            })
+
+            
         });
     });
-    app.post('/api/v1/verifyEmail', function(req: any, res: any) {
+    app.post('/api/v1/verifyEmail', function(req: Request, res: Response) {
         if (validator.isEmpty(req.body.key)) {
             return res.status(400).json({ error: 'Invalid request, no key supplied' });
         }
@@ -85,7 +89,7 @@ export default function(app: any) {
             return res.status(200).json({success: true});
         });
     });
-    app.get('/api/v1/logout', function(req: any, res: any) {
+    app.get('/api/v1/logout', function(req: Request, res: Response) {
         req.logout();
         return res.json({success: true, message: 'logged out'});
     });

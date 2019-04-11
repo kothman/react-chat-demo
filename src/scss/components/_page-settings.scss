@@ -1,9 +1,9 @@
 .page-settings {
-    background: $main-background;
     display: flex;
     flex-grow: 1;
     flex-direction: column;
     padding: 2rem;
+    overflow-y: scroll;
 
     .container {
         max-width: 600px;
@@ -11,39 +11,34 @@
         width: 100%;
 
         .title {
-            font-size: 1.5rem;
-            line-height: 1.5rem;
-            margin-bottom: 2rem;
-            border-bottom: 1px solid black;
-
-            & + .tabs {
-                margin-top: -2rem;
-            }
+            @include title;
+            margin-bottom: 1rem;
         }
 
         .tabs {
             margin-bottom: 2rem;
             display: flex;
             justify-content: flex-start;
+            flex-wrap: wrap;
 
             .tab {
                 padding: 1rem;
                 background: black;
-                border: 1px solid gray;
+                border: $border-dark;
                 color: white;
-                border-top: none;
+                border-top: $border-black;
                 cursor: pointer;
                 text-decoration: none;
 
                &:hover {
                     background: lighten(black, 20);
-                    border: 1px solid lightgray;
-                    border-top: none;
+                    border: $border;
+                    border-top: $border-black;
                 }
                 &.active {
                     background: lighten(black, 40);
-                    border: 1px solid white;
-                    border-top: none;
+                    border: $border-white;
+                    border-top: $border-black;
                 }
             }
         }
@@ -54,25 +49,33 @@
             margin-bottom: .5rem;
             display: flex;
             justify-content: space-between;
-            padding-bottom: 1rem;
+            padding: 1rem 0;
         }
 
         .settings-group {
-            margin-bottom: .5rem;
-            padding-left: 1rem;
-            border-left: 4px solid black;
+            padding: 1rem;
+            border: $border;
+            border-bottom: none;
+            background: $color-white;
+
+            &:last-child {
+                border-bottom: $border;
+            }
         }
 
         .channels-settings {
+            .subtitle {
+                padding: 1rem;
+            }
             .add-channel-icon {
                 cursor: pointer;
             }
             .channels {
-                border: 1px solid gray;
-                background: lightgray;
+                border: $border;
+                background: white;
 
                 .channel:not(:last-child) {
-                    border-bottom: 1px solid gray;
+                    border-bottom: $border;
                 }
                 .channel {
                     padding: 1rem;
@@ -81,12 +84,80 @@
                     justify-content: space-between;
                     align-items: center;
                     &:hover {
-                        background: darken(lightgray, 20);
+                        background: darken(white, 10);
                     }
                     .delete {
                         cursor: pointer;
-                        
+                        color: $color-danger;
                     }
+                }
+            }
+        }
+
+        .user-settings {
+            @import './user-settings-search';
+            .add-user {
+                color: $color-black;
+
+                &:hover {
+                    color: lighten($color-black, 10);
+                }
+
+                .add-user-text {
+                    margin-left: .5rem;
+                }
+                margin-bottom: 1rem;
+            }
+            .user-details {
+                border: $border;
+                background: $color-white;
+                margin-bottom: 1rem;
+                .user {
+                    &:not(:last-child) {
+                        border-bottom: $border;
+                    }
+                    display: flex;
+                    flex-direction: row;
+                    justify-content: space-evenly;
+                    align-items: center;
+                    flex-wrap: wrap;
+
+                    .edit-user, .user-name, .user-email, .user-role, .delete-user {
+                        padding: 1rem;
+                        display: flex;
+                    }
+
+                    .edit-user, .delete-user {
+                        margin-left: auto;
+                        flex-shrink: 1;
+                        cursor: pointer;
+                        &:hover {
+                            background: darken($color-white, 10);
+                        }
+                    }
+                    .user-name, .user-email, .user-role {
+                        flex-grow: 1;
+                        margin-right: auto;
+                        @include mobile {
+                            width: 100%;
+                            padding-top: 0;
+                            padding-bottom: 1rem;
+                        }
+                    }
+
+                    .edit-user {
+                        @include mobile {
+                            order: -2;
+                            margin-left: 0;
+                        }
+                    }
+                    .delete-user {
+                        color: $color-danger;
+                        @include mobile {
+                            order: -1;
+                        }
+                    }
+
                 }
             }
         }

@@ -1,0 +1,31 @@
+$columns: 12;
+
+.row {
+    display: flex;
+    flex-direction: row;
+
+    @include mobile {
+        flex-direction: column;
+    }
+
+    &.wrap {
+        flex-wrap: wrap;
+    }
+
+    .col {
+        display: flex;
+        flex-direction: column;
+        flex-grow: 1;
+        padding: 1rem;
+    }
+
+    @for $i from 1 through $columns {
+        .col-#{$i} {
+            display: flex;
+            flex-direction: column;
+            flex-grow: 1;
+            padding: 1rem;
+            width: 100% * $i / $columns;
+        }
+    }
+}

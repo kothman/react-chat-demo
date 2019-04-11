@@ -1,34 +1,52 @@
 import * as React from 'react';
+import { connect } from 'react-redux'
+
+import { State as StoreState } from '../store';
+import Modal from './Modal';
 
 interface Props {
-    socket: SocketIOClient.Socket
+    socket?: SocketIOClient.Socket,
+    connectedUserEmails?: string[]
 }
 
 interface State {
-    connectedUserEmails: string[]
+    displayConnectedUsers: boolean
 }
 
 class OnlineUsers extends React.Component<Props, State> {
     constructor(props: Props) {
         super(props);
         this.state = {
-            connectedUserEmails: []
-        };
-        this.props.socket.on('connected users', this.updateConnectedUsers);
+            displayConnectedUsers: false
+        }
     }
-    updateConnectedUsers = (userEmails: string[]) => {
-        console.log('connected user emails', userEmails);
-        this.setState(Object.assign({}, this.state, {connectedUserEmails: userEmails}));
+    handleClick = (e: React.MouseEvent) => {
+        e.preventDefault();
+        this.setState({displayConnectedUsers: true});
     }
     render() {
         return (
             <div className="online-users">
-                <a className="online-users-count" href="#" onClick={ () => {}}>{
-                    this.state.connectedUserEmails.length } user{ this.state.connectedUserEmails.length !== 1 ? 's' : '' } online
+                <a className="online-users-count" onClick={this.handleClick}>
+                    { this.props.connectedUserEmails.length } user{ this.props.connectedUserEmails.length !== 1 ? 's' : '' } online
                 </a>
+                <Modal
+                    title="Online Users"
+                    active={this.state.displayConnectedUsers}
+                    onDismiss={() => {
+                        this.setState({displayConnectedUsers: false});
+                    }}>
+                    { this.props.connectedUserEmails.map((email: string): (JSX.Element) => {
+                            return <div className="row">{email}</div>
+                        }) }
+                </Modal>
             </div>
         );
     }
 }
 
-export default OnlineUsers;
+export default connect((state: StoreState) => {
+    return {
+        connectedUserEmails: state.socket.connectedUserEmails
+    }
+})(OnlineUsers);

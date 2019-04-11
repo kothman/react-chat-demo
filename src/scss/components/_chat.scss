@@ -2,7 +2,7 @@
     display: flex;
     flex-direction: column;
     flex: 1 0 auto;
-    height: calc(100% - #{$online-users-height});
+    height: 100%;
     position: relative;
     
     .chat-history {
@@ -10,45 +10,46 @@
         flex-direction: column;
         flex: 1 0 auto;
         overflow-y: auto;
-        height: $chat-history-height;
+        height: calc(100% - #{$online-users-height} - #{$chat-history-height});
         position: relative;
+        border-bottom: $border;
         
         .message {
-            border-left: 4px solid white;
-            border-bottom: 1px solid white;
+            border-left: 4px solid $color-main;
             display: flex;
-            flex-direction: row;
-            align-items: center;
+            flex-direction: column;
 
             &:first-child {
                 border-top: none;
             }
 
-            .message-email {
-                height: 100%;
-                padding: .5rem;
-                margin-right: .5rem;
-                border-right: 1px solid white;
-                cursor: pointer;
-                display: flex;
-                align-items: center;
-                justify-content: center;
+            .message-header {
 
-                &:hover {
-                    background: darken($dashboard-background, 10);
+                .message-email {
+                    padding: .25rem;
+                    margin-right: .5rem;
+                    cursor: pointer;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    background: lighten($color-main, 20);
+                    &:hover {
+                        background: $color-main;
+                    }
+                }
+                .message-date {
+                    font-weight: 300;
+                    font-size: .8rem;
+                    padding: .25rem;
+                    display: flex;
                 }
             }
             .message-content {
                 padding: .5rem;
                 display: flex;
                 flex-grow: 1;
-
-            }
-            .message-date {
-                padding: .5rem;
-                font-size: .85rem;
-                opacity: .8;
-                white-space: nowrap;
+                font-weight: 300;
+                font-size: .95rem;
             }
         }
     }
