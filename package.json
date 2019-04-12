@@ -13,6 +13,7 @@
     "@types/lodash": "^4.14.123",
     "@types/mocha": "^5.2.6",
     "@types/mongodb": "^3.1.22",
+    "@types/mongoose": "^5.3.26",
     "@types/mustache-express": "^1.2.1",
     "@types/passport": "^1.0.0",
     "@types/passport-local": "^1.0.33",
@@ -62,7 +63,7 @@
     "watch:tests": "webpack -w --config test.webpack.config.js",
     "heroku-local": "nodemon --exec \"heroku local\" --signal SIGTERM",
     "start": "node dist/server.js",
-    "test": "mocha tests/all-tests.js"
+    "test": "DISABLE_REDUX_LOGGING=TRUE mocha tests/all-tests.js"
   },
   "dependencies": {
     "@types/helmet": "^0.0.43",
@@ -81,6 +82,7 @@
     "helmet": "^3.16.0",
     "mailgun-js": "^0.22.0",
     "mongodb": "^3.2.2",
+    "mongoose": "^5.5.1",
     "mustache-express": "^1.2.8",
     "shortid": "^2.2.14",
     "socket.io": "^2.2.0",

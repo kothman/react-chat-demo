@@ -11,7 +11,7 @@
         "node_modules"
     ],
     "files": [
-        "src/index.tsx"
+        "src/web/index.tsx"
     ],
     "include": [
         "**/*"

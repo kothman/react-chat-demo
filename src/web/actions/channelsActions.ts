@@ -1,7 +1,7 @@
 import {State, Channel, Message} from '../reducers/channels';
 import axios, { AxiosResponse, AxiosError } from 'axios';
 
-import {addError, addInfo} from '../actions/notificationsActions';
+import {addError, addInfo} from './notificationsActions';
 
 export const ADD_CHANNELS = 'ADD_CHANNELS';
 export const SET_CHANNEL_FETCHING_NEW_MESSAGES = 'SET_CHANNEL_FETCHING_NEW_MESSAGES';

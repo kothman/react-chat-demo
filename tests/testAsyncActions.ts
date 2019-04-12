@@ -1,7 +1,7 @@
 import 'mocha';
 import * as _ from 'lodash';
 import { Store } from 'redux';
-import store, { State } from '../src/store';
+import store, { State } from '../src/web/store';
 
 function getStoreCopy(): Store<State> {
     return _.cloneDeep(store);

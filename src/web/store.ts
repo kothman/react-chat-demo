@@ -1,4 +1,4 @@
-import {createStore, combineReducers, applyMiddleware, Reducer} from 'redux';
+import {createStore, combineReducers, applyMiddleware, Reducer, StoreEnhancer} from 'redux';
 import reduxThunk from 'redux-thunk';
 import {createLogger} from 'redux-logger';
 
@@ -27,7 +27,8 @@ const rootReducer: Reducer = combineReducers({
     chatUsers: chatUsersReducer,
 });
 
-export default createStore(
-    rootReducer,
-    applyMiddleware(reduxThunk, createLogger())
-);
+const middleware: StoreEnhancer =
+    process.env.PRODUCTION || process.env.DISABLE_REDUX_LOGGING ?
+    applyMiddleware(reduxThunk) : applyMiddleware(reduxThunk, createLogger());
+
+export default createStore(rootReducer, middleware);

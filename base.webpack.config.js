@@ -4,7 +4,7 @@ const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 module.exports = {
     mode: process.env.NODE_ENV !== 'production' ? 'development' : 'production',
     // Changed the entry point to a .tsx file
-    entry: './src/index.tsx',
+    entry: './src/web/index.tsx',
     // Enable sourcemaps for debugging Webpack's output
     devtool: 'source-map',
     resolve: {
