@@ -16,6 +16,8 @@ const widgetSchema: Schema = new Schema({
         type: String,
         required: true
     }
+}, {
+    timestamps: true
 });
 
 const Widget: Model<IWidget> = model('Widget', widgetSchema);

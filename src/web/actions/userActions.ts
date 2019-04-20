@@ -6,6 +6,7 @@ import {addError, addInfo} from './notificationsActions';
 export const SET_AUTHORIZED = 'SET_AUTHORIZED';
 export const SET_USER = 'SET_USER';
 export const LOGOUT_USER = 'LOGOUT_USER';
+export const SET_JWT = 'SET_JWT';
 
 export const setAuthorized = (authorized: boolean) => {
     return  {
@@ -24,6 +25,13 @@ export const setUser = (user: UserState) => {
 export const logoutUser = () => {
     return {
         type: LOGOUT_USER
+    };
+}
+
+export const setJwt = (token: string) => {
+    return {
+        type: SET_JWT,
+        data: token
     };
 }
 

@@ -1,63 +1,62 @@
 import * as socketio from 'socket.io';
-import { Db, ObjectID } from 'mongodb';
 import { Server } from 'http';
+import { Connection } from 'mongoose';
+import {authorize as authorizeJwt} from 'socketio-jwt';
+import Message, { IMessage } from '../models/Message';
+import { Token } from '../../types/jwt';
+const env = require('../../../env');
 
 interface Socket extends socketio.Socket {
-    request: {
-        session: {
-            user: {
-                email: string
-            }
-        }
-    }
+    jwt: Token
 } 
 
-const init = (server: Server, db: Db, sessionMiddleware: any) => {
-    const io = socketio(server);
+const init = (server: Server, db: Connection): socketio.Server => {
+    const io: socketio.Server = socketio(server);
     let connectedUserEmails: string[] = [];
 
-    // https://stackoverflow.com/questions/25532692/how-to-share-sessions-with-socket-io-1-x-and-express-4-x/25618636#25618636
-    io.use((socket, next) => {
-        sessionMiddleware(socket.request, socket.request.res, next);
-    });
-    // Make sure email is set on the session
-    io.use((socket, next) => {
-        if (socket.request.session.user.email) return next();
-        next(new Error('Authentication error'));
-    });
-    io.on('connection', (socket: Socket) => {
-        connectedUserEmails.push(socket.request.session.user.email);
-        console.log('Connected users', connectedUserEmails);
-        io.emit('connected users', connectedUserEmails.filter((value, index, self) => {
-            return self.indexOf(value) === index;
-        }));
+    // set authorization for socket.io
+    io.on('connection', authorizeJwt({
+            secret: env.secret,
+            timeout: 15000, // 15 seconds to send the authentication message
+            decodedPropertyName: 'jwt'
+        })).on('authenticated', (socket: Socket) => {
 
-        socket.on('disconnect', () => {
-            connectedUserEmails.splice(connectedUserEmails.indexOf(socket.request.session.user.email), 1);
+            connectedUserEmails.push(socket.jwt.email);
+            console.log('Connected users', connectedUserEmails);
             io.emit('connected users', connectedUserEmails.filter((value, index, self) => {
                 return self.indexOf(value) === index;
             }));
-        });
 
-        socket.on('message', (message: { text: string, channel: string }) => {
-            console.log(message);
-            db.collection('messages').insertOne(
-                {channel: message.channel, text: message.text, userEmail: socket.request.session.user.email },
-                (err, r) =>{
-                    if (!err) {
-                        io.emit('message', {
-                            _id: r.insertedId,
-                            userEmail: socket.request.session.user.email,
-                            text: message.text,
-                            channel: message.channel,
-                            created: (new ObjectID(r.insertedId)).getTimestamp() });
-                        return socket.emit('message received');
-                    }
-                        
-                    return console.error(err);
+            socket.on('disconnect', () => {
+                connectedUserEmails.splice(connectedUserEmails.indexOf(socket.jwt.email), 1);
+                io.emit('connected users', connectedUserEmails.filter((value, index, self) => {
+                    return self.indexOf(value) === index;
+                }));
+            });
+
+            socket.on('message', (message: { text: string, channel: string }) => {
+                console.log(message);
+                let m: IMessage = new Message({
+                    channel: message.channel,
+                    text: message.text,
+                    userEmail: socket.jwt.email
                 });
+                m.save().then((m: IMessage) => {
+                    io.emit('message', {
+                        _id: m._id,
+                        userEmail: m.userEmail,
+                        text: m.text,
+                        channel: m.channel,
+                        created: m.createdAt
+                    });
+                    socket.emit('message received');
+                }).catch((err: Error) => {
+                    console.error(err);
+                    socket.emit('message receive error', err);
+                });
+            });
         });
-    });
+    return io;
 }
 
 export default init;

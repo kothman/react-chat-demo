@@ -9,6 +9,8 @@ import sidebarReducer, {State as SidebarState} from './reducers/sidebar';
 import socketReducer, {State as SocketState} from './reducers/socket';
 import chatUsersReducer, {State as ChatUsersState} from './reducers/chatUsers';
 
+const env = require('../../env');
+
 export interface State {
     user: UserState,
     channels: ChannelsState,
@@ -28,7 +30,7 @@ const rootReducer: Reducer = combineReducers({
 });
 
 const middleware: StoreEnhancer =
-    process.env.PRODUCTION || process.env.DISABLE_REDUX_LOGGING ?
+    env.production || env.disableReduxLogging ?
     applyMiddleware(reduxThunk) : applyMiddleware(reduxThunk, createLogger());
 
 export default createStore(rootReducer, middleware);

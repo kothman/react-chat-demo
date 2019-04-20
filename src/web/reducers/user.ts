@@ -1,10 +1,11 @@
-import {SET_AUTHORIZED, SET_USER, LOGOUT_USER} from '../actions/userActions';
+import {SET_AUTHORIZED, SET_USER, LOGOUT_USER, SET_JWT} from '../actions/userActions';
 
 export interface State {
     authorized?: boolean,
     email?: string | boolean,
     name?: string | boolean,
     role?: string | boolean,
+    jwt?: string | boolean,
 }
 
 interface Action {
@@ -17,6 +18,7 @@ let initialState : State = {
     email: false,
     name: false,
     role: false,
+    jwt: false,
 }
 
 
@@ -39,6 +41,8 @@ export default function(state: State = initialState, action: Action) {
                 email: false,
                 role: false
             }
+        case SET_JWT:
+            return Object.assign({}, state, {token: action.data});
         default:
             return state;
     }

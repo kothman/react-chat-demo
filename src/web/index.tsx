@@ -24,10 +24,13 @@ declare global {
 axios.defaults.withCredentials = true;
 axios.interceptors.response.use(function (res) {
     // should get a new csrfToken for each request, update headers
-    let newToken: string = res.headers['new-csrf-token'];
-    if (newToken) {
-        axios.defaults.headers['csrf-token'] = newToken;
+    let newCsrfToken: string = res.headers['new-csrf-token'];
+    if (newCsrfToken) {
+        axios.defaults.headers['csrf-token'] = newCsrfToken;
     }
+    let newAccessToken: string = res.headers['x-access-token'];
+    if (newAccessToken)
+        axios.defaults.headers['x-access-token'] = newAccessToken;
     return res;
 });
 window.axios = axios;

@@ -81,10 +81,37 @@
 /******/
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = "./src/index.tsx");
+/******/ 	return __webpack_require__(__webpack_require__.s = "./src/web/index.tsx");
 /******/ })
 /************************************************************************/
 /******/ ({
+
+/***/ "./env.js":
+/*!****************!*\
+  !*** ./env.js ***!
+  \****************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+/* WEBPACK VAR INJECTION */(function(process) {module.exports = {
+    // https://docs.mongodb.com/manual/reference/connection-string/
+    mongodbConnectionUri: process.env.MONGODB_URI,
+    mongodbTestConnectionUri: 'mongodb://localhost:27017/openChatTest',
+    port: process.env.PORT || 5000,
+    production:  false || false,
+    useTestDb: process.env.USE_TEST_DB || false,
+    secret: process.env.SECRET || 'secret',
+    disableCsrf: process.env.DISABLE_CSRF || false,
+    disableReduxLogging: process.env.DISABLE_REDUX_LOGGING || false,
+    disableAutoStart: process.env.DISABLE_AUTO_START || false,
+    mailgunApiKey: process.env.MAILGUN_API_KEY,
+    mailgunDomain: process.env.MAILGUN_DOMAIN,
+    baseUrl: process.env.BASE_URL ? process.env.BASE_URL : 'http://localhost:5000'
+}
+
+/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(/*! ./node_modules/process/browser.js */ "./node_modules/process/browser.js")))
+
+/***/ }),
 
 /***/ "./node_modules/@babel/runtime/helpers/esm/assertThisInitialized.js":
 /*!**************************************************************************!*\
@@ -42450,10 +42477,10 @@ module.exports = yeast;
 
 /***/ }),
 
-/***/ "./src/actions/channelsActions.ts":
-/*!****************************************!*\
-  !*** ./src/actions/channelsActions.ts ***!
-  \****************************************/
+/***/ "./src/web/actions/channelsActions.ts":
+/*!********************************************!*\
+  !*** ./src/web/actions/channelsActions.ts ***!
+  \********************************************/
 /*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -42497,7 +42524,7 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
 var _this = this;
 exports.__esModule = true;
 var axios_1 = __webpack_require__(/*! axios */ "./node_modules/axios/index.js");
-var notificationsActions_1 = __webpack_require__(/*! ../actions/notificationsActions */ "./src/actions/notificationsActions.ts");
+var notificationsActions_1 = __webpack_require__(/*! ./notificationsActions */ "./src/web/actions/notificationsActions.ts");
 exports.ADD_CHANNELS = 'ADD_CHANNELS';
 exports.SET_CHANNEL_FETCHING_NEW_MESSAGES = 'SET_CHANNEL_FETCHING_NEW_MESSAGES';
 exports.SET_CHANNEL_HAS_MORE_MESSAGES = 'SET_CHANNEL_HAS_MORE_MESSAGE';
@@ -42633,10 +42660,10 @@ exports.addChannel = function (channelName) {
 
 /***/ }),
 
-/***/ "./src/actions/chatUsersActions.ts":
-/*!*****************************************!*\
-  !*** ./src/actions/chatUsersActions.ts ***!
-  \*****************************************/
+/***/ "./src/web/actions/chatUsersActions.ts":
+/*!*********************************************!*\
+  !*** ./src/web/actions/chatUsersActions.ts ***!
+  \*********************************************/
 /*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -42644,7 +42671,7 @@ exports.addChannel = function (channelName) {
 
 exports.__esModule = true;
 var axios_1 = __webpack_require__(/*! axios */ "./node_modules/axios/index.js");
-var notificationsActions_1 = __webpack_require__(/*! ./notificationsActions */ "./src/actions/notificationsActions.ts");
+var notificationsActions_1 = __webpack_require__(/*! ./notificationsActions */ "./src/web/actions/notificationsActions.ts");
 exports.UPDATE_CHAT_USERS = 'UPDATE_CHAT_USERS';
 exports.ADD_CHAT_USER = 'ADD_USER';
 exports.REMOVE_CHAT_USER = 'REMOVE_USER';
@@ -42701,10 +42728,10 @@ exports.deleteUser = function (email) {
 
 /***/ }),
 
-/***/ "./src/actions/notificationsActions.ts":
-/*!*********************************************!*\
-  !*** ./src/actions/notificationsActions.ts ***!
-  \*********************************************/
+/***/ "./src/web/actions/notificationsActions.ts":
+/*!*************************************************!*\
+  !*** ./src/web/actions/notificationsActions.ts ***!
+  \*************************************************/
 /*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -42753,10 +42780,10 @@ exports.clearInfos = function () {
 
 /***/ }),
 
-/***/ "./src/actions/sidebarActions.ts":
-/*!***************************************!*\
-  !*** ./src/actions/sidebarActions.ts ***!
-  \***************************************/
+/***/ "./src/web/actions/sidebarActions.ts":
+/*!*******************************************!*\
+  !*** ./src/web/actions/sidebarActions.ts ***!
+  \*******************************************/
 /*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -42773,10 +42800,10 @@ exports.toggleSidebarOpen = function () {
 
 /***/ }),
 
-/***/ "./src/actions/socketActions.ts":
-/*!**************************************!*\
-  !*** ./src/actions/socketActions.ts ***!
-  \**************************************/
+/***/ "./src/web/actions/socketActions.ts":
+/*!******************************************!*\
+  !*** ./src/web/actions/socketActions.ts ***!
+  \******************************************/
 /*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -42806,30 +42833,40 @@ exports.setSocketConnectedUsers = function (userEmails) {
     };
 };
 exports.init = function () {
-    return function (dispatch) {
-        var ioSocket = io();
-        ioSocket.on('connect', function () {
-            dispatch(exports.setSocketConnected(true));
-            console.log('Connected to websocket server [' + ioSocket.id + ']');
+    return function (dispatch, getState) {
+        var socket = io();
+        socket.on('connect', function () {
+            socket
+                .emit('authenticate', { token: getState().user.token })
+                .on('authenticated', function () {
+                dispatch(exports.setSocketConnected(true));
+                console.log('authorized [' + socket.id + ']');
+                socket.on('connected users', function (userEmails) {
+                    dispatch(exports.setSocketConnectedUsers(userEmails));
+                });
+            })
+                .on('unauthorized', function (msg) {
+                dispatch(exports.setSocketConnected(false));
+                console.log("unauthorized: " + JSON.stringify(msg.data));
+                socket.off('connected uses');
+                throw new Error(msg.data.type);
+            });
         });
-        ioSocket.on('disconnect', function () {
+        socket.on('disconnect', function () {
             dispatch(exports.setSocketConnected(false));
             console.log('Disconnected from websocket server, attempting reconnect');
         });
-        ioSocket.on('connected users', function (userEmails) {
-            dispatch(exports.setSocketConnectedUsers(userEmails));
-        });
-        return dispatch(exports.initWebsocket(ioSocket));
+        return dispatch(exports.initWebsocket(socket));
     };
 };
 
 
 /***/ }),
 
-/***/ "./src/actions/userActions.ts":
-/*!************************************!*\
-  !*** ./src/actions/userActions.ts ***!
-  \************************************/
+/***/ "./src/web/actions/userActions.ts":
+/*!****************************************!*\
+  !*** ./src/web/actions/userActions.ts ***!
+  \****************************************/
 /*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -42837,11 +42874,12 @@ exports.init = function () {
 
 exports.__esModule = true;
 var axios_1 = __webpack_require__(/*! axios */ "./node_modules/axios/index.js");
-var channelsActions_1 = __webpack_require__(/*! ./channelsActions */ "./src/actions/channelsActions.ts");
-var notificationsActions_1 = __webpack_require__(/*! ./notificationsActions */ "./src/actions/notificationsActions.ts");
+var channelsActions_1 = __webpack_require__(/*! ./channelsActions */ "./src/web/actions/channelsActions.ts");
+var notificationsActions_1 = __webpack_require__(/*! ./notificationsActions */ "./src/web/actions/notificationsActions.ts");
 exports.SET_AUTHORIZED = 'SET_AUTHORIZED';
 exports.SET_USER = 'SET_USER';
 exports.LOGOUT_USER = 'LOGOUT_USER';
+exports.SET_JWT = 'SET_JWT';
 exports.setAuthorized = function (authorized) {
     return {
         type: exports.SET_AUTHORIZED,
@@ -42857,6 +42895,12 @@ exports.setUser = function (user) {
 exports.logoutUser = function () {
     return {
         type: exports.LOGOUT_USER
+    };
+};
+exports.setJwt = function (token) {
+    return {
+        type: exports.SET_JWT,
+        data: token
     };
 };
 exports.logout = function () {
@@ -42918,10 +42962,10 @@ exports.updatePassword = function (oldPass, newPass, onSuccess) {
 
 /***/ }),
 
-/***/ "./src/components/AccountSettings.tsx":
-/*!********************************************!*\
-  !*** ./src/components/AccountSettings.tsx ***!
-  \********************************************/
+/***/ "./src/web/components/AccountSettings.tsx":
+/*!************************************************!*\
+  !*** ./src/web/components/AccountSettings.tsx ***!
+  \************************************************/
 /*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -42943,8 +42987,8 @@ var __extends = (this && this.__extends) || (function () {
 exports.__esModule = true;
 var React = __webpack_require__(/*! react */ "./node_modules/react/index.js");
 var react_redux_1 = __webpack_require__(/*! react-redux */ "./node_modules/react-redux/es/index.js");
-var userActions_1 = __webpack_require__(/*! ../actions/userActions */ "./src/actions/userActions.ts");
-var notificationsActions_1 = __webpack_require__(/*! ../actions/notificationsActions */ "./src/actions/notificationsActions.ts");
+var userActions_1 = __webpack_require__(/*! ../actions/userActions */ "./src/web/actions/userActions.ts");
+var notificationsActions_1 = __webpack_require__(/*! ../actions/notificationsActions */ "./src/web/actions/notificationsActions.ts");
 var AccountSettings = (function (_super) {
     __extends(AccountSettings, _super);
     function AccountSettings(props) {
@@ -43071,10 +43115,10 @@ exports["default"] = react_redux_1.connect(function (props) {
 
 /***/ }),
 
-/***/ "./src/components/App.tsx":
-/*!********************************!*\
-  !*** ./src/components/App.tsx ***!
-  \********************************/
+/***/ "./src/web/components/App.tsx":
+/*!************************************!*\
+  !*** ./src/web/components/App.tsx ***!
+  \************************************/
 /*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -43098,16 +43142,16 @@ var axios_1 = __webpack_require__(/*! axios */ "./node_modules/axios/index.js");
 var react_router_dom_1 = __webpack_require__(/*! react-router-dom */ "./node_modules/react-router-dom/esm/react-router-dom.js");
 var React = __webpack_require__(/*! react */ "./node_modules/react/index.js");
 var react_redux_1 = __webpack_require__(/*! react-redux */ "./node_modules/react-redux/es/index.js");
-var Navbar_1 = __webpack_require__(/*! ./Navbar */ "./src/components/Navbar.tsx");
-var Notifications_1 = __webpack_require__(/*! ./Notifications */ "./src/components/Notifications.tsx");
-var PageLogin_1 = __webpack_require__(/*! ./PageLogin */ "./src/components/PageLogin.tsx");
-var PageRegister_1 = __webpack_require__(/*! ./PageRegister */ "./src/components/PageRegister.tsx");
-var PageDashboard_1 = __webpack_require__(/*! ./PageDashboard */ "./src/components/PageDashboard.tsx");
-var VerifyEmail_1 = __webpack_require__(/*! ./VerifyEmail */ "./src/components/VerifyEmail.tsx");
-var LoadingFadeIn_1 = __webpack_require__(/*! ./LoadingFadeIn */ "./src/components/LoadingFadeIn.tsx");
-var Page404_1 = __webpack_require__(/*! ./Page404 */ "./src/components/Page404.tsx");
-var userActions_1 = __webpack_require__(/*! ../actions/userActions */ "./src/actions/userActions.ts");
-var history_1 = __webpack_require__(/*! ../lib/history */ "./src/lib/history.ts");
+var Navbar_1 = __webpack_require__(/*! ./Navbar */ "./src/web/components/Navbar.tsx");
+var Notifications_1 = __webpack_require__(/*! ./Notifications */ "./src/web/components/Notifications.tsx");
+var PageLogin_1 = __webpack_require__(/*! ./PageLogin */ "./src/web/components/PageLogin.tsx");
+var PageRegister_1 = __webpack_require__(/*! ./PageRegister */ "./src/web/components/PageRegister.tsx");
+var PageDashboard_1 = __webpack_require__(/*! ./PageDashboard */ "./src/web/components/PageDashboard.tsx");
+var VerifyEmail_1 = __webpack_require__(/*! ./VerifyEmail */ "./src/web/components/VerifyEmail.tsx");
+var LoadingFadeIn_1 = __webpack_require__(/*! ./LoadingFadeIn */ "./src/web/components/LoadingFadeIn.tsx");
+var Page404_1 = __webpack_require__(/*! ./Page404 */ "./src/web/components/Page404.tsx");
+var userActions_1 = __webpack_require__(/*! ../actions/userActions */ "./src/web/actions/userActions.ts");
+var history_1 = __webpack_require__(/*! ../lib/history */ "./src/web/lib/history.ts");
 var App = (function (_super) {
     __extends(App, _super);
     function App(props) {
@@ -43124,6 +43168,7 @@ var App = (function (_super) {
     App.prototype.checkIfLoggedIn = function () {
         var _this = this;
         return axios_1["default"].get('/api/v1/user').then(function (res) {
+            _this.props.setJwt(res.headers['x-access-token']);
             _this.props.setUser({
                 authorized: true,
                 email: res.data.email,
@@ -43159,17 +43204,18 @@ exports["default"] = react_redux_1.connect(function (state) {
     };
 }, function (dispatch) {
     return {
-        setUser: function (user) { return dispatch(userActions_1.setUser(user)); }
+        setUser: function (user) { return dispatch(userActions_1.setUser(user)); },
+        setJwt: function (token) { return dispatch(userActions_1.setJwt(token)); }
     };
 })(App);
 
 
 /***/ }),
 
-/***/ "./src/components/ChannelSettings.tsx":
-/*!********************************************!*\
-  !*** ./src/components/ChannelSettings.tsx ***!
-  \********************************************/
+/***/ "./src/web/components/ChannelSettings.tsx":
+/*!************************************************!*\
+  !*** ./src/web/components/ChannelSettings.tsx ***!
+  \************************************************/
 /*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -43191,9 +43237,9 @@ var __extends = (this && this.__extends) || (function () {
 exports.__esModule = true;
 var React = __webpack_require__(/*! react */ "./node_modules/react/index.js");
 var react_redux_1 = __webpack_require__(/*! react-redux */ "./node_modules/react-redux/es/index.js");
-var channelsActions_1 = __webpack_require__(/*! ../actions/channelsActions */ "./src/actions/channelsActions.ts");
-var Modal_1 = __webpack_require__(/*! ./Modal */ "./src/components/Modal.tsx");
-var LoadingSpinner_1 = __webpack_require__(/*! ./LoadingSpinner */ "./src/components/LoadingSpinner.tsx");
+var channelsActions_1 = __webpack_require__(/*! ../actions/channelsActions */ "./src/web/actions/channelsActions.ts");
+var Modal_1 = __webpack_require__(/*! ./Modal */ "./src/web/components/Modal.tsx");
+var LoadingSpinner_1 = __webpack_require__(/*! ./LoadingSpinner */ "./src/web/components/LoadingSpinner.tsx");
 var ChannelSettings = (function (_super) {
     __extends(ChannelSettings, _super);
     function ChannelSettings(props) {
@@ -43293,10 +43339,10 @@ exports["default"] = react_redux_1.connect(function (state) {
 
 /***/ }),
 
-/***/ "./src/components/Chat.tsx":
-/*!*********************************!*\
-  !*** ./src/components/Chat.tsx ***!
-  \*********************************/
+/***/ "./src/web/components/Chat.tsx":
+/*!*************************************!*\
+  !*** ./src/web/components/Chat.tsx ***!
+  \*************************************/
 /*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -43319,10 +43365,10 @@ exports.__esModule = true;
 var React = __webpack_require__(/*! react */ "./node_modules/react/index.js");
 var axios_1 = __webpack_require__(/*! axios */ "./node_modules/axios/index.js");
 var react_redux_1 = __webpack_require__(/*! react-redux */ "./node_modules/react-redux/es/index.js");
-var Modal_1 = __webpack_require__(/*! ./Modal */ "./src/components/Modal.tsx");
-var OnlineUsers_1 = __webpack_require__(/*! ./OnlineUsers */ "./src/components/OnlineUsers.tsx");
-var LoadingFadeIn_1 = __webpack_require__(/*! ./LoadingFadeIn */ "./src/components/LoadingFadeIn.tsx");
-var channelsActions_1 = __webpack_require__(/*! ../actions/channelsActions */ "./src/actions/channelsActions.ts");
+var Modal_1 = __webpack_require__(/*! ./Modal */ "./src/web/components/Modal.tsx");
+var OnlineUsers_1 = __webpack_require__(/*! ./OnlineUsers */ "./src/web/components/OnlineUsers.tsx");
+var LoadingFadeIn_1 = __webpack_require__(/*! ./LoadingFadeIn */ "./src/web/components/LoadingFadeIn.tsx");
+var channelsActions_1 = __webpack_require__(/*! ../actions/channelsActions */ "./src/web/actions/channelsActions.ts");
 var Chat = (function (_super) {
     __extends(Chat, _super);
     function Chat(props) {
@@ -43503,10 +43549,10 @@ exports["default"] = react_redux_1.connect(function (state, ownProps) {
 
 /***/ }),
 
-/***/ "./src/components/Dropdown.tsx":
-/*!*************************************!*\
-  !*** ./src/components/Dropdown.tsx ***!
-  \*************************************/
+/***/ "./src/web/components/Dropdown.tsx":
+/*!*****************************************!*\
+  !*** ./src/web/components/Dropdown.tsx ***!
+  \*****************************************/
 /*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -43553,10 +43599,10 @@ exports["default"] = Dropdown;
 
 /***/ }),
 
-/***/ "./src/components/DropdownMenu.tsx":
-/*!*****************************************!*\
-  !*** ./src/components/DropdownMenu.tsx ***!
-  \*****************************************/
+/***/ "./src/web/components/DropdownMenu.tsx":
+/*!*********************************************!*\
+  !*** ./src/web/components/DropdownMenu.tsx ***!
+  \*********************************************/
 /*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -43594,10 +43640,10 @@ exports["default"] = DropdownMenu;
 
 /***/ }),
 
-/***/ "./src/components/DropdownMenuItem.tsx":
-/*!*********************************************!*\
-  !*** ./src/components/DropdownMenuItem.tsx ***!
-  \*********************************************/
+/***/ "./src/web/components/DropdownMenuItem.tsx":
+/*!*************************************************!*\
+  !*** ./src/web/components/DropdownMenuItem.tsx ***!
+  \*************************************************/
 /*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -43635,10 +43681,10 @@ exports["default"] = DropdownMenuItem;
 
 /***/ }),
 
-/***/ "./src/components/LoadingFadeIn.tsx":
-/*!******************************************!*\
-  !*** ./src/components/LoadingFadeIn.tsx ***!
-  \******************************************/
+/***/ "./src/web/components/LoadingFadeIn.tsx":
+/*!**********************************************!*\
+  !*** ./src/web/components/LoadingFadeIn.tsx ***!
+  \**********************************************/
 /*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -43676,10 +43722,10 @@ exports["default"] = LoadingFadeIn;
 
 /***/ }),
 
-/***/ "./src/components/LoadingSpinner.tsx":
-/*!*******************************************!*\
-  !*** ./src/components/LoadingSpinner.tsx ***!
-  \*******************************************/
+/***/ "./src/web/components/LoadingSpinner.tsx":
+/*!***********************************************!*\
+  !*** ./src/web/components/LoadingSpinner.tsx ***!
+  \***********************************************/
 /*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -43728,10 +43774,10 @@ exports["default"] = LoadingSpinner;
 
 /***/ }),
 
-/***/ "./src/components/Modal.tsx":
-/*!**********************************!*\
-  !*** ./src/components/Modal.tsx ***!
-  \**********************************/
+/***/ "./src/web/components/Modal.tsx":
+/*!**************************************!*\
+  !*** ./src/web/components/Modal.tsx ***!
+  \**************************************/
 /*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -43803,10 +43849,10 @@ exports["default"] = Modal;
 
 /***/ }),
 
-/***/ "./src/components/Navbar.tsx":
-/*!***********************************!*\
-  !*** ./src/components/Navbar.tsx ***!
-  \***********************************/
+/***/ "./src/web/components/Navbar.tsx":
+/*!***************************************!*\
+  !*** ./src/web/components/Navbar.tsx ***!
+  \***************************************/
 /*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -43829,7 +43875,7 @@ exports.__esModule = true;
 var React = __webpack_require__(/*! react */ "./node_modules/react/index.js");
 var react_router_dom_1 = __webpack_require__(/*! react-router-dom */ "./node_modules/react-router-dom/esm/react-router-dom.js");
 var react_redux_1 = __webpack_require__(/*! react-redux */ "./node_modules/react-redux/es/index.js");
-var sidebarActions_1 = __webpack_require__(/*! ../actions/sidebarActions */ "./src/actions/sidebarActions.ts");
+var sidebarActions_1 = __webpack_require__(/*! ../actions/sidebarActions */ "./src/web/actions/sidebarActions.ts");
 var Navbar = (function (_super) {
     __extends(Navbar, _super);
     function Navbar(props) {
@@ -43862,10 +43908,10 @@ exports["default"] = react_redux_1.connect(function (state) {
 
 /***/ }),
 
-/***/ "./src/components/Notifications.tsx":
-/*!******************************************!*\
-  !*** ./src/components/Notifications.tsx ***!
-  \******************************************/
+/***/ "./src/web/components/Notifications.tsx":
+/*!**********************************************!*\
+  !*** ./src/web/components/Notifications.tsx ***!
+  \**********************************************/
 /*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -43887,7 +43933,7 @@ var __extends = (this && this.__extends) || (function () {
 exports.__esModule = true;
 var React = __webpack_require__(/*! react */ "./node_modules/react/index.js");
 var react_redux_1 = __webpack_require__(/*! react-redux */ "./node_modules/react-redux/es/index.js");
-var notificationsActions_1 = __webpack_require__(/*! ../actions/notificationsActions */ "./src/actions/notificationsActions.ts");
+var notificationsActions_1 = __webpack_require__(/*! ../actions/notificationsActions */ "./src/web/actions/notificationsActions.ts");
 var Notifications = (function (_super) {
     __extends(Notifications, _super);
     function Notifications() {
@@ -43927,10 +43973,10 @@ exports["default"] = react_redux_1.connect(mapStateToProps, mapDispatchToProps)(
 
 /***/ }),
 
-/***/ "./src/components/OnlineUsers.tsx":
-/*!****************************************!*\
-  !*** ./src/components/OnlineUsers.tsx ***!
-  \****************************************/
+/***/ "./src/web/components/OnlineUsers.tsx":
+/*!********************************************!*\
+  !*** ./src/web/components/OnlineUsers.tsx ***!
+  \********************************************/
 /*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -43952,7 +43998,7 @@ var __extends = (this && this.__extends) || (function () {
 exports.__esModule = true;
 var React = __webpack_require__(/*! react */ "./node_modules/react/index.js");
 var react_redux_1 = __webpack_require__(/*! react-redux */ "./node_modules/react-redux/es/index.js");
-var Modal_1 = __webpack_require__(/*! ./Modal */ "./src/components/Modal.tsx");
+var Modal_1 = __webpack_require__(/*! ./Modal */ "./src/web/components/Modal.tsx");
 var OnlineUsers = (function (_super) {
     __extends(OnlineUsers, _super);
     function OnlineUsers(props) {
@@ -43977,7 +44023,7 @@ var OnlineUsers = (function (_super) {
             React.createElement(Modal_1["default"], { title: "Online Users", active: this.state.displayConnectedUsers, onDismiss: function () {
                     _this.setState({ displayConnectedUsers: false });
                 } }, this.props.connectedUserEmails.map(function (email) {
-                return React.createElement("div", { className: "row" }, email);
+                return React.createElement("div", { className: "row", key: email }, email);
             }))));
     };
     return OnlineUsers;
@@ -43991,10 +44037,10 @@ exports["default"] = react_redux_1.connect(function (state) {
 
 /***/ }),
 
-/***/ "./src/components/Page404.tsx":
-/*!************************************!*\
-  !*** ./src/components/Page404.tsx ***!
-  \************************************/
+/***/ "./src/web/components/Page404.tsx":
+/*!****************************************!*\
+  !*** ./src/web/components/Page404.tsx ***!
+  \****************************************/
 /*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -44036,10 +44082,10 @@ exports["default"] = react_redux_1.connect(function (state) { return ({
 
 /***/ }),
 
-/***/ "./src/components/PageDashboard.tsx":
-/*!******************************************!*\
-  !*** ./src/components/PageDashboard.tsx ***!
-  \******************************************/
+/***/ "./src/web/components/PageDashboard.tsx":
+/*!**********************************************!*\
+  !*** ./src/web/components/PageDashboard.tsx ***!
+  \**********************************************/
 /*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -44062,16 +44108,16 @@ exports.__esModule = true;
 var React = __webpack_require__(/*! react */ "./node_modules/react/index.js");
 var react_redux_1 = __webpack_require__(/*! react-redux */ "./node_modules/react-redux/es/index.js");
 var react_router_dom_1 = __webpack_require__(/*! react-router-dom */ "./node_modules/react-router-dom/esm/react-router-dom.js");
-var channelsActions_1 = __webpack_require__(/*! ../actions/channelsActions */ "./src/actions/channelsActions.ts");
-var socketActions_1 = __webpack_require__(/*! ../actions/socketActions */ "./src/actions/socketActions.ts");
-var Chat_1 = __webpack_require__(/*! ./Chat */ "./src/components/Chat.tsx");
-var LoadingFadeIn_1 = __webpack_require__(/*! ./LoadingFadeIn */ "./src/components/LoadingFadeIn.tsx");
-var PageLogout_1 = __webpack_require__(/*! ./PageLogout */ "./src/components/PageLogout.tsx");
-var PageSettings_1 = __webpack_require__(/*! ./PageSettings */ "./src/components/PageSettings.tsx");
-var Dropdown_1 = __webpack_require__(/*! ./Dropdown */ "./src/components/Dropdown.tsx");
-var DropdownMenu_1 = __webpack_require__(/*! ./DropdownMenu */ "./src/components/DropdownMenu.tsx");
-var DropdownMenuItem_1 = __webpack_require__(/*! ./DropdownMenuItem */ "./src/components/DropdownMenuItem.tsx");
-var history_1 = __webpack_require__(/*! ../lib/history */ "./src/lib/history.ts");
+var channelsActions_1 = __webpack_require__(/*! ../actions/channelsActions */ "./src/web/actions/channelsActions.ts");
+var socketActions_1 = __webpack_require__(/*! ../actions/socketActions */ "./src/web/actions/socketActions.ts");
+var Chat_1 = __webpack_require__(/*! ./Chat */ "./src/web/components/Chat.tsx");
+var LoadingFadeIn_1 = __webpack_require__(/*! ./LoadingFadeIn */ "./src/web/components/LoadingFadeIn.tsx");
+var PageLogout_1 = __webpack_require__(/*! ./PageLogout */ "./src/web/components/PageLogout.tsx");
+var PageSettings_1 = __webpack_require__(/*! ./PageSettings */ "./src/web/components/PageSettings.tsx");
+var Dropdown_1 = __webpack_require__(/*! ./Dropdown */ "./src/web/components/Dropdown.tsx");
+var DropdownMenu_1 = __webpack_require__(/*! ./DropdownMenu */ "./src/web/components/DropdownMenu.tsx");
+var DropdownMenuItem_1 = __webpack_require__(/*! ./DropdownMenuItem */ "./src/web/components/DropdownMenuItem.tsx");
+var history_1 = __webpack_require__(/*! ../lib/history */ "./src/web/lib/history.ts");
 var PageDashboard = (function (_super) {
     __extends(PageDashboard, _super);
     function PageDashboard(props) {
@@ -44165,10 +44211,10 @@ exports["default"] = react_redux_1.connect(function (state) {
 
 /***/ }),
 
-/***/ "./src/components/PageLogin.tsx":
-/*!**************************************!*\
-  !*** ./src/components/PageLogin.tsx ***!
-  \**************************************/
+/***/ "./src/web/components/PageLogin.tsx":
+/*!******************************************!*\
+  !*** ./src/web/components/PageLogin.tsx ***!
+  \******************************************/
 /*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -44191,8 +44237,8 @@ exports.__esModule = true;
 var React = __webpack_require__(/*! react */ "./node_modules/react/index.js");
 var axios_1 = __webpack_require__(/*! axios */ "./node_modules/axios/index.js");
 var react_redux_1 = __webpack_require__(/*! react-redux */ "./node_modules/react-redux/es/index.js");
-var notificationsActions_1 = __webpack_require__(/*! ../actions/notificationsActions */ "./src/actions/notificationsActions.ts");
-var userActions_1 = __webpack_require__(/*! ../actions/userActions */ "./src/actions/userActions.ts");
+var notificationsActions_1 = __webpack_require__(/*! ../actions/notificationsActions */ "./src/web/actions/notificationsActions.ts");
+var userActions_1 = __webpack_require__(/*! ../actions/userActions */ "./src/web/actions/userActions.ts");
 var PageLogin = (function (_super) {
     __extends(PageLogin, _super);
     function PageLogin(props) {
@@ -44224,6 +44270,7 @@ var PageLogin = (function (_super) {
             password: this.state.password
         }).then(function (res) {
             _this.props.clearErrors();
+            _this.props.setJwt(res.headers['x-access-token']);
             _this.props.setUser({
                 authorized: true,
                 email: res.data.email,
@@ -44241,16 +44288,17 @@ exports["default"] = react_redux_1.connect(null, function (dispatch) {
         clearErrors: function () { return dispatch(notificationsActions_1.clearErrors()); },
         addError: function (err) { return dispatch(notificationsActions_1.addError(err)); },
         setUser: function (user) { return dispatch(userActions_1.setUser(user)); },
+        setJwt: function (token) { return dispatch(userActions_1.setJwt(token)); },
     };
 })(PageLogin);
 
 
 /***/ }),
 
-/***/ "./src/components/PageLogout.tsx":
-/*!***************************************!*\
-  !*** ./src/components/PageLogout.tsx ***!
-  \***************************************/
+/***/ "./src/web/components/PageLogout.tsx":
+/*!*******************************************!*\
+  !*** ./src/web/components/PageLogout.tsx ***!
+  \*******************************************/
 /*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -44273,7 +44321,7 @@ exports.__esModule = true;
 var React = __webpack_require__(/*! react */ "./node_modules/react/index.js");
 var react_redux_1 = __webpack_require__(/*! react-redux */ "./node_modules/react-redux/es/index.js");
 var axios_1 = __webpack_require__(/*! axios */ "./node_modules/axios/index.js");
-var userActions_1 = __webpack_require__(/*! ../actions/userActions */ "./src/actions/userActions.ts");
+var userActions_1 = __webpack_require__(/*! ../actions/userActions */ "./src/web/actions/userActions.ts");
 var PageLogout = (function (_super) {
     __extends(PageLogout, _super);
     function PageLogout(props) {
@@ -44297,10 +44345,10 @@ exports["default"] = react_redux_1.connect(null, function (dispatch) {
 
 /***/ }),
 
-/***/ "./src/components/PageRegister.tsx":
-/*!*****************************************!*\
-  !*** ./src/components/PageRegister.tsx ***!
-  \*****************************************/
+/***/ "./src/web/components/PageRegister.tsx":
+/*!*********************************************!*\
+  !*** ./src/web/components/PageRegister.tsx ***!
+  \*********************************************/
 /*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -44324,7 +44372,7 @@ var React = __webpack_require__(/*! react */ "./node_modules/react/index.js");
 var axios_1 = __webpack_require__(/*! axios */ "./node_modules/axios/index.js");
 var react_redux_1 = __webpack_require__(/*! react-redux */ "./node_modules/react-redux/es/index.js");
 var react_router_dom_1 = __webpack_require__(/*! react-router-dom */ "./node_modules/react-router-dom/esm/react-router-dom.js");
-var notificationsActions_1 = __webpack_require__(/*! ../actions/notificationsActions */ "./src/actions/notificationsActions.ts");
+var notificationsActions_1 = __webpack_require__(/*! ../actions/notificationsActions */ "./src/web/actions/notificationsActions.ts");
 var PageRegister = (function (_super) {
     __extends(PageRegister, _super);
     function PageRegister(props) {
@@ -44384,10 +44432,10 @@ exports["default"] = react_redux_1.connect(null, function (dispatch) {
 
 /***/ }),
 
-/***/ "./src/components/PageSettings.tsx":
-/*!*****************************************!*\
-  !*** ./src/components/PageSettings.tsx ***!
-  \*****************************************/
+/***/ "./src/web/components/PageSettings.tsx":
+/*!*********************************************!*\
+  !*** ./src/web/components/PageSettings.tsx ***!
+  \*********************************************/
 /*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -44410,9 +44458,9 @@ exports.__esModule = true;
 var React = __webpack_require__(/*! react */ "./node_modules/react/index.js");
 var react_redux_1 = __webpack_require__(/*! react-redux */ "./node_modules/react-redux/es/index.js");
 var react_router_dom_1 = __webpack_require__(/*! react-router-dom */ "./node_modules/react-router-dom/esm/react-router-dom.js");
-var AccountSettings_1 = __webpack_require__(/*! ./AccountSettings */ "./src/components/AccountSettings.tsx");
-var ChannelSettings_1 = __webpack_require__(/*! ./ChannelSettings */ "./src/components/ChannelSettings.tsx");
-var UserSettings_1 = __webpack_require__(/*! ./UserSettings */ "./src/components/UserSettings.tsx");
+var AccountSettings_1 = __webpack_require__(/*! ./AccountSettings */ "./src/web/components/AccountSettings.tsx");
+var ChannelSettings_1 = __webpack_require__(/*! ./ChannelSettings */ "./src/web/components/ChannelSettings.tsx");
+var UserSettings_1 = __webpack_require__(/*! ./UserSettings */ "./src/web/components/UserSettings.tsx");
 var PageSettings = (function (_super) {
     __extends(PageSettings, _super);
     function PageSettings(props) {
@@ -44464,10 +44512,10 @@ exports["default"] = react_redux_1.connect(function (props) {
 
 /***/ }),
 
-/***/ "./src/components/UserSettings.tsx":
-/*!*****************************************!*\
-  !*** ./src/components/UserSettings.tsx ***!
-  \*****************************************/
+/***/ "./src/web/components/UserSettings.tsx":
+/*!*********************************************!*\
+  !*** ./src/web/components/UserSettings.tsx ***!
+  \*********************************************/
 /*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -44490,9 +44538,9 @@ exports.__esModule = true;
 var React = __webpack_require__(/*! react */ "./node_modules/react/index.js");
 var axios_1 = __webpack_require__(/*! axios */ "./node_modules/axios/index.js");
 var react_redux_1 = __webpack_require__(/*! react-redux */ "./node_modules/react-redux/es/index.js");
-var UserSettingsSearch_1 = __webpack_require__(/*! ./UserSettingsSearch */ "./src/components/UserSettingsSearch.tsx");
-var notificationsActions_1 = __webpack_require__(/*! ../actions/notificationsActions */ "./src/actions/notificationsActions.ts");
-var Modal_1 = __webpack_require__(/*! ./Modal */ "./src/components/Modal.tsx");
+var UserSettingsSearch_1 = __webpack_require__(/*! ./UserSettingsSearch */ "./src/web/components/UserSettingsSearch.tsx");
+var notificationsActions_1 = __webpack_require__(/*! ../actions/notificationsActions */ "./src/web/actions/notificationsActions.ts");
+var Modal_1 = __webpack_require__(/*! ./Modal */ "./src/web/components/Modal.tsx");
 var UserSettings = (function (_super) {
     __extends(UserSettings, _super);
     function UserSettings(props) {
@@ -44574,10 +44622,10 @@ exports["default"] = react_redux_1.connect(null, function (dispatch) { return ({
 
 /***/ }),
 
-/***/ "./src/components/UserSettingsSearch.tsx":
-/*!***********************************************!*\
-  !*** ./src/components/UserSettingsSearch.tsx ***!
-  \***********************************************/
+/***/ "./src/web/components/UserSettingsSearch.tsx":
+/*!***************************************************!*\
+  !*** ./src/web/components/UserSettingsSearch.tsx ***!
+  \***************************************************/
 /*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -44631,10 +44679,10 @@ exports["default"] = UserSettingsSearch;
 
 /***/ }),
 
-/***/ "./src/components/VerifyEmail.tsx":
-/*!****************************************!*\
-  !*** ./src/components/VerifyEmail.tsx ***!
-  \****************************************/
+/***/ "./src/web/components/VerifyEmail.tsx":
+/*!********************************************!*\
+  !*** ./src/web/components/VerifyEmail.tsx ***!
+  \********************************************/
 /*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -44689,10 +44737,10 @@ exports["default"] = react_redux_1.connect()(VerifyEmail);
 
 /***/ }),
 
-/***/ "./src/html/index.html":
-/*!*****************************!*\
-  !*** ./src/html/index.html ***!
-  \*****************************/
+/***/ "./src/web/html/index.html":
+/*!*********************************!*\
+  !*** ./src/web/html/index.html ***!
+  \*********************************/
 /*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -44700,33 +44748,36 @@ module.exports = __webpack_require__.p + "index.html";
 
 /***/ }),
 
-/***/ "./src/index.tsx":
-/*!***********************!*\
-  !*** ./src/index.tsx ***!
-  \***********************/
+/***/ "./src/web/index.tsx":
+/*!***************************!*\
+  !*** ./src/web/index.tsx ***!
+  \***************************/
 /*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 exports.__esModule = true;
-__webpack_require__(/*! ./html/index.html */ "./src/html/index.html");
-__webpack_require__(/*! ./scss/app.scss */ "./src/scss/app.scss");
+__webpack_require__(/*! ./html/index.html */ "./src/web/html/index.html");
+__webpack_require__(/*! ./scss/app.scss */ "./src/web/scss/app.scss");
 var React = __webpack_require__(/*! react */ "./node_modules/react/index.js");
 var ReactDOM = __webpack_require__(/*! react-dom */ "./node_modules/react-dom/index.js");
 var react_redux_1 = __webpack_require__(/*! react-redux */ "./node_modules/react-redux/es/index.js");
 var axios_1 = __webpack_require__(/*! axios */ "./node_modules/axios/index.js");
-var App_1 = __webpack_require__(/*! ./components/App */ "./src/components/App.tsx");
-var store_1 = __webpack_require__(/*! ./store */ "./src/store.ts");
+var App_1 = __webpack_require__(/*! ./components/App */ "./src/web/components/App.tsx");
+var store_1 = __webpack_require__(/*! ./store */ "./src/web/store.ts");
 var root = document.getElementById('app');
 ReactDOM.render(React.createElement(react_redux_1.Provider, { store: store_1["default"] },
     React.createElement(App_1["default"], null)), root);
 axios_1["default"].defaults.withCredentials = true;
 axios_1["default"].interceptors.response.use(function (res) {
-    var newToken = res.headers['new-csrf-token'];
-    if (newToken) {
-        axios_1["default"].defaults.headers['csrf-token'] = newToken;
+    var newCsrfToken = res.headers['new-csrf-token'];
+    if (newCsrfToken) {
+        axios_1["default"].defaults.headers['csrf-token'] = newCsrfToken;
     }
+    var newAccessToken = res.headers['x-access-token'];
+    if (newAccessToken)
+        axios_1["default"].defaults.headers['x-access-token'] = newAccessToken;
     return res;
 });
 window.axios = axios_1["default"];
@@ -44734,10 +44785,10 @@ window.axios = axios_1["default"];
 
 /***/ }),
 
-/***/ "./src/lib/history.ts":
-/*!****************************!*\
-  !*** ./src/lib/history.ts ***!
-  \****************************/
+/***/ "./src/web/lib/history.ts":
+/*!********************************!*\
+  !*** ./src/web/lib/history.ts ***!
+  \********************************/
 /*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -44750,17 +44801,17 @@ exports["default"] = history_1.createBrowserHistory();
 
 /***/ }),
 
-/***/ "./src/reducers/channels.ts":
-/*!**********************************!*\
-  !*** ./src/reducers/channels.ts ***!
-  \**********************************/
+/***/ "./src/web/reducers/channels.ts":
+/*!**************************************!*\
+  !*** ./src/web/reducers/channels.ts ***!
+  \**************************************/
 /*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 exports.__esModule = true;
-var channelsActions_1 = __webpack_require__(/*! ../actions/channelsActions */ "./src/actions/channelsActions.ts");
+var channelsActions_1 = __webpack_require__(/*! ../actions/channelsActions */ "./src/web/actions/channelsActions.ts");
 var initialState = [];
 exports.channelExists = function (channels, channelName) {
     var channel = channels.find(function (c) {
@@ -44858,17 +44909,17 @@ exports["default"] = default_1;
 
 /***/ }),
 
-/***/ "./src/reducers/chatUsers.ts":
-/*!***********************************!*\
-  !*** ./src/reducers/chatUsers.ts ***!
-  \***********************************/
+/***/ "./src/web/reducers/chatUsers.ts":
+/*!***************************************!*\
+  !*** ./src/web/reducers/chatUsers.ts ***!
+  \***************************************/
 /*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 exports.__esModule = true;
-var chatUsersActions_1 = __webpack_require__(/*! ../actions/chatUsersActions */ "./src/actions/chatUsersActions.ts");
+var chatUsersActions_1 = __webpack_require__(/*! ../actions/chatUsersActions */ "./src/web/actions/chatUsersActions.ts");
 var initialState = {};
 function default_1(state, action) {
     if (state === void 0) { state = initialState; }
@@ -44895,17 +44946,17 @@ exports["default"] = default_1;
 
 /***/ }),
 
-/***/ "./src/reducers/notifications.ts":
-/*!***************************************!*\
-  !*** ./src/reducers/notifications.ts ***!
-  \***************************************/
+/***/ "./src/web/reducers/notifications.ts":
+/*!*******************************************!*\
+  !*** ./src/web/reducers/notifications.ts ***!
+  \*******************************************/
 /*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 exports.__esModule = true;
-var notificationsActions_1 = __webpack_require__(/*! ../actions/notificationsActions */ "./src/actions/notificationsActions.ts");
+var notificationsActions_1 = __webpack_require__(/*! ../actions/notificationsActions */ "./src/web/actions/notificationsActions.ts");
 var initialState = {
     errors: [],
     infos: []
@@ -44938,17 +44989,17 @@ exports["default"] = default_1;
 
 /***/ }),
 
-/***/ "./src/reducers/sidebar.ts":
-/*!*********************************!*\
-  !*** ./src/reducers/sidebar.ts ***!
-  \*********************************/
+/***/ "./src/web/reducers/sidebar.ts":
+/*!*************************************!*\
+  !*** ./src/web/reducers/sidebar.ts ***!
+  \*************************************/
 /*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 exports.__esModule = true;
-var sidebarActions_1 = __webpack_require__(/*! ../actions/sidebarActions */ "./src/actions/sidebarActions.ts");
+var sidebarActions_1 = __webpack_require__(/*! ../actions/sidebarActions */ "./src/web/actions/sidebarActions.ts");
 var initialState = {
     open: true
 };
@@ -44966,17 +45017,17 @@ exports["default"] = default_1;
 
 /***/ }),
 
-/***/ "./src/reducers/socket.ts":
-/*!********************************!*\
-  !*** ./src/reducers/socket.ts ***!
-  \********************************/
+/***/ "./src/web/reducers/socket.ts":
+/*!************************************!*\
+  !*** ./src/web/reducers/socket.ts ***!
+  \************************************/
 /*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 exports.__esModule = true;
-var socketActions_1 = __webpack_require__(/*! ../actions/socketActions */ "./src/actions/socketActions.ts");
+var socketActions_1 = __webpack_require__(/*! ../actions/socketActions */ "./src/web/actions/socketActions.ts");
 var initialState = {
     io: null,
     connected: false,
@@ -45000,22 +45051,23 @@ exports["default"] = default_1;
 
 /***/ }),
 
-/***/ "./src/reducers/user.ts":
-/*!******************************!*\
-  !*** ./src/reducers/user.ts ***!
-  \******************************/
+/***/ "./src/web/reducers/user.ts":
+/*!**********************************!*\
+  !*** ./src/web/reducers/user.ts ***!
+  \**********************************/
 /*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 exports.__esModule = true;
-var userActions_1 = __webpack_require__(/*! ../actions/userActions */ "./src/actions/userActions.ts");
+var userActions_1 = __webpack_require__(/*! ../actions/userActions */ "./src/web/actions/userActions.ts");
 var initialState = {
     authorized: false,
     email: false,
     name: false,
     role: false,
+    jwt: false,
 };
 function default_1(state, action) {
     if (state === void 0) { state = initialState; }
@@ -45037,6 +45089,8 @@ function default_1(state, action) {
                 email: false,
                 role: false
             };
+        case userActions_1.SET_JWT:
+            return Object.assign({}, state, { token: action.data });
         default:
             return state;
     }
@@ -45046,10 +45100,10 @@ exports["default"] = default_1;
 
 /***/ }),
 
-/***/ "./src/scss/app.scss":
-/*!***************************!*\
-  !*** ./src/scss/app.scss ***!
-  \***************************/
+/***/ "./src/web/scss/app.scss":
+/*!*******************************!*\
+  !*** ./src/web/scss/app.scss ***!
+  \*******************************/
 /*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -45057,25 +45111,26 @@ exports["default"] = default_1;
 
 /***/ }),
 
-/***/ "./src/store.ts":
-/*!**********************!*\
-  !*** ./src/store.ts ***!
-  \**********************/
+/***/ "./src/web/store.ts":
+/*!**************************!*\
+  !*** ./src/web/store.ts ***!
+  \**************************/
 /*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
-/* WEBPACK VAR INJECTION */(function(process) {
+
 exports.__esModule = true;
 var redux_1 = __webpack_require__(/*! redux */ "./node_modules/redux/es/redux.js");
 var redux_thunk_1 = __webpack_require__(/*! redux-thunk */ "./node_modules/redux-thunk/es/index.js");
 var redux_logger_1 = __webpack_require__(/*! redux-logger */ "./node_modules/redux-logger/dist/redux-logger.js");
-var user_1 = __webpack_require__(/*! ./reducers/user */ "./src/reducers/user.ts");
-var channels_1 = __webpack_require__(/*! ./reducers/channels */ "./src/reducers/channels.ts");
-var notifications_1 = __webpack_require__(/*! ./reducers/notifications */ "./src/reducers/notifications.ts");
-var sidebar_1 = __webpack_require__(/*! ./reducers/sidebar */ "./src/reducers/sidebar.ts");
-var socket_1 = __webpack_require__(/*! ./reducers/socket */ "./src/reducers/socket.ts");
-var chatUsers_1 = __webpack_require__(/*! ./reducers/chatUsers */ "./src/reducers/chatUsers.ts");
+var user_1 = __webpack_require__(/*! ./reducers/user */ "./src/web/reducers/user.ts");
+var channels_1 = __webpack_require__(/*! ./reducers/channels */ "./src/web/reducers/channels.ts");
+var notifications_1 = __webpack_require__(/*! ./reducers/notifications */ "./src/web/reducers/notifications.ts");
+var sidebar_1 = __webpack_require__(/*! ./reducers/sidebar */ "./src/web/reducers/sidebar.ts");
+var socket_1 = __webpack_require__(/*! ./reducers/socket */ "./src/web/reducers/socket.ts");
+var chatUsers_1 = __webpack_require__(/*! ./reducers/chatUsers */ "./src/web/reducers/chatUsers.ts");
+var env = __webpack_require__(/*! ../../env */ "./env.js");
 var rootReducer = redux_1.combineReducers({
     user: user_1["default"],
     channels: channels_1["default"],
@@ -45084,11 +45139,10 @@ var rootReducer = redux_1.combineReducers({
     socket: socket_1["default"],
     chatUsers: chatUsers_1["default"],
 });
-var middleware = process.env.PRODUCTION || process.env.DISABLE_REDUX_LOGGING ?
+var middleware = env.production || env.disableReduxLogging ?
     redux_1.applyMiddleware(redux_thunk_1["default"]) : redux_1.applyMiddleware(redux_thunk_1["default"], redux_logger_1.createLogger());
 exports["default"] = redux_1.createStore(rootReducer, middleware);
 
-/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(/*! ./../node_modules/process/browser.js */ "./node_modules/process/browser.js")))
 
 /***/ }),
 

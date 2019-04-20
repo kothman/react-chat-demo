@@ -91,11 +91,19 @@
   !*** ./env.js ***!
   \****************/
 /*! no static exports found */
-/***/ (function(module, exports) {
+/***/ (function(module, exports, __webpack_require__) {
 
 module.exports = {
     // https://docs.mongodb.com/manual/reference/connection-string/
     mongodbConnectionUri: process.env.MONGODB_URI,
+    mongodbTestConnectionUri: 'mongodb://localhost:27017/openChatTest',
+    port: process.env.PORT || 5000,
+    production:  false || false,
+    useTestDb: process.env.USE_TEST_DB || false,
+    secret: process.env.SECRET || 'secret',
+    disableCsrf: process.env.DISABLE_CSRF || false,
+    disableReduxLogging: process.env.DISABLE_REDUX_LOGGING || false,
+    disableAutoStart: process.env.DISABLE_AUTO_START || false,
     mailgunApiKey: process.env.MAILGUN_API_KEY,
     mailgunDomain: process.env.MAILGUN_DOMAIN,
     baseUrl: process.env.BASE_URL ? process.env.BASE_URL : 'http://localhost:5000'
@@ -104,23 +112,258 @@ module.exports = {
 
 /***/ }),
 
-/***/ "./src/server/middleware/admin.ts":
-/*!****************************************!*\
-  !*** ./src/server/middleware/admin.ts ***!
-  \****************************************/
+/***/ "./src/server/controllers/authController.ts":
+/*!**************************************************!*\
+  !*** ./src/server/controllers/authController.ts ***!
+  \**************************************************/
 /*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 exports.__esModule = true;
-function default_1(req, res, next) {
-    if (req.session.user && req.session.user.role === 'admin') {
-        return next();
+var validator_1 = __webpack_require__(/*! validator */ "validator");
+var bcryptjs_1 = __webpack_require__(/*! bcryptjs */ "bcryptjs");
+var User_1 = __webpack_require__(/*! ../models/User */ "./src/server/models/User.ts");
+var env = __webpack_require__(/*! ../../../env */ "./env.js");
+exports["default"] = {
+    login: function (req, res) {
+        if (validator_1.isEmpty(req.body.email || '') || validator_1.isEmpty(req.body.password || '')) {
+            return res.status(400).json({ error: 'Please supply an email and password' }).end();
+        }
+        if (!validator_1.isEmail(req.body.email)) {
+            return res.status(400).json({ error: 'Not a valid email address' }).end();
+        }
+        req.authenticate(req.body.email, req.body.password, function (user) {
+            if (!user)
+                return res.status(401).json({ error: 'Invalid email or password' }).end();
+            req.issueNewToken(user);
+            return res.status(200)
+                .json({
+                success: true,
+                email: user.email,
+                role: user.role,
+                name: user.name
+            }).end();
+        });
+    },
+    register: function (req, res) {
+        if (validator_1.isEmpty(req.body.email || '') || validator_1.isEmpty(req.body.password || '')) {
+            return res.status(400).json({ error: 'Please supply an email and password' });
+        }
+        if (!validator_1.isEmail(req.body.email)) {
+            return res.status(400).json({ error: 'Not a valid email address' });
+        }
+        return User_1["default"].findByEmail(req.body.email).countDocuments().exec().then(function (count) {
+            if (count !== 0)
+                return res.status(400).json({ error: 'Email address in use' });
+            var passwordHash = bcryptjs_1.hashSync(req.body.password);
+            User_1["default"].countDocuments().exec().then(function (count) {
+                var role = 'user';
+                if (count === 0)
+                    role = 'admin';
+                var user = new User_1["default"]({
+                    name: '',
+                    email: req.body.email,
+                    password: passwordHash,
+                    role: role,
+                    emailVerified: false,
+                });
+                user.save().then(function (u) {
+                    return res.status(200).json({ success: true });
+                })["catch"](function (err) {
+                    console.error(err);
+                    return res.status(500).json({ error: 'Something went wrong trying to create a new user' });
+                });
+            });
+        });
+    },
+    logout: function (req, res) {
+        req.logout();
+        return res.json({ success: true, message: 'logged out' });
+    },
+    verifyEmail: function (req, res) {
     }
-    return res.status(401).json({ error: 'Not authorized as admin' });
-}
-exports["default"] = default_1;
+};
+
+
+/***/ }),
+
+/***/ "./src/server/controllers/channelController.ts":
+/*!*****************************************************!*\
+  !*** ./src/server/controllers/channelController.ts ***!
+  \*****************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+exports.__esModule = true;
+var Channel_1 = __webpack_require__(/*! ../models/Channel */ "./src/server/models/Channel.ts");
+exports["default"] = {
+    channels: function (req, res) {
+        return Channel_1["default"].countDocuments().exec().then(function (count) {
+            var p = new Promise(function (resolve, reject) {
+                if (count !== 0) {
+                    return resolve();
+                }
+                Channel_1["default"].create([{ name: 'general' }, { name: 'random' }]).then(function () {
+                    return resolve();
+                })["catch"](function (err) {
+                    return reject(err);
+                });
+            });
+            return p.then(function () {
+                Channel_1["default"].find().exec().then(function (channels) {
+                    return res.status(200).json({ channels: channels });
+                })["catch"](function (err) {
+                    console.log(err);
+                    return res.status(500).json({ error: 'Something went wrong while trying to fetch channels' });
+                });
+            })["catch"](function (err) {
+                console.error(err);
+                return res.status(500).json({ error: 'Something went wrong while trying to create default channels' });
+            });
+        })["catch"](function (err) {
+            console.error(err);
+            return res.status(500).json({ error: 'Something went wrong while counting channels' });
+        });
+    },
+    "delete": function (req, res) {
+    },
+    create: function (req, res) {
+    }
+};
+
+
+/***/ }),
+
+/***/ "./src/server/controllers/messageController.ts":
+/*!*****************************************************!*\
+  !*** ./src/server/controllers/messageController.ts ***!
+  \*****************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+exports.__esModule = true;
+var Message_1 = __webpack_require__(/*! ../models/Message */ "./src/server/models/Message.ts");
+exports["default"] = {
+    messages: function (req, res) {
+        return Message_1["default"].find({ channel: req.params.channel })
+            .skip(parseInt(req.params.offest))
+            .sort({ _id: -1 })
+            .limit(20)
+            .exec().then(function (messages) {
+            return res.status(200).json({
+                messages: messages.map(function (m) {
+                    return {
+                        text: m.text,
+                        created: m.createdAt,
+                        userEmail: m.userEmail,
+                        channel: m.channel,
+                        _id: m._id
+                    };
+                }).reverse()
+            });
+        })["catch"](function (err) {
+            return res.status(400).json({ error: 'something went wrong trying to fetch messages' });
+        });
+    }
+};
+
+
+/***/ }),
+
+/***/ "./src/server/controllers/userController.ts":
+/*!**************************************************!*\
+  !*** ./src/server/controllers/userController.ts ***!
+  \**************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+exports.__esModule = true;
+var validator_1 = __webpack_require__(/*! validator */ "validator");
+var User_1 = __webpack_require__(/*! ../models/User */ "./src/server/models/User.ts");
+var bcryptjs_1 = __webpack_require__(/*! bcryptjs */ "bcryptjs");
+exports["default"] = {
+    user: function (req, res) {
+        res.send(req.user);
+    },
+    users: function (req, res) {
+        return User_1["default"].find({}).then(function (users) {
+            return res.status(200).json({ success: true, users: users });
+        })["catch"](function (err) {
+            console.error(err);
+            return res.status(200).json({ error: 'Something went wrong while retrieving users' });
+        });
+    },
+    userByEmail: function (req, res) {
+        if (!validator_1.isEmail(req.params.user))
+            return res.status(400).json({ error: 'Please supply a valid email' });
+        return User_1["default"].findByEmail(req.params.user).exec().then(function (user) {
+            if (user !== null) {
+                return res.status(200).json({
+                    user: {
+                        email: user.email,
+                        _id: user._id,
+                        name: user.name || '',
+                    }
+                });
+            }
+            return res.status(400).json({ error: 'No user found with that email' });
+        })["catch"](function (err) {
+            console.error(err);
+            return res.status(500).json({ error: 'Something went wrong trying to find the user' });
+        });
+    },
+    updateEmail: function (req, res) {
+        if (!validator_1.isEmail(req.body.email))
+            return res.status(400).json({ error: 'Not a valid email' });
+        return User_1["default"].countDocuments({ email: req.body.email }).exec().then(function (count) {
+            if (count !== 0)
+                return res.status(400).json({ error: 'Email address already in use' });
+            return User_1["default"].findByEmail(req.user.email).exec().then(function (user) {
+                user.email = req.body.email;
+                user.save();
+                req.issueNewToken(Object.assign({}, req.user, { email: req.body.email }));
+                return res.status(200).json({ success: true });
+            })["catch"](function (err) {
+                console.error(err);
+                return res.status(500).json({ error: 'Something went wrong trying to fetch the user' });
+            });
+        });
+    },
+    updateName: function (req, res) {
+        return User_1["default"].findByEmail(req.user.email)
+            .exec().then(function (user) {
+            user.name = req.body.name;
+            user.save();
+            req.issueNewToken(Object.assign({}, req.user, { name: req.body.name }));
+            return res.status(200).json({ success: true });
+        })["catch"](function (err) {
+            console.error(err);
+            return res.status(500).json({ error: 'Something went wrong trying to update the user' });
+        });
+    },
+    updatePassword: function (req, res) {
+        if (validator_1.isEmpty(req.body.newPass) || validator_1.isEmpty(req.body.oldPass))
+            return res.status(400).json({ error: 'Must supply the current and new password' });
+        return User_1["default"].findByEmail(req.user.email).exec().then(function (user) {
+            if (!bcryptjs_1.compareSync(req.body.oldPass, user.password))
+                return res.status(400).json({ error: 'Current password is incorrect' });
+            user.password = bcryptjs_1.hashSync(req.body.newPass);
+            user.save();
+            return res.status(200).json({ success: true });
+        });
+    },
+    resetPassword: function (req, res) {
+        return res.status(500).json({ error: 'Not implemented' });
+    },
+};
 
 
 /***/ }),
@@ -135,369 +378,132 @@ exports["default"] = default_1;
 "use strict";
 
 exports.__esModule = true;
+var jsonwebtoken_1 = __webpack_require__(/*! jsonwebtoken */ "jsonwebtoken");
+var env = __webpack_require__(/*! ../../../env */ "./env.js");
 function default_1(req, res, next) {
-    if (req.session.user) {
-        return next();
+    if (req.session.token && !req.headers['x-access-token']) {
+        res.setHeader('x-access-token', req.session.token);
     }
-    return res.status(401).json({ error: 'Not authorized' });
-}
-exports["default"] = default_1;
-
-
-/***/ }),
-
-/***/ "./src/server/routes/api/channels.ts":
-/*!*******************************************!*\
-  !*** ./src/server/routes/api/channels.ts ***!
-  \*******************************************/
-/*! no static exports found */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-exports.__esModule = true;
-var authorized_1 = __webpack_require__(/*! ../../middleware/authorized */ "./src/server/middleware/authorized.ts");
-var admin_1 = __webpack_require__(/*! ../../middleware/admin */ "./src/server/middleware/admin.ts");
-var validator = __webpack_require__(/*! validator */ "validator");
-function default_1(app) {
-    app.get('/api/v1/channel*', authorized_1["default"]);
-    app.get('/api/v1/channels', function (req, res) {
-        req.db.collection('channels', function (e, coll) {
-            var p = new Promise(function (resolve) {
-                coll.find({}).count(function (e, count) {
-                    if (count === 0) {
-                        coll.insertMany([{ name: 'general' }, { name: 'random' }], function () { return resolve(); });
-                    }
-                    else {
-                        resolve();
-                    }
-                });
-            });
-            p.then(function () {
-                coll.find({}).toArray(function (err, arr) {
-                    res.json({ channels: arr });
-                });
-            });
-        });
-    });
-    app.get('/api/v1/channel/delete/:channel', admin_1["default"], function (req, res) {
-        if (validator.isEmpty(req.params.channel)) {
-            return res.status(400).json({ error: 'Invalid channel name' });
-        }
-        return req.db.collection('channels', function (e, coll) {
-            var p = new Promise(function (resolve, reject) {
-                coll.find({ name: req.params.channel }).count(function (e, count) {
-                    if (count === 1) {
-                        return resolve();
-                    }
-                    return reject();
-                });
-            });
-            p.then(function () {
-                coll.deleteOne({ name: req.params.channel }).then(function () {
-                    return res.json({ success: true });
-                });
-            })["catch"](function () {
-                return res.status(400).json({ error: 'Returned channels count not equal to 1' });
-            });
-            return p;
-        });
-    });
-    app.post('/api/v1/channel/create', admin_1["default"], function (req, res) {
-        if (validator.isEmpty(req.body.channelName)) {
-            return res.status(400).json({ error: 'Invalid channel name' });
-        }
-        return req.db.collection('channels', function (e, coll) {
-            var p = new Promise(function (resolve, reject) {
-                coll.countDocuments({ name: req.body.channelName }, function (err, count) {
-                    if (count !== 0) {
-                        return reject();
-                    }
-                    return resolve();
-                });
-            });
-            return p.then(function () {
-                return coll.insertOne({ name: req.body.channelName }).then(function () {
-                    return res.json({ success: true });
-                });
-            })["catch"](function () {
-                return res.status(400).json({ error: 'Channel already exists' });
-            });
-        });
-    });
-}
-exports["default"] = default_1;
-
-
-/***/ }),
-
-/***/ "./src/server/routes/api/index.ts":
-/*!****************************************!*\
-  !*** ./src/server/routes/api/index.ts ***!
-  \****************************************/
-/*! no static exports found */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-exports.__esModule = true;
-var bcrypt = __webpack_require__(/*! bcryptjs */ "bcryptjs");
-var validator = __webpack_require__(/*! validator */ "validator");
-var users_1 = __webpack_require__(/*! ./users */ "./src/server/routes/api/users.ts");
-var messages_1 = __webpack_require__(/*! ./messages */ "./src/server/routes/api/messages.ts");
-var channels_1 = __webpack_require__(/*! ./channels */ "./src/server/routes/api/channels.ts");
-var shortid_1 = __webpack_require__(/*! shortid */ "shortid");
-function default_1(app) {
-    app.use(function (req, res, next) {
-        res.set('new-csrf-token', req.csrfToken());
+    var token = req.headers['x-access-token'] || req.session.token;
+    if (!token)
+        return res.status(401).json({ error: 'Not authorized' });
+    jsonwebtoken_1.verify(token, env.secret, function (err, decoded) {
+        if (err)
+            return res.status(401).send({ error: 'Not authorized' });
+        req.user = decoded;
         return next();
     });
-    users_1["default"](app);
-    messages_1["default"](app);
-    channels_1["default"](app);
-    app.post('/api/v1/login', function (req, res) {
-        if (validator.isEmpty(req.body.email) || validator.isEmpty(req.body.password)) {
-            return res.status(400).json({ error: 'Please supply an email and password' });
-        }
-        if (!validator.isEmail(req.body.email)) {
-            return res.status(400).json({ error: 'Not a valid email address' });
-        }
-        req.authenticate(req.body.email, req.body.password, function (user) {
-            if (!user)
-                return res.status(401).json({ error: 'Invalid email or password' });
-            return res.json({
-                success: true,
-                email: req.session.user.email,
-                role: req.session.user.role,
-                name: req.session.user.name
-            });
-        });
-    });
-    app.post('/api/v1/register', function (req, res) {
-        if (validator.isEmpty(req.body.email) || validator.isEmpty(req.body.password)) {
-            return res.status(400).json({ error: 'Please supply an email and password' });
-        }
-        if (!validator.isEmail(req.body.email)) {
-            return res.status(400).json({ error: 'Not a valid email address' });
-        }
-        var passwordHash = bcrypt.hashSync(req.body.password);
-        var users = req.db.collection('users');
-        users.findOne({ email: req.body.email }).then(function (user) {
-            if (user !== null) {
-                return res.status(401).json({ error: 'Email address already in use' });
-            }
-            users.countDocuments().then(function (count) {
-                var role = 'user';
-                if (count === 0) {
-                    role = 'admin';
-                    var widgets = req.db.collection('widgets');
-                    widgets.insertOne({
-                        shortId: shortid_1.generate(),
-                        domain: 'http://localhost:4000',
-                    });
-                }
-                users.insertOne({
-                    email: req.body.email,
-                    password: passwordHash,
-                    emailVerified: false,
-                    role: role
-                }, function (err) {
-                    return res.json({ success: true });
-                });
-            });
-        });
-    });
-    app.post('/api/v1/verifyEmail', function (req, res) {
-        if (validator.isEmpty(req.body.key)) {
-            return res.status(400).json({ error: 'Invalid request, no key supplied' });
-        }
-        var users = req.db.collection('users');
-        users.findOneAndUpdate({ verifyKey: req.body.key }, { $set: { emailVerified: true, verifyKey: null } }, function (err, result) {
-            if (err || !result) {
-                console.log(err, result);
-                return res.status(400).json({ error: 'Invalid key' });
-            }
-            return res.status(200).json({ success: true });
-        });
-    });
-    app.get('/api/v1/logout', function (req, res) {
-        req.logout();
-        return res.json({ success: true, message: 'logged out' });
-    });
 }
 exports["default"] = default_1;
 
 
 /***/ }),
 
-/***/ "./src/server/routes/api/messages.ts":
-/*!*******************************************!*\
-  !*** ./src/server/routes/api/messages.ts ***!
-  \*******************************************/
+/***/ "./src/server/models/Channel.ts":
+/*!**************************************!*\
+  !*** ./src/server/models/Channel.ts ***!
+  \**************************************/
 /*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 exports.__esModule = true;
-var authorized_1 = __webpack_require__(/*! ../../middleware/authorized */ "./src/server/middleware/authorized.ts");
-var mongodb_1 = __webpack_require__(/*! mongodb */ "mongodb");
-function default_1(app) {
-    app.get('/api/v1/messages?', authorized_1["default"]);
-    app.get('/api/v1/messages/:channel/:offset', function (req, res) {
-        var messages = req.db.collection('messages');
-        messages.find({ channel: req.params.channel }, { skip: parseInt(req.params.offset), sort: [['_id', -1]], limit: 20 })
-            .toArray(function (err, messages) {
-            if (!messages)
-                return res.status(400).json({ json: err });
-            messages.toArray(function (err, msgArray) {
-                return res.json({ messages: msgArray.map(function (m) {
-                        var objID = new mongodb_1.ObjectID(m['_id']);
-                        m.created = objID.getTimestamp();
-                        return m;
-                    }).reverse()
-                });
-            });
-        });
-    });
-}
-exports["default"] = default_1;
+var mongoose_1 = __webpack_require__(/*! mongoose */ "mongoose");
+var channelSchema = new mongoose_1.Schema({
+    name: {
+        type: String,
+        required: true,
+        lowercase: true,
+    },
+}, {
+    timestamps: true
+});
+var Channel = mongoose_1.model('Channel', channelSchema);
+exports["default"] = Channel;
 
 
 /***/ }),
 
-/***/ "./src/server/routes/api/users.ts":
-/*!****************************************!*\
-  !*** ./src/server/routes/api/users.ts ***!
-  \****************************************/
+/***/ "./src/server/models/Message.ts":
+/*!**************************************!*\
+  !*** ./src/server/models/Message.ts ***!
+  \**************************************/
 /*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 exports.__esModule = true;
-var bcrypt = __webpack_require__(/*! bcryptjs */ "bcryptjs");
-var validator = __webpack_require__(/*! validator */ "validator");
-var authorized_1 = __webpack_require__(/*! ../../middleware/authorized */ "./src/server/middleware/authorized.ts");
-function default_1(app) {
-    app.get('/api/v1/user*', authorized_1["default"]);
-    app.get('/api/v1/user', function (req, res) {
-        res.send(req.session.user);
-    });
-    app.get('/api/v1/users', function (req, res) {
-        var usersColl = req.db.collection('users');
-        var users = [];
-        usersColl.find({}).forEach(function (userDoc) {
-            users.push({
-                name: userDoc.name || '',
-                email: userDoc.email,
-                role: userDoc.role
-            });
-        }, function (err) {
-            if (err) {
-                console.log(err);
-                return res.status(500).json({ error: 'Something went wrong retrieving users' });
-            }
-            return res.status(200).json({ success: true, users: users });
-        });
-    });
-    app.get('/api/v1/user/:user', function (req, res) {
-        req.db.collection('users').findOne({ email: req.params.user }, function (err, user) {
-            if (err)
-                return res.status(400).json({ error: err });
-            return res.json({ user: {
-                    email: user.email,
-                    _id: user['_id'],
-                    name: '',
-                } });
-        });
-    });
-    app.post('/api/v1/user/update/email', function (req, res) {
-        if (!validator.isEmail(req.body.email))
-            return res.status(400).json({ error: 'Not a valid email' });
-        var users = req.db.collection('users');
-        return users.countDocuments({ email: req.body.email }, function (err, count) {
-            if (err) {
-                console.log(err);
-                return res.status(500).json({ error: 'Something went wrong counting users with email ' + req.body.email });
-            }
-            if (count !== 0)
-                return res.status(400).json({ error: 'Email address already in use' });
-            users.updateOne({ email: req.session.user.email }, { $set: { email: req.body.email } }, function (err, user) {
-                if (err || !user) {
-                    console.log(err, user);
-                    return res.status(500).json({ error: 'Something went wrong trying to update user\'s email' });
-                }
-                req.session.user.email = req.body.email;
-                return res.status(200).json({ success: true });
-            });
-        });
-    });
-    app.post('/api/v1/user/update/name', function (req, res) {
-        var users = req.db.collection('users');
-        users.updateOne({ email: req.session.user.email }, { $set: { name: req.body.name } }, function (err, user) {
-            if (err || !user) {
-                console.log(err, user);
-                return res.status(500).json({ error: 'Something went wrong trying to update user\'s name' });
-            }
-            req.session.user.name = req.body.name;
-            return res.status(200).json({ success: true });
-        });
-    });
-    app.post('/api/v1/user/update/password', function (req, res) {
-        var users = req.db.collection('users');
-        if (validator.isEmpty(req.body.newPass) || validator.isEmpty(req.body.oldPass))
-            return res.status(400).json({ error: 'Must supply the current and new password' });
-        return users.findOne({ email: req.session.user.email }, function (err, user) {
-            if (err || !user) {
-                console.log(err);
-                return res.status(500).json({ error: 'Something went wrong trying to retrieve the logged in user' });
-            }
-            if (!bcrypt.compareSync(req.body.oldPass, user.password))
-                return res.status(400).json({ error: 'Invalid password' });
-            users.updateOne({ email: req.session.user.email }, { $set: { password: bcrypt.hashSync(req.body.newPass) } }, function (err, user) {
-                if (err) {
-                    console.log(err);
-                    return res.status(500).json({ error: 'Something went wrong trying to update the logged in user\'s password' });
-                }
-                return res.status(200).json({ success: true });
-            });
-        });
-    });
-    app.post('/api/v1/user/reset_password', function (req, res) {
-    });
-    app.post('/api/v1/user/resend_email_verification');
-}
-exports["default"] = default_1;
+var mongoose_1 = __webpack_require__(/*! mongoose */ "mongoose");
+var messageSchema = new mongoose_1.Schema({
+    channel: {
+        type: String,
+        required: true,
+    },
+    text: {
+        type: String,
+        required: true,
+    },
+    userEmail: {
+        type: String,
+        required: true,
+        lowercase: true,
+    }
+}, {
+    timestamps: true
+});
+var Message = mongoose_1.model('Message', messageSchema);
+exports["default"] = Message;
 
 
 /***/ }),
 
-/***/ "./src/server/routes/index.ts":
-/*!************************************!*\
-  !*** ./src/server/routes/index.ts ***!
-  \************************************/
+/***/ "./src/server/models/User.ts":
+/*!***********************************!*\
+  !*** ./src/server/models/User.ts ***!
+  \***********************************/
 /*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 exports.__esModule = true;
-var index_1 = __webpack_require__(/*! ./api/index */ "./src/server/routes/api/index.ts");
-var widget_1 = __webpack_require__(/*! ./widget */ "./src/server/routes/widget.ts");
-function default_1(app) {
-    widget_1["default"](app);
-    index_1["default"](app);
-}
-exports["default"] = default_1;
+var mongoose_1 = __webpack_require__(/*! mongoose */ "mongoose");
+;
+var userSchema = new mongoose_1.Schema({
+    name: String,
+    email: {
+        required: true,
+        type: String,
+        lowercase: true
+    },
+    password: {
+        type: String,
+        required: true
+    },
+    role: {
+        type: String,
+        required: true,
+        lowercase: true,
+        "enum": ['admin', 'user']
+    },
+}, {
+    timestamps: true
+});
+userSchema.statics.findByEmail = function (email) {
+    return this.findOne({ email: email });
+};
+var User = mongoose_1.model('User', userSchema);
+exports["default"] = User;
 
 
 /***/ }),
 
-/***/ "./src/server/routes/widget.ts":
-/*!*************************************!*\
-  !*** ./src/server/routes/widget.ts ***!
-  \*************************************/
+/***/ "./src/server/routes.ts":
+/*!******************************!*\
+  !*** ./src/server/routes.ts ***!
+  \******************************/
 /*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -505,17 +511,46 @@ exports["default"] = default_1;
 /* WEBPACK VAR INJECTION */(function(__dirname) {
 exports.__esModule = true;
 var path = __webpack_require__(/*! path */ "path");
+var authorized_1 = __webpack_require__(/*! ./middleware/authorized */ "./src/server/middleware/authorized.ts");
+var authController_1 = __webpack_require__(/*! ./controllers/authController */ "./src/server/controllers/authController.ts");
+var userController_1 = __webpack_require__(/*! ./controllers/userController */ "./src/server/controllers/userController.ts");
+var messageController_1 = __webpack_require__(/*! ./controllers/messageController */ "./src/server/controllers/messageController.ts");
+var channelController_1 = __webpack_require__(/*! ./controllers/channelController */ "./src/server/controllers/channelController.ts");
 function default_1(app) {
+    app.get('/', function (req, res) {
+        return res.render(path.resolve(__dirname, '../../dist/public/index.html'), { csrfToken: req.csrfToken() });
+    });
     app.get('/widget', function (req, res) {
-        res.render(path.resolve(__dirname, '../../../dist/public/widget/index.html'));
+        return res.render(path.resolve(__dirname, '../../../dist/public/widget/index.html'));
     });
     app.get('/widget/demo', function (req, res) {
-        res.render(path.resolve(__dirname, '../../../dist/public/widget/demo.html'));
+        return res.render(path.resolve(__dirname, '../../../dist/public/widget/demo.html'));
+    });
+    app.post('/api/v1/login', authController_1["default"].login);
+    app.post('/api/v1/register', authController_1["default"].register);
+    app.get('/api/v1/logout', authController_1["default"].logout);
+    app.get('/api/v1/verifyEmail/:id', authController_1["default"].verifyEmail);
+    app.use('/api/v1/user', authorized_1["default"]);
+    app.get('/api/v1/user', userController_1["default"].user);
+    app.get('/api/v1/users', userController_1["default"].users);
+    app.get('/api/v1/user/:user', userController_1["default"].userByEmail);
+    app.post('/api/v1/user/update/email', userController_1["default"].updateEmail);
+    app.post('/api/v1/user/update/name', userController_1["default"].updateName);
+    app.post('/api/v1/user/update/password', userController_1["default"].updatePassword);
+    app.post('/api/v1/user/reset_password', userController_1["default"].resetPassword);
+    app.get('/api/v1/message*', authorized_1["default"]);
+    app.get('/api/v1/messages/:channel/:offset', messageController_1["default"].messages);
+    app.use('/api/v1/channel', authorized_1["default"]);
+    app.get('/api/v1/channels', channelController_1["default"].channels);
+    app.post('/api/v1/channels/delete', channelController_1["default"]["delete"]);
+    app.post('/api/v1/channels/create', channelController_1["default"].create);
+    app.get('*', function (req, res) {
+        return res.render(path.resolve(__dirname, '../../dist/public/index.html'), { csrfToken: req.csrfToken() });
     });
 }
 exports["default"] = default_1;
 
-/* WEBPACK VAR INJECTION */}.call(this, "src/server/routes"))
+/* WEBPACK VAR INJECTION */}.call(this, "src/server"))
 
 /***/ }),
 
@@ -531,24 +566,55 @@ exports["default"] = default_1;
 exports.__esModule = true;
 var http = __webpack_require__(/*! http */ "http");
 var express = __webpack_require__(/*! express */ "express");
-var session = __webpack_require__(/*! express-session */ "express-session");
 var path = __webpack_require__(/*! path */ "path");
 var mongoose = __webpack_require__(/*! mongoose */ "mongoose");
+var csrf = __webpack_require__(/*! csurf */ "csurf");
+var cookieParser = __webpack_require__(/*! cookie-parser */ "cookie-parser");
+var session = __webpack_require__(/*! express-session */ "express-session");
 var bodyParser = __webpack_require__(/*! body-parser */ "body-parser");
 var bcrypt = __webpack_require__(/*! bcryptjs */ "bcryptjs");
-var csurf = __webpack_require__(/*! csurf */ "csurf");
 var helmet = __webpack_require__(/*! helmet */ "helmet");
-var MongoStore = __webpack_require__(/*! connect-mongo */ "connect-mongo")(session);
+var compression = __webpack_require__(/*! compression */ "compression");
+var jsonwebtoken_1 = __webpack_require__(/*! jsonwebtoken */ "jsonwebtoken");
 var mustacheExpress = __webpack_require__(/*! mustache-express */ "mustache-express");
-var index_1 = __webpack_require__(/*! ./routes/index */ "./src/server/routes/index.ts");
-var index_2 = __webpack_require__(/*! ./socket.io/index */ "./src/server/socket.io/index.ts");
+var MongoStore = __webpack_require__(/*! connect-mongo */ "connect-mongo")(session);
+var routes_1 = __webpack_require__(/*! ./routes */ "./src/server/routes.ts");
+var index_1 = __webpack_require__(/*! ./socket.io/index */ "./src/server/socket.io/index.ts");
+var User_1 = __webpack_require__(/*! ./models/User */ "./src/server/models/User.ts");
 var env = __webpack_require__(/*! ../../env */ "./env.js");
 var app = express();
-var port = process.env.PORT || 3000;
-var csurfMiddleware = csurf();
+exports.app = app;
+var port = env.port;
+var server;
+var socketServer;
+exports.socketServer = socketServer;
 app.engine('html', mustacheExpress());
 app.set('view engine', 'html');
-mongoose.connect(env.mongodbConnectionUri, { useNewUrlParser: true });
+app.use(compression());
+var sessionMiddleware = session({
+    secret: env.secret,
+    cookie: {
+        maxAge: 24 * 60 * 60 * 1000,
+        sameSite: true,
+        secure: env.production,
+        httpOnly: true
+    },
+    saveUninitialized: true,
+    resave: false,
+    store: new MongoStore({
+        mongooseConnection: mongoose.connection
+    })
+});
+var csrfMiddleware = csrf({
+    cookie: {
+        maxAge: 24 * 60 * 60 * 1000,
+        sameSite: true,
+        secure: env.production,
+        httpOnly: true,
+        key: '_csrf'
+    }
+});
+mongoose.connect(env.useTestDb ? env.mongodbTestConnectionUri : env.mongodbConnectionUri, { useNewUrlParser: true });
 mongoose.connection.on('error', function (err) {
     console.error('Mongoose connection error', err);
 });
@@ -558,62 +624,81 @@ process.on('SIGINT', function () {
         process.exit(0);
     });
 });
-mongoose.connection.on('connected', function () {
-    var db = mongoose.connection;
+app.use(sessionMiddleware);
+app.use(cookieParser(env.secret));
+if (env.disableCsrf) {
+    console.log('CSRF disabled');
     app.use(function (req, res, next) {
-        req.db = db;
+        req.csrfToken = function () { return ''; };
         return next();
     });
-    var sessionMiddleware = session({
-        secret: 'some secret',
-        saveUninitialized: true,
-        resave: false,
-        cookie: {
-            secure: false
-        },
-        store: new MongoStore({ db: db, collection: 'session' })
-    });
-    app.use(bodyParser.json());
-    app.use(bodyParser.urlencoded({ extended: true }));
-    app.use(sessionMiddleware);
-    app.use(csurfMiddleware);
-    app.use(helmet());
-    app.use(function (req, res, next) {
-        req.authenticate = function (username, password, done) {
-            var users = db.collection('users');
-            users.findOne({ email: username }).then(function (user) {
-                if (user === null || !bcrypt.compareSync(password, user.password)) {
-                    return done(false);
-                }
-                var userDetails = {
-                    email: user.email,
-                    name: user.name,
-                    role: user.role
-                };
-                req.session.user = userDetails;
-                return done(userDetails);
-            });
-        };
-        req.logout = function () {
-            req.session.user = null;
-        };
-        next();
-    });
-    index_1["default"](app);
-    app.get('/', function (req, res) {
-        res.render(path.resolve(__dirname, '../../dist/public/index.html'), { csrfToken: req.csrfToken() });
-    });
-    app.use(express.static(path.resolve(__dirname, '../../dist/public/')));
-    app.get('*', function (req, res) {
-        res.render(path.resolve(__dirname, '../../dist/public/index.html'), { csrfToken: req.csrfToken() });
-    });
-    var server = http.createServer(app);
-    index_2["default"](server, db, sessionMiddleware);
-    server.listen(port, function () {
-        console.log("Listening on port " + port + "!");
-    });
+}
+else {
+    app.use(csrfMiddleware);
+}
+var db = mongoose.connection;
+app.use(function (req, res, next) {
+    req.db = db;
+    return next();
 });
-exports["default"] = app;
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(helmet());
+app.use(express.static(path.resolve(__dirname, '../../dist/public/')));
+app.use('/api', function (req, res, next) {
+    return next();
+});
+app.use(function (req, res, next) {
+    req.authenticate = function (email, password, done) {
+        User_1["default"].findByEmail(email).then(function (user) {
+            if (user === null)
+                return done(false, null);
+            if (!bcrypt.compareSync(password, user.password))
+                return done(false, new Error('Invalid password'));
+            var userDetails = {
+                email: user.email,
+                name: user.name,
+                role: user.role,
+            };
+            return done(userDetails, null);
+        })["catch"](function (err) {
+            done(false, err);
+        });
+    };
+    req.logout = function () {
+        req.session.token = null;
+    };
+    req.issueNewToken = function (user) {
+        var token = jsonwebtoken_1.sign({
+            name: user.name,
+            role: user.role,
+            email: user.email
+        }, env.secret, {
+            expiresIn: 86400
+        });
+        req.session.token = token;
+        res.setHeader('x-access-token', token);
+    };
+    next();
+});
+routes_1["default"](app);
+server = http.createServer(app);
+server.on('error', function (err) {
+    console.error(err);
+    server.close();
+});
+if (!env.disableAutoStart) {
+    exports.socketServer = socketServer = index_1["default"](server, db);
+    mongoose.connection.on('connected', function () {
+        console.log('Connected to MongoDB via Mongoose');
+        server.listen(port, function () {
+            console.log("Listening on port " + port + "!");
+            app.emit('server started');
+        });
+    });
+}
+exports["default"] = server;
+exports.conn = mongoose.connection;
 
 /* WEBPACK VAR INJECTION */}.call(this, "src/server"))
 
@@ -630,47 +715,51 @@ exports["default"] = app;
 
 exports.__esModule = true;
 var socketio = __webpack_require__(/*! socket.io */ "socket.io");
-var mongodb_1 = __webpack_require__(/*! mongodb */ "mongodb");
-var init = function (server, db, sessionMiddleware) {
+var socketio_jwt_1 = __webpack_require__(/*! socketio-jwt */ "socketio-jwt");
+var Message_1 = __webpack_require__(/*! ../models/Message */ "./src/server/models/Message.ts");
+var env = __webpack_require__(/*! ../../../env */ "./env.js");
+var init = function (server, db) {
     var io = socketio(server);
     var connectedUserEmails = [];
-    io.use(function (socket, next) {
-        sessionMiddleware(socket.request, socket.request.res, next);
-    });
-    io.use(function (socket, next) {
-        if (socket.request.session.user.email)
-            return next();
-        next(new Error('Authentication error'));
-    });
-    io.on('connection', function (socket) {
-        connectedUserEmails.push(socket.request.session.user.email);
+    io.on('connection', socketio_jwt_1.authorize({
+        secret: env.secret,
+        timeout: 15000,
+        decodedPropertyName: 'jwt'
+    })).on('authenticated', function (socket) {
+        connectedUserEmails.push(socket.jwt.email);
         console.log('Connected users', connectedUserEmails);
         io.emit('connected users', connectedUserEmails.filter(function (value, index, self) {
             return self.indexOf(value) === index;
         }));
         socket.on('disconnect', function () {
-            connectedUserEmails.splice(connectedUserEmails.indexOf(socket.request.session.user.email), 1);
+            connectedUserEmails.splice(connectedUserEmails.indexOf(socket.jwt.email), 1);
             io.emit('connected users', connectedUserEmails.filter(function (value, index, self) {
                 return self.indexOf(value) === index;
             }));
         });
         socket.on('message', function (message) {
             console.log(message);
-            db.collection('messages').insertOne({ channel: message.channel, text: message.text, userEmail: socket.request.session.user.email }, function (err, r) {
-                if (!err) {
-                    io.emit('message', {
-                        _id: r.insertedId,
-                        userEmail: socket.request.session.user.email,
-                        text: message.text,
-                        channel: message.channel,
-                        created: (new mongodb_1.ObjectID(r.insertedId)).getTimestamp()
-                    });
-                    return socket.emit('message received');
-                }
-                return console.error(err);
+            var m = new Message_1["default"]({
+                channel: message.channel,
+                text: message.text,
+                userEmail: socket.jwt.email
+            });
+            m.save().then(function (m) {
+                io.emit('message', {
+                    _id: m._id,
+                    userEmail: m.userEmail,
+                    text: m.text,
+                    channel: m.channel,
+                    created: m.createdAt
+                });
+                socket.emit('message received');
+            })["catch"](function (err) {
+                console.error(err);
+                socket.emit('message receive error', err);
             });
         });
     });
+    return io;
 };
 exports["default"] = init;
 
@@ -699,6 +788,17 @@ module.exports = require("body-parser");
 
 /***/ }),
 
+/***/ "compression":
+/*!******************************!*\
+  !*** external "compression" ***!
+  \******************************/
+/*! no static exports found */
+/***/ (function(module, exports) {
+
+module.exports = require("compression");
+
+/***/ }),
+
 /***/ "connect-mongo":
 /*!********************************!*\
   !*** external "connect-mongo" ***!
@@ -707,6 +807,17 @@ module.exports = require("body-parser");
 /***/ (function(module, exports) {
 
 module.exports = require("connect-mongo");
+
+/***/ }),
+
+/***/ "cookie-parser":
+/*!********************************!*\
+  !*** external "cookie-parser" ***!
+  \********************************/
+/*! no static exports found */
+/***/ (function(module, exports) {
+
+module.exports = require("cookie-parser");
 
 /***/ }),
 
@@ -765,14 +876,14 @@ module.exports = require("http");
 
 /***/ }),
 
-/***/ "mongodb":
-/*!**************************!*\
-  !*** external "mongodb" ***!
-  \**************************/
+/***/ "jsonwebtoken":
+/*!*******************************!*\
+  !*** external "jsonwebtoken" ***!
+  \*******************************/
 /*! no static exports found */
 /***/ (function(module, exports) {
 
-module.exports = require("mongodb");
+module.exports = require("jsonwebtoken");
 
 /***/ }),
 
@@ -809,17 +920,6 @@ module.exports = require("path");
 
 /***/ }),
 
-/***/ "shortid":
-/*!**************************!*\
-  !*** external "shortid" ***!
-  \**************************/
-/*! no static exports found */
-/***/ (function(module, exports) {
-
-module.exports = require("shortid");
-
-/***/ }),
-
 /***/ "socket.io":
 /*!****************************!*\
   !*** external "socket.io" ***!
@@ -828,6 +928,17 @@ module.exports = require("shortid");
 /***/ (function(module, exports) {
 
 module.exports = require("socket.io");
+
+/***/ }),
+
+/***/ "socketio-jwt":
+/*!*******************************!*\
+  !*** external "socketio-jwt" ***!
+  \*******************************/
+/*! no static exports found */
+/***/ (function(module, exports) {
+
+module.exports = require("socketio-jwt");
 
 /***/ }),
 

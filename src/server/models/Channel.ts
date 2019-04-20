@@ -12,6 +12,8 @@ const channelSchema: Schema = new Schema({
         required: true,
         lowercase: true,
     },
+}, {
+    timestamps: true
 });
 
 const Channel: Model<IChannel> = model('Channel', channelSchema);

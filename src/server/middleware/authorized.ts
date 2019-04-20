@@ -1,6 +1,19 @@
-export default function(req: any, res: any, next: Function) {
-    if (req.session.user) {
-        return next();
+import { verify } from 'jsonwebtoken';
+import { Token } from '../../types/jwt';
+import { Request, Response } from '../../types/express';
+const env = require('../../../env');
+export default function(req: Request, res: Response, next: Function) {
+    // see if we need to load token from session
+    if (req.session.token && !req.headers['x-access-token']) {
+        res.setHeader('x-access-token', req.session.token);
     }
-    return res.status(401).json({ error: 'Not authorized' });
+    var token = req.headers['x-access-token'] || req.session.token;
+    if (!token)
+        return res.status(401).json({ error: 'Not authorized' });
+
+    verify(token, env.secret, (err: Error, decoded: Token) => {
+        if (err) return res.status(401).send({ error: 'Not authorized' });
+        req.user = decoded;
+        return next();
+    });    
 }

@@ -10,30 +10,12 @@ import {generate as shortid} from 'shortid';
 import { App, Request, Response } from '../../../types/express';
 
 export default function(app: App) {
-    app.use(function(req: Request, res: Response, next: Function) {
-        res.set('new-csrf-token', req.csrfToken());
-        return next();
-    });
+    
     UserRoutes(app);
     MessageRoutes(app);
     ChannelRoutes(app);
     app.post('/api/v1/login', (req: Request, res: Response) => {
-        if (validator.isEmpty(req.body.email) || validator.isEmpty(req.body.password)) {
-            return res.status(400).json({ error: 'Please supply an email and password' });
-        }
-        if (!validator.isEmail(req.body.email)) {
-            return res.status(400).json({error: 'Not a valid email address'});
-        }
-        req.authenticate(req.body.email, req.body.password, (user: any | boolean) => {
-            if (!user)
-                return res.status(401).json({error: 'Invalid email or password'});
-            return res.json({
-                success: true,
-                email: req.session.user.email,
-                role: req.session.user.role,
-                name: req.session.user.name
-            });
-        })
+
     });
     app.post('/api/v1/register', function(req: Request, res: Response) {
         if (validator.isEmpty(req.body.email) || validator.isEmpty(req.body.password)) {
@@ -73,20 +55,6 @@ export default function(app: App) {
             })
 
             
-        });
-    });
-    app.post('/api/v1/verifyEmail', function(req: Request, res: Response) {
-        if (validator.isEmpty(req.body.key)) {
-            return res.status(400).json({ error: 'Invalid request, no key supplied' });
-        }
-        let users: Collection = req.db.collection('users');
-        //console.log(req.body.key, typeof req.body.key);
-        users.findOneAndUpdate({ verifyKey: req.body.key }, { $set: {emailVerified: true, verifyKey: null}}, (err, result) => {
-            if (err || !result) {
-                console.log(err, result);
-                return res.status(400).json({error: 'Invalid key'});
-            }
-            return res.status(200).json({success: true});
         });
     });
     app.get('/api/v1/logout', function(req: Request, res: Response) {

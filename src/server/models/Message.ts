@@ -24,6 +24,8 @@ const messageSchema: Schema = new Schema({
         lowercase: true,
         // should validate to confirm that user exists
     }
+}, {
+    timestamps: true
 });
 
 const Message: Model<IMessage> = model('Message', messageSchema);

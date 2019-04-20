@@ -37,7 +37,7 @@ class OnlineUsers extends React.Component<Props, State> {
                         this.setState({displayConnectedUsers: false});
                     }}>
                     { this.props.connectedUserEmails.map((email: string): (JSX.Element) => {
-                            return <div className="row">{email}</div>
+                            return <div className="row" key={email}>{email}</div>
                         }) }
                 </Modal>
             </div>

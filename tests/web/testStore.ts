@@ -1,10 +1,10 @@
 import { assert } from 'chai';
 import * as _ from 'lodash';
 import 'mocha';
-import store, {State} from '../src/web/store';
+import store, {State} from '../../src/web/store';
 import { Store } from 'redux';
-import { setAuthorized, setUser, logoutUser } from '../src/web/actions/userActions';
-import { addChannels, setChannelFetchingNewMessages } from '../src/web/actions/channelsActions';
+import { setAuthorized, setUser, logoutUser } from '../../src/web/actions/userActions';
+import { addChannels, setChannelFetchingNewMessages } from '../../src/web/actions/channelsActions';
 
 function getStoreCopy(): Store<State> {
     return _.cloneDeep(store);

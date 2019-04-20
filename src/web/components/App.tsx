@@ -13,7 +13,7 @@ import LoadingFadeIn from './LoadingFadeIn';
 import Page404 from './Page404';
 
 import {State as UserState} from '../reducers/user';
-import {setUser} from '../actions/userActions';
+import {setUser, setJwt} from '../actions/userActions';
 import history from '../lib/history';
 
 interface State {
@@ -33,6 +33,7 @@ class App extends React.Component<any, State> {
     }
     checkIfLoggedIn() {
         return axios.get('/api/v1/user').then((res: AxiosResponse) => {
+            this.props.setJwt(res.headers['x-access-token']);
             this.props.setUser({
                 authorized: true,
                 email: res.data.email,
@@ -75,6 +76,7 @@ export default connect((state: any) => {
     };
 }, dispatch => {
     return {
-        setUser: (user: UserState) => dispatch(setUser(user))
+        setUser: (user: UserState) => dispatch(setUser(user)),
+        setJwt: (token: string) => dispatch(setJwt(token))
     }
 })(App);

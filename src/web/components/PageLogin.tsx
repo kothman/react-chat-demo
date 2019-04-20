@@ -3,7 +3,7 @@ import axios from 'axios';
 import { connect } from 'react-redux';
 
 import {addError, clearErrors} from '../actions/notificationsActions';
-import {setUser} from '../actions/userActions';
+import {setUser, setJwt} from '../actions/userActions';
 import {State as UserState} from '../reducers/user';
 
 interface State {
@@ -45,6 +45,7 @@ class PageLogin extends React.Component<any, State> {
             password: this.state.password
         }).then((res) => {
             this.props.clearErrors();
+            this.props.setJwt(res.headers['x-access-token']);
             this.props.setUser({
                 authorized: true,
                 email: res.data.email,
@@ -62,5 +63,6 @@ export default connect(null, (dispatch) => {
         clearErrors: () => dispatch(clearErrors()),
         addError: (err: string) => dispatch(addError(err)),
         setUser: (user: UserState) => dispatch(setUser(user)),
+        setJwt: (token: string) => dispatch(setJwt(token)),
     };
 })(PageLogin);
