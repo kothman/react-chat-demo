@@ -1,39 +1,4 @@
-body {
-  background: black; }
-
-#kothman-react-chat-widget-container {
-  position: absolute;
-  bottom: 0;
-  right: 0;
-  display: flex;
-  align-items: flex-end;
-  justify-content: flex-end;
-  background: transparent;
-  height: 100%;
-  width: 300px;
-  max-height: 100%;
-  max-width: 100%;
-  z-index: -10000;
-  opacity: 0;
-  transition: opacity .2s ease-in-out; }
-  #kothman-react-chat-widget-container.done-loading {
-    opacity: 1; }
-  #kothman-react-chat-widget-container iframe {
-    z-index: 10000;
-    max-height: 100%;
-    max-width: 100%; }
-  #kothman-react-chat-widget-container div {
-    max-height: 100%;
-    max-width: 100%; }
-  #kothman-react-chat-widget-container div, #kothman-react-chat-widget-container iframe {
-    width: 300px !important;
-    height: 100% !important; }
-  #kothman-react-chat-widget-container.widget-closed, #kothman-react-chat-widget-container.widget-closed div, #kothman-react-chat-widget-container.widget-closed iframe {
-    height: 60px !important;
-    width: 60px !important; }
-  #kothman-react-chat-widget-container.widget-closed {
-    margin-right: 15px;
-    margin-bottom: 15px; }
+body{background:black}#kothman-react-chat-widget-container{position:absolute;bottom:0;right:0;display:flex;align-items:flex-end;justify-content:flex-end;background:transparent;height:100%;width:300px;max-height:100%;max-width:100%;z-index:-10000;opacity:0;transition:opacity .2s ease-in-out}#kothman-react-chat-widget-container.done-loading{opacity:1}#kothman-react-chat-widget-container iframe{z-index:10000;max-height:100%;max-width:100%}#kothman-react-chat-widget-container div{max-height:100%;max-width:100%}#kothman-react-chat-widget-container div,#kothman-react-chat-widget-container iframe{width:300px !important;height:100% !important}#kothman-react-chat-widget-container.widget-closed,#kothman-react-chat-widget-container.widget-closed div,#kothman-react-chat-widget-container.widget-closed iframe{height:60px !important;width:60px !important}#kothman-react-chat-widget-container.widget-closed{margin-right:15px;margin-bottom:15px}
 
 
 /*# sourceMappingURL=widget.css.map*/
