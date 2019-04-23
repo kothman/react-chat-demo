@@ -42598,7 +42598,6 @@ exports.fetchChannels = function () {
             });
             return dispatch(exports.addChannels(channels));
         })["catch"](function (err) {
-            console.log(err);
             return dispatch(notificationsActions_1.addError('Something went wrong while trying to fetch the channels'));
         });
     };
@@ -42611,8 +42610,8 @@ exports.retrieveChannelMessages = function (channelName) {
                 return c.name === channelName;
             });
             if (!channel || channel.fetchingNewMessages || !channel.hasMoreMessages) {
-                console.log('Retrieve Channel Messages dispatched with incorrect channel name or while already fetching messages', channelName, getState());
-                return [2, Promise.resolve()];
+                dispatch(notificationsActions_1.addError('Something went wrong while trying to fetch messages'));
+                return [2, Promise.resolve('Retrieve Channel Messages dispatched with incorrect channel name or while already fetching messages')];
             }
             dispatch(exports.setChannelFetchingNewMessages(channel.name, true));
             return [2, axios_1["default"].get('/api/v1/messages/' + channel.name + '/' + channel.retrieveMessagesOffset).then(function (res) {
@@ -42620,10 +42619,9 @@ exports.retrieveChannelMessages = function (channelName) {
                         dispatch(exports.setChannelHasMoreMessages(channel.name, false));
                         return res;
                     }
-                    dispatch(exports.incrementChannelRetrieveMessagesOffset(channelName, 20));
+                    dispatch(exports.incrementChannelRetrieveMessagesOffset(channelName, res.data.messages.length));
                     dispatch(exports.addRetrievedChannelMessages(channel.name, res.data.messages));
                 })["catch"](function (err) {
-                    console.log('Error fetching messages', channel, err);
                     dispatch(notificationsActions_1.addError('Something went wrong while trying to fetch messages'));
                 }).then(function () {
                     return dispatch(exports.setChannelFetchingNewMessages(channel.name, false));
@@ -42638,7 +42636,6 @@ exports.deleteChannel = function (channelName) {
             dispatch(notificationsActions_1.addInfo('Channel deleted'));
             return dispatch(exports.fetchChannels());
         })["catch"](function (err) {
-            console.log('Error deleting channel', err);
             return dispatch(notificationsActions_1.addError(err.response.data.error));
         });
     };
@@ -42651,7 +42648,6 @@ exports.addChannel = function (channelName) {
             dispatch(notificationsActions_1.addInfo('Channel created'));
             return dispatch(exports.fetchChannels());
         })["catch"](function (err) {
-            console.log('Error creating chanel', err);
             return dispatch(notificationsActions_1.addError(err.response.data.error));
         });
     };
@@ -42701,7 +42697,7 @@ exports.removeUser = function (email) {
 };
 exports.fetchAllUsers = function () {
     return function (dispatch) {
-        axios_1["default"].get('/api/v1/users').then(function (res) {
+        return axios_1["default"].get('/api/v1/users').then(function (res) {
             var users = {};
             res.data.users.forEach(function (u) {
                 users[u.email] = {
@@ -42713,7 +42709,6 @@ exports.fetchAllUsers = function () {
             return res;
         })["catch"](function (err) {
             dispatch(notificationsActions_1.addError('Fetching all users failed'));
-            console.log(err);
             return err;
         });
     };
@@ -45131,7 +45126,7 @@ var sidebar_1 = __webpack_require__(/*! ./reducers/sidebar */ "./src/web/reducer
 var socket_1 = __webpack_require__(/*! ./reducers/socket */ "./src/web/reducers/socket.ts");
 var chatUsers_1 = __webpack_require__(/*! ./reducers/chatUsers */ "./src/web/reducers/chatUsers.ts");
 var env = __webpack_require__(/*! ../../env */ "./env.js");
-var rootReducer = redux_1.combineReducers({
+exports.rootReducer = redux_1.combineReducers({
     user: user_1["default"],
     channels: channels_1["default"],
     notifications: notifications_1["default"],
@@ -45139,9 +45134,9 @@ var rootReducer = redux_1.combineReducers({
     socket: socket_1["default"],
     chatUsers: chatUsers_1["default"],
 });
-var middleware = env.production || env.disableReduxLogging ?
+exports.middleware = env.production || env.disableReduxLogging ?
     redux_1.applyMiddleware(redux_thunk_1["default"]) : redux_1.applyMiddleware(redux_thunk_1["default"], redux_logger_1.createLogger());
-exports["default"] = redux_1.createStore(rootReducer, middleware);
+exports["default"] = redux_1.createStore(exports.rootReducer, exports.middleware);
 
 
 /***/ }),

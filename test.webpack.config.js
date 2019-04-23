@@ -9,5 +9,6 @@ module.exports = Object.assign({}, config, {
         filename: 'all-tests.js'
     },
     target: 'node',
-    externals: [nodeExternals()]
+    externals: [nodeExternals()],
+    devtool: 'inline-source-map'
 });

@@ -20,7 +20,7 @@ export interface State {
     chatUsers: ChatUsersState,
 }
 
-const rootReducer: Reducer = combineReducers({
+export const rootReducer: Reducer = combineReducers({
     user: userReducer,
     channels: channelsReducer,
     notifications: notificationsReducer,
@@ -29,7 +29,7 @@ const rootReducer: Reducer = combineReducers({
     chatUsers: chatUsersReducer,
 });
 
-const middleware: StoreEnhancer =
+export const middleware: StoreEnhancer =
     env.production || env.disableReduxLogging ?
     applyMiddleware(reduxThunk) : applyMiddleware(reduxThunk, createLogger());
 

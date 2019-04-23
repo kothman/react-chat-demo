@@ -13,6 +13,7 @@ const dropAllCollections = () => {
     });
 }
 
+const NotImplementedError = new Error('Test not implemented');
 
 before('all tests', function(done) {
     // wait for connection to begin tests
@@ -47,4 +48,4 @@ require('./server/testUserController');
 require('./server/testMessageController');
 require('./server/testChannelController');
 
-export { app, dropAllCollections };
+export { app, dropAllCollections, NotImplementedError };

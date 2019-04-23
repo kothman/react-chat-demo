@@ -4,6 +4,8 @@ import { app, dropAllCollections } from '../';
 import User, { IUser } from '../../src/server/models/User';
 import { assert } from 'chai';
 
+const session = require('supertest-session');
+
 describe('Auth Controller', function() {
     describe('login', function() {
         beforeEach(function (done) {
@@ -216,14 +218,39 @@ describe('Auth Controller', function() {
         });
     });
     describe('logout', function() {
+        let testSession: any;
         beforeEach(function (done) {
-            dropAllCollections().then(() => done());
+            testSession = session(app);
+            dropAllCollections().then(() => {
+                let user: IUser = new User({
+                    name: 'Adrian',
+                    email: 'test@test.com',
+                    password: hashSync('test'),
+                    role: 'user',
+                });
+                user.save().then((user: IUser) => done()).catch((err: any) => {
+                    throw err;
+                });
+            });
         });
-        it('should log out the user');
+        it('should log out the user', function(done) {
+            testSession.post('/api/v1/login')
+                .send({email: 'test@test.com', password: 'test'}).end((err: any) => {
+                    if (err) return done(err);
+                    testSession.get('/api/v1/user').send().expect(200).end((err: any) => {
+                        if (err) return done(err);
+                        testSession.get('/api/v1/logout').send().expect(200).end((err: any) => {
+                            if (err) return done(err);
+                            testSession.get('/api/v1/user').send().expect(401).end(done);
+                        })
+                    })
+                });
+        });
     });
     describe('verify email', function() {
         beforeEach(function (done) {
             dropAllCollections().then(() => done());
+
         });
         it('should verify an email given the correct verification link');
         it('should not verify an email with an incorrect verification link');

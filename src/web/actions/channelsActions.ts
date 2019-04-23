@@ -86,7 +86,6 @@ export const fetchChannels = () => {
             });
             return dispatch(addChannels(channels));
         }).catch((err: AxiosError) => {
-            console.log(err);
             return dispatch(addError('Something went wrong while trying to fetch the channels'));
         });
     }
@@ -98,10 +97,8 @@ export const retrieveChannelMessages = (channelName: string) => {
             return c.name === channelName;
         })
         if (!channel || channel.fetchingNewMessages || !channel.hasMoreMessages) {
-            console.log('Retrieve Channel Messages dispatched with incorrect channel name or while already fetching messages',
-                        channelName,
-                        getState());
-            return Promise.resolve();
+            dispatch(addError('Something went wrong while trying to fetch messages'));
+            return Promise.resolve('Retrieve Channel Messages dispatched with incorrect channel name or while already fetching messages');
         }
         dispatch(setChannelFetchingNewMessages(channel.name, true));
         return axios.get('/api/v1/messages/' + channel.name + '/' + channel.retrieveMessagesOffset).then((res: AxiosResponse) => {
@@ -109,10 +106,9 @@ export const retrieveChannelMessages = (channelName: string) => {
                 dispatch(setChannelHasMoreMessages(channel.name, false));
                 return res;
             }
-            dispatch(incrementChannelRetrieveMessagesOffset(channelName, 20));
+            dispatch(incrementChannelRetrieveMessagesOffset(channelName, res.data.messages.length));
             dispatch(addRetrievedChannelMessages(channel.name, res.data.messages))
         }).catch((err: AxiosError) => {
-            console.log('Error fetching messages', channel, err);
             dispatch(addError('Something went wrong while trying to fetch messages'));
         }).then(() => {
             return dispatch(setChannelFetchingNewMessages(channel.name, false));
@@ -127,7 +123,6 @@ export const deleteChannel = (channelName: string) => {
                 dispatch(addInfo('Channel deleted'));
                 return dispatch(fetchChannels());
             }).catch((err: AxiosError) => {
-                console.log('Error deleting channel', err);
                 return dispatch(addError(err.response.data.error));
             });
     };
@@ -141,7 +136,6 @@ export const addChannel = (channelName: string) => {
             dispatch(addInfo('Channel created'));
             return dispatch(fetchChannels());
         }).catch((err: AxiosError) => {
-            console.log('Error creating chanel', err);
             return dispatch(addError(err.response.data.error));
         })
     };

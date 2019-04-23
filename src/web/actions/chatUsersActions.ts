@@ -38,7 +38,7 @@ export const removeUser = function(email: string) {
 /* Async Functions */
 export const fetchAllUsers = () => {
     return (dispatch: Dispatch) => {
-        axios.get('/api/v1/users').then((res: AxiosResponse) => {
+        return axios.get('/api/v1/users').then((res: AxiosResponse) => {
             let users: State = {};
             res.data.users.forEach((u: ChatUser) => {
                 users[u.email] = {
@@ -50,7 +50,6 @@ export const fetchAllUsers = () => {
             return res;
         }).catch((err: AxiosError) => {
             dispatch(addError('Fetching all users failed'));
-            console.log(err);
             return err;
         });
     }
