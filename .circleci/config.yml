@@ -18,7 +18,7 @@ jobs:
       - run:
           name: Wait for DB
           # preinstalled in circleci/* docker image
-          command: dockerize -wait mongodb://localhost:27017 -timeout 60s
+          command: dockerize -wait tcp://localhost:27017 -timeout 60s
       - run:
           name: Test
           command: yarn test
