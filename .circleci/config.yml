@@ -1,0 +1,20 @@
+version: 2
+jobs:
+  test:
+    docker:
+      - image: circleci/node:lts-browsers
+        environment:
+          NODE_ENV: development
+          MONGODB_TEST_URI: 'mongodb://root:password@localhost:27017/openChatTest'
+      - image: circleci/mongo:latest
+        environment:
+          MONGO_INITDB_ROOT_USERNAME: root
+          MONGO_INITDB_ROOT_PASSWORD: password
+    steps:
+      - checkout
+      - run:
+          name: Build
+          command: yarn build
+      - run:
+          name: Test
+          command: yarn test
