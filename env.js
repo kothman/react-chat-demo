@@ -1,7 +1,8 @@
 module.exports = {
     // https://docs.mongodb.com/manual/reference/connection-string/
     mongodbConnectionUri: process.env.MONGODB_URI,
-    mongodbTestConnectionUri: 'mongodb://localhost:27017/openChatTest',
+    mongodbTestConnectionUri: process.env.MONGODB_TEST_URI ||
+			      'mongodb://localhost:27017/openChatTest',
     port: process.env.PORT || 5000,
     production: process.env.NODE_ENV === 'production' || false,
     useTestDb: process.env.USE_TEST_DB || false,
