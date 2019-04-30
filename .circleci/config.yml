@@ -5,7 +5,7 @@ jobs:
       - image: circleci/node:11.11.0-browsers
         environment:
           NODE_ENV: development
-          MONGODB_TEST_URI: 'mongodb://root:password@mongo:27017/openChatTest'
+          MONGODB_TEST_URI: 'mongodb://root:password@localhost:27017/openChatTest'
       - image: circleci/mongo:latest
         environment:
           MONGO_INITDB_ROOT_USERNAME: root
@@ -18,6 +18,10 @@ jobs:
       - run:
           name: Build
           command: yarn build
+      - run:
+          name: Wait for DB
+          # preinstalled in circleci/* docker image
+          command: dockerize -wait tcp://127.0.0.1:27017 -timeout 60s
       - run:
           name: Test
           command: yarn test
