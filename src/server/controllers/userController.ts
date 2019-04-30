@@ -8,11 +8,11 @@ export default {
         res.send(req.user);
     },
     users: (req: Request, res: Response) => {
-        return User.find({}).then((users: IUser[]) => {
+        return User.find({}).select('name email role').then((users: IUser[]) => {
             return res.status(200).json({success: true, users: users});
         }).catch((err: Error) => {
             console.error(err);
-            return res.status(200).json({error: 'Something went wrong while retrieving users'});
+            return res.status(500).json({error: 'Something went wrong while retrieving users'});
         })
     },
     userByEmail: (req: Request, res: Response) => {
@@ -26,7 +26,8 @@ export default {
                         email: user.email,
                         _id: user._id,
                         name: user.name || '',
-
+                        role: user.role,
+                        created: user.createdAt
                     }
                 });
             }
@@ -80,4 +81,80 @@ export default {
     resetPassword: (req: Request, res: Response) => {
         return res.status(500).json({error: 'Not implemented'});
     },
+    /**
+     * POST /api/v1/user/create
+     * req.body.email: string
+     * req.body.name?: string,
+     * req.body.role: string
+     */
+    createUser: (req: Request, res: Response) => {
+        if(isEmpty(req.body.email) || !isEmail(req.body.email) ||
+           isEmpty(req.body.role) || (req.body.role !== 'user' && req.body.role !== 'admin'))
+            return res.status(400).json({ error: 'Must supply valid email and role'});
+        return User.findByEmail(req.body.email).countDocuments((err: any, c: number) => {
+            if (err) {
+                console.error('Something went wrong trying to count users with email ' + req.body.email, err);
+                return res.status(500).json({error: 'Something went wrong'});
+            }
+            if (c !== 0)
+                return res.status(400).json({error: 'Email address in use'});
+            let u = new User({
+                email: req.body.email,
+                name: req.body.name || '',
+                role: req.body.role,
+                // @todo send password reset link to new user
+                password: 'temp',
+            })
+            return u.save((err: any, u: IUser) => {
+                if (err) {
+                    console.error('Something went wrong trying to save user', err);
+                    return res.status(500).json({ error: 'Something went wrong' });
+                }
+                return res.status(200).json({success: true});
+            });
+
+        })
+    },
+    /**
+     * PUT /api/v1/user/update
+     * @param req.body.email: string
+     * @param req.body.user: {
+     *  email?: string,
+     *  name?: string,
+     *  role?: string,
+     * }
+     */
+    editUser: (req: Request, res: Response) => {
+        if (!req.body.email || !isEmail(req.body.email))
+            return res.status(400).json({error: 'Please supply a valid email'});
+        if (req.body.user.email && !isEmail(req.body.user.email))
+            return res.status(400).json({ error: 'Please supply a valid email' });
+        if (req.body.user.role && !isEmpty(req.body.user.role) && (req.body.user.role !== 'user' && req.body.user.role !== 'admin'))
+            return res.status(400).json({error: 'Invalid role'});
+        return User.findByEmail(req.body.email).exec((err: any, user: IUser) => {
+            if (err) {
+                console.log('Something went wrong', err);
+                return res.status(500).json({error: 'Something went wrong'});
+            }
+            if (!user) {
+                return res.status(404).json({error: 'User does not exist'});
+            }
+            if (req.body.user.email)
+                user.email = req.body.user.email;
+            if (req.body.user.name)
+                user.name = req.body.user.name;
+            if (req.body.user.role)
+                user.role = req.body.user.role;
+            return user.save((err: any, user: IUser) => {
+                if (err) {
+                    console.log(err);
+                    return res.status(500).json({error: 'Something went wrong'});
+                }
+                return res.status(200).json({success: true});
+            });
+        });
+    },
+    deleteUser: (req: Request, res: Response) => {
+
+    }
 }

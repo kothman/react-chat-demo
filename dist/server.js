@@ -294,11 +294,11 @@ exports["default"] = {
         res.send(req.user);
     },
     users: function (req, res) {
-        return User_1["default"].find({}).then(function (users) {
+        return User_1["default"].find({}).select('name email role').then(function (users) {
             return res.status(200).json({ success: true, users: users });
         })["catch"](function (err) {
             console.error(err);
-            return res.status(200).json({ error: 'Something went wrong while retrieving users' });
+            return res.status(500).json({ error: 'Something went wrong while retrieving users' });
         });
     },
     userByEmail: function (req, res) {
@@ -311,6 +311,8 @@ exports["default"] = {
                         email: user.email,
                         _id: user._id,
                         name: user.name || '',
+                        role: user.role,
+                        created: user.createdAt
                     }
                 });
             }
@@ -363,7 +365,86 @@ exports["default"] = {
     resetPassword: function (req, res) {
         return res.status(500).json({ error: 'Not implemented' });
     },
+    createUser: function (req, res) {
+        if (validator_1.isEmpty(req.body.email) || !validator_1.isEmail(req.body.email) ||
+            validator_1.isEmpty(req.body.role) || (req.body.role !== 'user' && req.body.role !== 'admin'))
+            return res.status(400).json({ error: 'Must supply valid email and role' });
+        return User_1["default"].findByEmail(req.body.email).countDocuments(function (err, c) {
+            if (err) {
+                console.error('Something went wrong trying to count users with email ' + req.body.email, err);
+                return res.status(500).json({ error: 'Something went wrong' });
+            }
+            if (c !== 0)
+                return res.status(400).json({ error: 'Email address in use' });
+            var u = new User_1["default"]({
+                email: req.body.email,
+                name: req.body.name || '',
+                role: req.body.role,
+                password: 'temp',
+            });
+            return u.save(function (err, u) {
+                if (err) {
+                    console.error('Something went wrong trying to save user', err);
+                    return res.status(500).json({ error: 'Something went wrong' });
+                }
+                return res.status(200).json({ success: true });
+            });
+        });
+    },
+    editUser: function (req, res) {
+        if (!req.body.email || !validator_1.isEmail(req.body.email))
+            return res.status(400).json({ error: 'Please supply a valid email' });
+        if (req.body.user.email && !validator_1.isEmail(req.body.user.email))
+            return res.status(400).json({ error: 'Please supply a valid email' });
+        if (req.body.user.role && !validator_1.isEmpty(req.body.user.role) && (req.body.user.role !== 'user' && req.body.user.role !== 'admin'))
+            return res.status(400).json({ error: 'Invalid role' });
+        return User_1["default"].findByEmail(req.body.email).exec(function (err, user) {
+            if (err) {
+                console.log('Something went wrong', err);
+                return res.status(500).json({ error: 'Something went wrong' });
+            }
+            if (!user) {
+                return res.status(404).json({ error: 'User does not exist' });
+            }
+            if (req.body.user.email)
+                user.email = req.body.user.email;
+            if (req.body.user.name)
+                user.name = req.body.user.name;
+            if (req.body.user.role)
+                user.role = req.body.user.role;
+            return user.save(function (err, user) {
+                if (err) {
+                    console.log(err);
+                    return res.status(500).json({ error: 'Something went wrong' });
+                }
+                return res.status(200).json({ success: true });
+            });
+        });
+    },
+    deleteUser: function (req, res) {
+    }
 };
+
+
+/***/ }),
+
+/***/ "./src/server/middleware/admin.ts":
+/*!****************************************!*\
+  !*** ./src/server/middleware/admin.ts ***!
+  \****************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+exports.__esModule = true;
+function default_1(req, res, next) {
+    if (req.user && req.user.role === 'admin') {
+        return next();
+    }
+    return res.status(401).json({ error: 'Not authorized as admin' });
+}
+exports["default"] = default_1;
 
 
 /***/ }),
@@ -381,10 +462,7 @@ exports.__esModule = true;
 var jsonwebtoken_1 = __webpack_require__(/*! jsonwebtoken */ "jsonwebtoken");
 var env = __webpack_require__(/*! ../../../env */ "./env.js");
 function default_1(req, res, next) {
-    if (req.session.token && !req.headers['x-access-token']) {
-        res.setHeader('x-access-token', req.session.token);
-    }
-    var token = req.headers['x-access-token'] || req.session.token;
+    var token = req.session.token || req.headers['x-access-token'];
     if (!token)
         return res.status(401).json({ error: 'Not authorized' });
     jsonwebtoken_1.verify(token, env.secret, function (err, decoded) {
@@ -512,6 +590,7 @@ exports["default"] = User;
 exports.__esModule = true;
 var path = __webpack_require__(/*! path */ "path");
 var authorized_1 = __webpack_require__(/*! ./middleware/authorized */ "./src/server/middleware/authorized.ts");
+var admin_1 = __webpack_require__(/*! ./middleware/admin */ "./src/server/middleware/admin.ts");
 var authController_1 = __webpack_require__(/*! ./controllers/authController */ "./src/server/controllers/authController.ts");
 var userController_1 = __webpack_require__(/*! ./controllers/userController */ "./src/server/controllers/userController.ts");
 var messageController_1 = __webpack_require__(/*! ./controllers/messageController */ "./src/server/controllers/messageController.ts");
@@ -530,7 +609,7 @@ function default_1(app) {
     app.post('/api/v1/register', authController_1["default"].register);
     app.get('/api/v1/logout', authController_1["default"].logout);
     app.get('/api/v1/verifyEmail/:id', authController_1["default"].verifyEmail);
-    app.use('/api/v1/user', authorized_1["default"]);
+    app.use('/api/v1/user*', authorized_1["default"]);
     app.get('/api/v1/user', userController_1["default"].user);
     app.get('/api/v1/users', userController_1["default"].users);
     app.get('/api/v1/user/:user', userController_1["default"].userByEmail);
@@ -538,12 +617,15 @@ function default_1(app) {
     app.post('/api/v1/user/update/name', userController_1["default"].updateName);
     app.post('/api/v1/user/update/password', userController_1["default"].updatePassword);
     app.post('/api/v1/user/reset_password', userController_1["default"].resetPassword);
-    app.get('/api/v1/message*', authorized_1["default"]);
+    app.post('/api/v1/user/create', admin_1["default"], userController_1["default"].createUser);
+    app.put('/api/v1/user/update', admin_1["default"], userController_1["default"].editUser);
+    app.post('/api/v1/user/delete', admin_1["default"], userController_1["default"].deleteUser);
+    app.use('/api/v1/message*', authorized_1["default"]);
     app.get('/api/v1/messages/:channel/:offset', messageController_1["default"].messages);
     app.use('/api/v1/channel', authorized_1["default"]);
     app.get('/api/v1/channels', channelController_1["default"].channels);
-    app.post('/api/v1/channels/delete', channelController_1["default"]["delete"]);
-    app.post('/api/v1/channels/create', channelController_1["default"].create);
+    app.post('/api/v1/channels/delete', admin_1["default"], channelController_1["default"]["delete"]);
+    app.post('/api/v1/channels/create', admin_1["default"], channelController_1["default"].create);
     app.get('*', function (req, res) {
         return res.render(path.resolve(__dirname, '../../dist/public/index.html'), { csrfToken: req.csrfToken() });
     });
@@ -676,8 +758,8 @@ app.use(function (req, res, next) {
         }, env.secret, {
             expiresIn: 86400
         });
-        req.session.token = token;
         res.setHeader('x-access-token', token);
+        req.session.token = token;
     };
     next();
 });

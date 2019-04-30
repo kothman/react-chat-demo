@@ -33636,7 +33636,7 @@ function warning(message) {
 /*!***************************************************************!*\
   !*** ./node_modules/react-router-dom/esm/react-router-dom.js ***!
   \***************************************************************/
-/*! exports provided: MemoryRouter, Prompt, Redirect, Route, Router, StaticRouter, Switch, generatePath, matchPath, withRouter, __RouterContext, BrowserRouter, HashRouter, Link, NavLink */
+/*! exports provided: BrowserRouter, HashRouter, Link, NavLink, MemoryRouter, Prompt, Redirect, Route, Router, StaticRouter, Switch, generatePath, matchPath, withRouter, __RouterContext */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -42714,6 +42714,9 @@ exports.fetchAllUsers = function () {
     };
 };
 exports.createNewUser = function (user) {
+    return function (dispatch) {
+        return axios_1["default"].get('/api/v1/');
+    };
 };
 exports.editUser = function (email, user) {
 };
@@ -44770,9 +44773,6 @@ axios_1["default"].interceptors.response.use(function (res) {
     if (newCsrfToken) {
         axios_1["default"].defaults.headers['csrf-token'] = newCsrfToken;
     }
-    var newAccessToken = res.headers['x-access-token'];
-    if (newAccessToken)
-        axios_1["default"].defaults.headers['x-access-token'] = newAccessToken;
     return res;
 });
 window.axios = axios_1["default"];

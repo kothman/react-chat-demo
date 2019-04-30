@@ -128,8 +128,8 @@ app.use((req: Request, res: Response, next: Function) => {
         }, env.secret, {
             expiresIn: 86400 // expires in 24 hours
         });
+        res.setHeader('x-access-token', token);
         req.session.token = token;
-        res.setHeader('x-access-token', token)
     }
     next();
 });
