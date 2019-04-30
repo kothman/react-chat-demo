@@ -8,7 +8,7 @@ export interface IUser extends Document {
     updatedAt: Date,
     password: string,
     role: 'admin' | 'user',
-
+    deleted: boolean,
 };
 
 export interface IUserModel extends Model<IUser> {
@@ -32,6 +32,10 @@ const userSchema: Schema = new Schema({
         lowercase: true,
         enum: ['admin', 'user']
     },
+    deleted: {
+        type: Boolean,
+        default: false
+    }
 }, {
     timestamps: true
 });

@@ -46,7 +46,8 @@ export default function(app: App) {
     app.post('/api/v1/user/reset_password', userController.resetPassword);
     app.post('/api/v1/user/create', admin, userController.createUser);
     app.put('/api/v1/user/update', admin, userController.editUser);
-    app.post('/api/v1/user/delete', admin, userController.deleteUser);
+    app.delete('/api/v1/user/delete', admin, userController.deleteUser);
+    app.put('/api/v1/user/restore', admin, userController.restoreUser);
 
     app.use('/api/v1/message*', authorized);
     app.get('/api/v1/messages/:channel/:offset', messageController.messages);

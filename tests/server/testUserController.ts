@@ -4,6 +4,7 @@ import { assert } from 'chai';
 
 import { app, dropAllCollections } from '../';
 import User, { IUser } from '../../src/server/models/User';
+import { isBuffer } from 'util';
 
 describe('User Controller', function() {
     let token: string;
@@ -351,5 +352,178 @@ describe('User Controller', function() {
                     user: Object.assign({}, newUserInfo, { role: 'not valid' })
                 }).expect(400, done);
         })
+    });
+    describe('DELETE /api/v1/user/delete', function () {
+        beforeEach(function(done) {
+            let user = new User({
+                name: 'New Name',
+                email: 'newemail@test.com',
+                role: 'user',
+                password: 'pass'
+            });
+            let inactiveUser = new User({
+                name: 'Name',
+                email: 'deleted@test.com',
+                role: 'user',
+                password: 'password',
+                deleted: true,
+            });
+            user.save((err: any) => {
+                if (err) return done(err);
+                inactiveUser.save((err: any) => {
+                    done(err);
+                })
+            });
+        });
+        it('should delete the user', function(done) {
+            request(app)
+                .delete('/api/v1/user/delete')
+                .set('x-access-token', token)
+                .send({email: 'newemail@test.com'})
+                .expect(200, (err: any) => {
+                    if (err) return done(err);
+                    User.findByEmail('newemail@test.com').exec((err: any, user: IUser) => {
+                        if (err) return done(err);
+                        assert.isTrue(user.deleted);
+                        done();
+                    });
+                });
+        });
+        it('should fail if trying to delete logged in user', function(done) {
+            request(app)
+                .delete('/api/v1/user/delete')
+                .set('x-access-token', token)
+                .send({email: userInfo.email})
+                .expect(400, done);
+        });
+        it('should fail if email inactive', function(done) {
+            request(app)
+                .delete('/api/v1/user/delete')
+                .set('x-access-token', token)
+                .send({ email: 'deleted@test.com'})
+                .expect(400, done);
+        });
+        it('should fail if email does not exist', function(done) {
+            request(app)
+                .delete('/api/v1/user/delete')
+                .set('x-access-token', token)
+                .send({ email: 'notreal@test.com' })
+                .expect(404, done);
+        });
+        it('should fail if email not provided', function(done) {
+            request(app)
+                .delete('/api/v1/user/delete')
+                .set('x-access-token', token)
+                .send({ email: 'not valid' })
+                .expect(400, done);
+        });
+        it('should fail if user making request is not an admin', function(done) {
+            let user: IUser = new User({
+                name: 'Name',
+                email: 'notanadmin@test.com',
+                password: hashSync('password'),
+                role: 'user',
+            });
+            user.save((err: any, user: IUser) => {
+                if (err) return done(err);
+                // once user is created, login and store jwt
+                request(app)
+                    .post('/api/v1/login')
+                    .send({ email: 'notanadmin@test.com', password: 'password' })
+                    .expect(200)
+                    .end((err: any, res: request.Response) => {
+                        token = res.get('x-access-token');
+                        request(app)
+                            .delete('/api/v1/user/delete')
+                            .set('x-access-token', token)
+                            .expect(401, done);
+                    });
+                });
+        });
+        it('should fail if user not logged in', function(done) {
+            request(app)
+                .delete('/api/v1/user/delete')
+                .expect(401, done);
+        });
+    });
+    describe('PUT /api/v1/user/restore', function() {
+        beforeEach(function (done) {
+            let user = new User({
+                name: 'New Name',
+                email: 'active@test.com',
+                role: 'user',
+                password: 'pass'
+            });
+            let inactiveUser = new User({
+                name: 'Name',
+                email: 'deleted@test.com',
+                role: 'user',
+                password: 'password',
+                deleted: true,
+            });
+            user.save((err: any) => {
+                if (err) return done(err);
+                inactiveUser.save((err: any) => {
+                    done(err);
+                })
+            });
+        });
+        it('should restore the user', function(done) {
+            request(app)
+                .put('/api/v1/user/restore')
+                .set('x-access-token', token)
+                .send({ email: 'deleted@test.com' })
+                .expect(200, (err: any) => {
+                    if (err) return done(err);
+                    User.findByEmail('deleted@test.com').exec((err: any, user: IUser) => {
+                        if (err) return done(err);
+                        assert.isFalse(user.deleted);
+                        done();
+                    });
+                });
+        });
+        it('should fail if email does not exist', function(done) {
+            request(app)
+                .put('/api/v1/user/restore')
+                .set('x-access-token', token)
+                .send({ email: 'doesnotexist@test.com'})
+                .expect(404, done);
+        });
+        it('should fail if user is active', function(done) {
+            request(app)
+                .put('/api/v1/user/restore')
+                .set('x-access-token', token)
+                .send({ email: 'active@test.com' })
+                .expect(400, done);
+        });
+        it('should fail if user making request is not an admin', function(done) {
+            let user: IUser = new User({
+                name: 'Name',
+                email: 'notanadmin@test.com',
+                password: hashSync('password'),
+                role: 'user',
+            });
+            user.save((err: any, user: IUser) => {
+                if (err) return done(err);
+                // once user is created, login and store jwt
+                request(app)
+                    .post('/api/v1/login')
+                    .send({ email: 'notanadmin@test.com', password: 'password' })
+                    .expect(200)
+                    .end((err: any, res: request.Response) => {
+                        token = res.get('x-access-token');
+                        request(app)
+                            .put('/api/v1/user/restore')
+                            .set('x-access-token', token)
+                            .expect(401, done);
+                    });
+            });
+        });
+        it('should fail if user not logged in', function(done) {
+            request(app)
+                .put('/api/v1/user/restore')
+                .send({ email: 'active@test.com' })
+                .expect(401, done); 
+        });
     });
 });

@@ -155,6 +155,41 @@ export default {
         });
     },
     deleteUser: (req: Request, res: Response) => {
-
+        if (!req.body.email || !isEmail(req.body.email))
+            return res.status(400).json({error: 'Invalid data for parameter "email"'});
+        return User.findByEmail(req.body.email).exec((err: any, user: IUser) => {
+            if (err) {
+                console.log('Something went wrong', err);
+                return res.status(500).json({error: 'Something went wrong'});
+            }
+            if (!user)
+                return res.status(404).json({error: 'User does not exist'});
+            if (user.deleted)
+                return res.status(400).json({error: 'User already deleted'});
+            if (req.user.email === req.body.email)
+                return res.status(400).json({error: 'Cannot delete current user'});
+            user.deleted = true;
+            return user.save((err: any) => {
+                return res.status(200).json({success: true});
+            });
+        });
+    },
+    restoreUser: (req: Request, res: Response) => {
+        if (!req.body.email || !isEmail(req.body.email))
+            return res.status(400).json({ error: 'Invalid data for parameter "email"' });
+        return User.findByEmail(req.body.email).exec((err: any, user: IUser) => {
+            if (err) {
+                console.log('Something went wrong', err);
+                return res.status(500).json({ error: 'Something went wrong' });
+            }
+            if (!user)
+                return res.status(404).json({ error: 'User does not exist' });
+            if (!user.deleted)
+                return res.status(400).json({ error: 'User already active' });
+                user.deleted = false;
+            return user.save((err: any) => {
+                return res.status(200).json({ success: true });
+            });
+        });
     }
 }
