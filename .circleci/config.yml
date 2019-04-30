@@ -16,9 +16,6 @@ jobs:
           name: Build
           command: yarn build
       - run:
-          name: Start MongoDB
-          command: docker run --net=host mongo
-      - run:
           name: Wait for DB
           # preinstalled in circleci/* docker image
           command: dockerize -wait mongodb://localhost:27017 -timeout 60s
