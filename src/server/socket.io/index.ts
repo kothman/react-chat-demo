@@ -22,6 +22,11 @@ const init = (server: Server, db: Connection, sessionMiddleware: any): socketio.
         // decode session token
         authorizedMiddleware(socket.request, {}, next);
     })
+    io.use((socket, next) => {
+        if (!socket.request.user)
+            return socket.disconnect();
+        next();
+    })
 
     // set authorization for socket.io
     io.on('connection', (socket: Socket) => {

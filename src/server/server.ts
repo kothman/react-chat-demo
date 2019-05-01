@@ -35,14 +35,16 @@ app.use(compression());
 
 const sessionMiddleware = session({
     secret: env.secret,
+    // need this for heroku
+    proxy: true,
     cookie: {
         maxAge: 24 * 60 * 60 * 1000, // 24 hours
         sameSite: true,
         secure: env.production,
-        httpOnly: true
+        httpOnly: true,
     },
     saveUninitialized: true,
-    resave: false,
+    resave: true,
     store: new MongoStore({
         mongooseConnection: mongoose.connection
     })
