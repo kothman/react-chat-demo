@@ -35,6 +35,7 @@ app.use(compression());
 
 const sessionMiddleware = session({
     secret: env.secret,
+    // need this for heroku
     proxy: true,
     cookie: {
         maxAge: 24 * 60 * 60 * 1000, // 24 hours
