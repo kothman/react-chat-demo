@@ -62,10 +62,13 @@ mongoose.connect(env.useTestDb ? env.mongodbTestConnectionUri : env.mongodbConne
 mongoose.connection.on('error', function(err) {
     console.error('Mongoose connection error', err);
 });
+
 process.on('SIGINT', function () {
     mongoose.connection.close(function () {
         console.log('Mongoose default connection disconnected through app termination');
-        process.exit(0);
+        server.close(() => {
+            process.exit(0);
+        });
     });
 }); 
 

@@ -8,7 +8,7 @@ export default {
         res.send(req.user);
     },
     users: (req: Request, res: Response) => {
-        return User.find({}).select('name email role').then((users: IUser[]) => {
+        return User.find({}).select('name email role deleted').then((users: IUser[]) => {
             return res.status(200).json({success: true, users: users});
         }).catch((err: Error) => {
             console.error(err);

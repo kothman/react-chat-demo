@@ -4,7 +4,6 @@ import { assert } from 'chai';
 
 import { app, dropAllCollections } from '../';
 import User, { IUser } from '../../src/server/models/User';
-import { isBuffer } from 'util';
 
 describe('User Controller', function() {
     let token: string;

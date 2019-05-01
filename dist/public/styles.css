@@ -194,14 +194,17 @@ table {
         flex-wrap: wrap; }
         .page-settings .container .user-settings .user-details .user:not(:last-child) {
           border-bottom: 1px solid lightgray; }
-        .page-settings .container .user-settings .user-details .user .edit-user, .page-settings .container .user-settings .user-details .user .user-name, .page-settings .container .user-settings .user-details .user .user-email, .page-settings .container .user-settings .user-details .user .user-role, .page-settings .container .user-settings .user-details .user .delete-user {
+        .page-settings .container .user-settings .user-details .user.deleted .user-name, .page-settings .container .user-settings .user-details .user.deleted .user-email, .page-settings .container .user-settings .user-details .user.deleted .user-role {
+          color: gray;
+          text-decoration: line-through; }
+        .page-settings .container .user-settings .user-details .user .edit-user, .page-settings .container .user-settings .user-details .user .user-name, .page-settings .container .user-settings .user-details .user .user-email, .page-settings .container .user-settings .user-details .user .user-role, .page-settings .container .user-settings .user-details .user .delete-user, .page-settings .container .user-settings .user-details .user .restore-user {
           padding: 1rem;
           display: flex; }
-        .page-settings .container .user-settings .user-details .user .edit-user, .page-settings .container .user-settings .user-details .user .delete-user {
+        .page-settings .container .user-settings .user-details .user .edit-user, .page-settings .container .user-settings .user-details .user .delete-user, .page-settings .container .user-settings .user-details .user .restore-user {
           margin-left: auto;
           flex-shrink: 1;
           cursor: pointer; }
-          .page-settings .container .user-settings .user-details .user .edit-user:hover, .page-settings .container .user-settings .user-details .user .delete-user:hover {
+          .page-settings .container .user-settings .user-details .user .edit-user:hover, .page-settings .container .user-settings .user-details .user .delete-user:hover, .page-settings .container .user-settings .user-details .user .restore-user:hover {
             background: #e6e6e6; }
         .page-settings .container .user-settings .user-details .user .user-name, .page-settings .container .user-settings .user-details .user .user-email, .page-settings .container .user-settings .user-details .user .user-role {
           flex-grow: 1;
@@ -219,6 +222,11 @@ table {
           color: salmon; }
           @media (max-width: 800px) {
             .page-settings .container .user-settings .user-details .user .delete-user {
+              order: -1; } }
+        .page-settings .container .user-settings .user-details .user .restore-user {
+          color: #3333ff; }
+          @media (max-width: 800px) {
+            .page-settings .container .user-settings .user-details .user .restore-user {
               order: -1; } }
 
 .online-users {

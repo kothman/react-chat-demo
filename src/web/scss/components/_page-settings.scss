@@ -122,12 +122,19 @@
                     align-items: center;
                     flex-wrap: wrap;
 
-                    .edit-user, .user-name, .user-email, .user-role, .delete-user {
+                    &.deleted {
+                        .user-name, .user-email, .user-role {
+                            color: $color-gray;
+                            text-decoration: line-through;
+                        }
+                    }
+
+                    .edit-user, .user-name, .user-email, .user-role, .delete-user, .restore-user {
                         padding: 1rem;
                         display: flex;
                     }
 
-                    .edit-user, .delete-user {
+                    .edit-user, .delete-user, .restore-user {
                         margin-left: auto;
                         flex-shrink: 1;
                         cursor: pointer;
@@ -153,6 +160,12 @@
                     }
                     .delete-user {
                         color: $color-danger;
+                        @include mobile {
+                            order: -1;
+                        }
+                    }
+                    .restore-user {
+                        color: $color-info;
                         @include mobile {
                             order: -1;
                         }

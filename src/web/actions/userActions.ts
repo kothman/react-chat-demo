@@ -92,3 +92,74 @@ export const updatePassword = (oldPass: string, newPass: string, onSuccess?: Fun
         });
     };
 }
+
+export const createUser = (name: string, email: string, role: string) => {
+    return (dispatch: any) => {
+        return axios.post('/api/v1/user/create', {
+            name: name,
+            email: email,
+            role: role,
+        }).then((res: AxiosResponse) => {
+            dispatch(addInfo('New user created'));
+        }).catch((err: any) => {
+            if (err.response && err.response.data.error)
+                dispatch(addError(err.response.data.error));
+            else 
+                dispatch(addError('Something went wrong'));
+        });
+    };
+};
+
+export const editUser = (originalEmail: string, newName?: string, newEmail?: string, newRole?: string) => {
+    return (dispatch: any) => {
+        return axios.put('/api/v1/user/update', {
+            email: originalEmail,
+            user: {
+                name: newName,
+                email: newEmail,
+                role: newRole
+            }
+        }).then((res: AxiosResponse) => {
+            dispatch(addInfo('Changes saved'));
+        }).catch((err: any) => {
+            if (err.response && err.response.data.error)
+                dispatch(addError(err.response.data.error));
+            else
+                dispatch(addError('Something went wrong'));
+        });
+    };
+};
+
+export const deleteUser = (email: string) => {
+    return (dispatch: any) => {
+        // should probably change this server-side to use a url parameter,
+        // didn't realize DELETE method doesn't take a data paramater normally
+        return axios({
+            method: 'delete',
+            url: '/api/v1/user/delete',
+            data: { email: email }
+        }).then((res: AxiosResponse) => {
+            dispatch(addInfo('User deleted'));
+        }).catch((err: any) => {
+            if (err.response && err.response.data.error)
+                dispatch(addError(err.response.data.error));
+            else
+                dispatch(addError('Something went wrong'));
+        });
+    };
+};
+
+export const restoreUser = (email: string) => {
+    return (dispatch: any) => {
+        return axios.put('/api/v1/user/restore', {
+            email: email
+        }).then((res: AxiosResponse) => {
+            dispatch(addInfo('User restored'));
+        }).catch((err: any) => {
+            if (err.response && err.response.data.error)
+                dispatch(addError(err.response.data.error));
+            else
+                dispatch(addError('Something went wrong'));
+        });
+    };
+};

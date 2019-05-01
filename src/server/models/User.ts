@@ -9,6 +9,7 @@ export interface IUser extends Document {
     password: string,
     role: 'admin' | 'user',
     deleted: boolean,
+    verified: boolean,
 };
 
 export interface IUserModel extends Model<IUser> {
@@ -35,7 +36,11 @@ const userSchema: Schema = new Schema({
     deleted: {
         type: Boolean,
         default: false
-    }
+    },
+    verified: {
+        type: Boolean,
+        default: false,
+    },
 }, {
     timestamps: true
 });
