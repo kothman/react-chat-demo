@@ -32,7 +32,7 @@ after('all tests', function(done) {
     dropAllCollections().then(() => {
         console.log('Closing connections');
         conn.close();
-        done()
+        done();
     });
 })
 

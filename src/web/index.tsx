@@ -28,9 +28,6 @@ axios.interceptors.response.use(function (res) {
     if (newCsrfToken) {
         axios.defaults.headers['csrf-token'] = newCsrfToken;
     }
-    let newAccessToken: string = res.headers['x-access-token'];
-    if (newAccessToken)
-        axios.defaults.headers['x-access-token'] = newAccessToken;
     return res;
 });
 window.axios = axios;

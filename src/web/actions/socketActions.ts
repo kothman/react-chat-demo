@@ -32,22 +32,13 @@ export const init = () => {
     return (dispatch: Dispatch, getState: Function) => {
         let socket: SocketIOClient.Socket = io();
         socket.on('connect', () => {
-            socket
-                .emit('authenticate', { token: getState().user.token }) //send the jwt
-                .on('authenticated', function () {
-                    dispatch(setSocketConnected(true));
-                    console.log('authorized [' + socket.id + ']');
-                    socket.on('connected users', (userEmails: string[]) => {
-                        dispatch(setSocketConnectedUsers(userEmails));
-                    });
-                })
-                .on('unauthorized', function (msg: any) {
-                    dispatch(setSocketConnected(false));
-                    console.log("unauthorized: " + JSON.stringify(msg.data));
-                    socket.off('connected uses');
-                    throw new Error(msg.data.type);
-                })
+            dispatch(setSocketConnected(true));
+            console.log('authorized [' + socket.id + ']');
+            socket.on('connected users', (userEmails: string[]) => {
+                dispatch(setSocketConnectedUsers(userEmails));
+            });
         });
+
         socket.on('disconnect', () => {
             dispatch(setSocketConnected(false));
             console.log('Disconnected from websocket server, attempting reconnect');

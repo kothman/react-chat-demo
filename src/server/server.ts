@@ -62,10 +62,13 @@ mongoose.connect(env.useTestDb ? env.mongodbTestConnectionUri : env.mongodbConne
 mongoose.connection.on('error', function(err) {
     console.error('Mongoose connection error', err);
 });
+
 process.on('SIGINT', function () {
     mongoose.connection.close(function () {
         console.log('Mongoose default connection disconnected through app termination');
-        process.exit(0);
+        server.close(() => {
+            process.exit(0);
+        });
     });
 }); 
 
@@ -128,8 +131,8 @@ app.use((req: Request, res: Response, next: Function) => {
         }, env.secret, {
             expiresIn: 86400 // expires in 24 hours
         });
+        res.setHeader('x-access-token', token);
         req.session.token = token;
-        res.setHeader('x-access-token', token)
     }
     next();
 });
@@ -142,7 +145,7 @@ server.on('error', (err: Error) => {
 })
 
 if (!env.disableAutoStart) {
-    socketServer = websocket(server, db);
+    socketServer = websocket(server, db, sessionMiddleware);
     mongoose.connection.on('connected', function () {
         console.log('Connected to MongoDB via Mongoose');
         server.listen(port, () => {

@@ -1,6 +1,7 @@
 import * as path from 'path';
 import { App, Request, Response } from '../types/express';
 import authorized from './middleware/authorized';
+import admin from './middleware/admin';
 import authController from './controllers/authController';
 import userController from './controllers/userController';
 import messageController from './controllers/messageController';
@@ -35,7 +36,7 @@ export default function(app: App) {
     app.get('/api/v1/logout', authController.logout);
     app.get('/api/v1/verifyEmail/:id', authController.verifyEmail);
 
-    app.use('/api/v1/user', authorized);
+    app.use('/api/v1/user*', authorized);
     app.get('/api/v1/user', userController.user);
     app.get('/api/v1/users', userController.users)
     app.get('/api/v1/user/:user', userController.userByEmail);
@@ -43,14 +44,18 @@ export default function(app: App) {
     app.post('/api/v1/user/update/name', userController.updateName);
     app.post('/api/v1/user/update/password', userController.updatePassword);
     app.post('/api/v1/user/reset_password', userController.resetPassword);
+    app.post('/api/v1/user/create', admin, userController.createUser);
+    app.put('/api/v1/user/update', admin, userController.editUser);
+    app.delete('/api/v1/user/delete', admin, userController.deleteUser);
+    app.put('/api/v1/user/restore', admin, userController.restoreUser);
 
-    app.get('/api/v1/message*', authorized);
+    app.use('/api/v1/message*', authorized);
     app.get('/api/v1/messages/:channel/:offset', messageController.messages);
 
     app.use('/api/v1/channel', authorized);
     app.get('/api/v1/channels', channelController.channels);
-    app.post('/api/v1/channels/delete', channelController.delete);
-    app.post('/api/v1/channels/create', channelController.create);
+    app.post('/api/v1/channels/delete', admin, channelController.delete);
+    app.post('/api/v1/channels/create', admin, channelController.create);
 
     /* Display index.html if unknown path, and let React-Router handle the 404 */
     app.get('*', function (req: Request, res: Response) {

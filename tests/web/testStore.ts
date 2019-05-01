@@ -360,7 +360,5 @@ describe('Store and Synchronous Actions', function() {
             store.dispatch(updateUsers(users));
             assert.deepStrictEqual(chatUsers(), users);
         });
-        it('should add a user');
-        it('should remove a user');
     });
 });

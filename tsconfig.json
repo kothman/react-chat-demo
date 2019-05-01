@@ -1,11 +1,13 @@
 {
     "compilerOptions": {
         "module": "commonjs",
+        "target": "es3",
         "noImplicitAny": true,
         "removeComments": true,
         "preserveConstEnums": true,
-        "sourceMap": true,
-        "jsx": "react"
+        "inlineSourceMap": true,
+        "jsx": "react",
+        "outDir": "./dist/"
     },
     "exclude": [
         "node_modules"

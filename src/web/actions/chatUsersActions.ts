@@ -56,7 +56,9 @@ export const fetchAllUsers = () => {
 }
 
 export const createNewUser = (user: ChatUser) => {
-
+    return (dispatch: Dispatch) => {
+        return axios.get('/api/v1/')
+    }
 }
 
 export const editUser = (email: string, user: ChatUser) => {

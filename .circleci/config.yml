@@ -13,9 +13,6 @@ jobs:
           name: Install Packages
           command: yarn install
       - run:
-          name: Build
-          command: yarn build
-      - run:
           name: Wait for DB
           # preinstalled in circleci/* docker image
           command: dockerize -wait tcp://localhost:27017 -timeout 60s

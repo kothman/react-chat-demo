@@ -4,7 +4,7 @@ import { assert } from 'chai';
 import MockAdapter from 'axios-mock-adapter';
 import configureStore, { MockStoreCreator, MockStoreEnhanced } from 'redux-mock-store'
 import thunk from 'redux-thunk'
-import { updateName, updateEmail, updatePassword } from '../../src/web/actions/userActions';
+import { updateName, updateEmail, updatePassword, createUser, editUser, restoreUser, deleteUser } from '../../src/web/actions/userActions';
 import { AnyAction } from 'redux';
 import { ADD_INFO, ADD_ERROR, addError, addInfo } from '../../src/web/actions/notificationsActions';
 import { Channel, Message } from '../../src/web/reducers/channels';
@@ -38,9 +38,9 @@ describe('Async Actions', function() {
             mockAxios.reset();
             mockAxios.onAny().reply(200, {})
         });
-        it('should handle callback and set info ' +
-           'on successful post request to /api/v1/user/update/name', function(done) {
-                let name : false | string = false;
+        describe('updateName', function() {
+            it('should handle callback and set info ', function (done) {
+                let name: false | string = false;
                 mockStore
                     .dispatch(updateName('Adrian', () => name = 'Adrian'))
                     .then(() => {
@@ -52,86 +52,179 @@ describe('Async Actions', function() {
                         }]);
                         done();
                     }).catch(done);
+            });
+            it('should set an error on failed request', function (done) {
+                let name: false | string = false;
+                mockAxios.reset();
+                mockAxios.onPost('/api/v1/user/update/name').reply(500, { error: 'Something went wrong' });
+                mockStore
+                    .dispatch(updateName('Adrian', () => name = 'Adrian'))
+                    .then(() => {
+                        assert.strictEqual(name, false);
+                        const actions: AnyAction[] = mockStore.getActions();
+                        assert.deepStrictEqual(actions, [{
+                            type: ADD_ERROR,
+                            data: 'Something went wrong'
+                        }]);
+                        done();
+                    }).catch(done);
+            });
         });
-        it('should set an error on failed post request to /api/v1/user/update/name', function(done) {
-            let name : false | string = false;
-            mockAxios.reset();
-            mockAxios.onPost('/api/v1/user/update/name').reply(500, {error: 'Something went wrong'});
-            mockStore
-                .dispatch(updateName('Adrian', () => name = 'Adrian'))
-                .then(() => {
-                    assert.strictEqual(name, false);
-                    const actions: AnyAction[] = mockStore.getActions();
-                    assert.deepStrictEqual(actions, [{
-                        type: ADD_ERROR,
-                        data: 'Something went wrong'
-                    }]);
-                    done();
-                }).catch(done);
+
+        describe('updateEmail', function() {
+            it('should set an error on failed request', function (done) {
+                let email: false | string = false;
+                mockAxios.reset();
+                mockAxios.onPost('/api/v1/user/update/email').reply(500, { error: 'Something went wrong' });
+                mockStore
+                    .dispatch(updateEmail('test@test.com', () => email = 'test@test.com'))
+                    .then(() => {
+                        assert.isFalse(email);
+                        const actions: AnyAction[] = mockStore.getActions();
+                        assert.deepStrictEqual(actions, [{
+                            type: ADD_ERROR,
+                            data: 'Something went wrong'
+                        }]);
+                        done();
+                    })
+                    .catch(done);
+            });
+            it('should handle callback and set info', function(done) {
+                let email: false | string = false;
+                mockStore
+                    .dispatch(updateEmail('test@test.com', () => email = 'test@test.com'))
+                    .then(() => {
+                        assert.strictEqual(email, 'test@test.com');
+                        const actions: AnyAction[] = mockStore.getActions();
+                        assert.deepStrictEqual(actions, [{
+                            type: ADD_INFO,
+                            data: 'Email updated'
+                        }]);
+                        done();
+                    })
+                    .catch(done);
+            });
         });
-        it('should handle callback and set info ' +
-           'on successful post request to /api/v1/user/update/email', function(done) {
-            let email: false | string = false;
-            mockStore
-                .dispatch(updateEmail('test@test.com', () => email = 'test@test.com'))
-                .then(() => {
-                    assert.strictEqual(email, 'test@test.com');
-                    const actions: AnyAction[] = mockStore.getActions();
-                    assert.deepStrictEqual(actions, [{
-                        type: ADD_INFO,
-                        data: 'Email updated'
-                    }]);
-                    done();
-                })
-                .catch(done);
+        describe('updatePassword', function() {
+            it('should set info', function(done) {
+                let updated: boolean = false;
+                mockStore.dispatch(updatePassword('a', 'b', () => updated = true))
+                    .then(() => {
+                        assert.isTrue(updated);
+                        const actions: AnyAction[] = mockStore.getActions();
+                        assert.deepStrictEqual(actions, [{
+                            type: ADD_INFO,
+                            data: 'Password updated'
+                        }]);
+                        done();
+                    })
+                    .catch(done);
+            });
+            it('should set an error on failed request', function(done) {
+                let updated: boolean = false;
+                mockAxios.reset();
+                mockAxios.onPost('/api/v1/user/update/password').reply(500, { error: 'Something went wrong' });
+                mockStore.dispatch(updatePassword('a', 'b', () => updated = true))
+                    .then(() => {
+                        assert.isFalse(updated);
+                        const actions: AnyAction[] = mockStore.getActions();
+                        assert.deepStrictEqual(actions, [{
+                            type: ADD_ERROR,
+                            data: 'Something went wrong'
+                        }]);
+                        done();
+                    })
+                    .catch(done);
+            })
         });
-        it('should set an error on failed post request to /api/v1/user/update/email', function(done) {
-            let email: false | string = false;
-            mockAxios.reset();
-            mockAxios.onPost('/api/v1/user/update/email').reply(500, { error: 'Something went wrong' });
-            mockStore
-                .dispatch(updateEmail('test@test.com', () => email = 'test@test.com'))
-                .then(() => {
-                    assert.isFalse(email);
-                    const actions: AnyAction[] = mockStore.getActions();
-                    assert.deepStrictEqual(actions, [{
-                        type: ADD_ERROR,
-                        data: 'Something went wrong'
-                    }]);
-                    done();
-                })
-                .catch(done);
-        })
-        it('should set info on successful post request to /api/v1/user/update/password', function(done) {
-            let updated: boolean = false;
-            mockStore.dispatch(updatePassword('a', 'b', () => updated = true))
-                .then(() => {
-                    assert.isTrue(updated);
-                    const actions: AnyAction[] = mockStore.getActions();
-                    assert.deepStrictEqual(actions, [{
-                        type: ADD_INFO,
-                        data: 'Password updated'
-                    }]);
-                    done();
-                })
-                .catch(done);
+        describe('createUser', function() {
+            it('should set info on success', function(done) {
+                mockStore
+                    .dispatch(createUser('Name', 'email@test.com', 'user'))
+                    .then(() => {
+                        const actions: AnyAction[] = mockStore.getActions();
+                        assert.deepStrictEqual(actions, [addInfo('New user created')]);
+                        done();
+                    }).catch(done);
+            });
+            it('should set error on failure', function(done) {
+                mockAxios.reset();
+                mockAxios.onAny().reply(400, {error: 'Something went wrong'});
+                mockStore
+                    .dispatch(createUser('Name', 'email@test.com', 'user'))
+                    .then(() => {
+                        const actions: AnyAction[] = mockStore.getActions();
+                        assert.deepStrictEqual(actions, [addError('Something went wrong')]);
+                        done();
+                    }).catch(done);
+            });
         });
-        it('should set an error on failed post request to /api/v1/user/update/password', function(done) {
-            let updated: boolean = false;
-            mockAxios.reset();
-            mockAxios.onPost('/api/v1/user/update/password').reply(500, { error: 'Something went wrong' });
-            mockStore.dispatch(updatePassword('a', 'b', () => updated = true))
-                .then(() => {
-                    assert.isFalse(updated);
-                    const actions: AnyAction[] = mockStore.getActions();
-                    assert.deepStrictEqual(actions, [{
-                        type: ADD_ERROR,
-                        data: 'Something went wrong'
-                    }]);
-                    done();
-                })
-                .catch(done);
-        })
+        describe('editUser', function() {
+            it('should set info on success', function(done) {
+                mockStore
+                    .dispatch(editUser('original@test.com', 'Name', 'email@test.com', 'user'))
+                    .then(() => {
+                        const actions: AnyAction[] = mockStore.getActions();
+                        assert.deepStrictEqual(actions, [addInfo('Changes saved')]);
+                        done();
+                    }).catch(done);
+            });
+            it('should set error on failure', function(done) {
+                mockAxios.reset();
+                mockAxios.onAny().reply(400, { error: 'Something went wrong' });
+                mockStore
+                    .dispatch(editUser('original@test.com', 'Name', 'email@test.com', 'user'))
+                    .then(() => {
+                        const actions: AnyAction[] = mockStore.getActions();
+                        assert.deepStrictEqual(actions, [addError('Something went wrong')]);
+                        done();
+                    }).catch(done);
+            });
+        });
+        describe('deleteUser', function() {
+            it('should set info on success', function(done) {
+                mockStore
+                    .dispatch(deleteUser('user@test.com'))
+                    .then(() => {
+                        const actions: AnyAction[] = mockStore.getActions();
+                        assert.deepStrictEqual(actions, [addInfo('User deleted')]);
+                        done();
+                    }).catch(done);
+            });
+            it('should set error on failure', function(done) {
+                mockAxios.reset();
+                mockAxios.onAny().reply(400, { error: 'Something went wrong' });
+                mockStore
+                    .dispatch(deleteUser('test@test.com'))
+                    .then(() => {
+                        const actions: AnyAction[] = mockStore.getActions();
+                        assert.deepStrictEqual(actions, [addError('Something went wrong')]);
+                        done();
+                    }).catch(done);
+            });
+        });
+        describe('restoreUser', function() {
+            it('should set info on success', function(done) {
+                mockStore
+                    .dispatch(restoreUser('user@test.com'))
+                    .then(() => {
+                        const actions: AnyAction[] = mockStore.getActions();
+                        assert.deepStrictEqual(actions, [addInfo('User restored')]);
+                        done();
+                    }).catch(done);
+            });
+            it('should set error on failure', function(done) {
+                mockAxios.reset();
+                mockAxios.onAny().reply(400, { error: 'Something went wrong' });
+                mockStore
+                    .dispatch(restoreUser('test@test.com'))
+                    .then(() => {
+                        const actions: AnyAction[] = mockStore.getActions();
+                        assert.deepStrictEqual(actions, [addError('Something went wrong')]);
+                        done();
+                    }).catch(done);
+            });
+        });
     });
     describe('Channels async actions', function () {
         beforeEach(function () {
@@ -407,9 +500,6 @@ describe('Async Actions', function() {
                     assert.deepStrictEqual(actions, [addErrorAction]);
                     done();
                 }).catch(done);
-        })
-        it('should create a new user');
-        it('should edit the user');
-        it('should delete the user');
+        });
     });
 })

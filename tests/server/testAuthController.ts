@@ -7,7 +7,7 @@ import { assert } from 'chai';
 const session = require('supertest-session');
 
 describe('Auth Controller', function() {
-    describe('login', function() {
+    describe('POST /api/v1/login', function() {
         beforeEach(function (done) {
             dropAllCollections().then(() => {
                 let user: IUser = new User({
@@ -123,7 +123,7 @@ describe('Auth Controller', function() {
                 })
         });
     });
-    describe('register', function() {
+    describe('POST /api/v1/register', function() {
         beforeEach(function (done) {
             dropAllCollections().then(() => done());
         });
@@ -217,7 +217,7 @@ describe('Auth Controller', function() {
                 });
         });
     });
-    describe('logout', function() {
+    describe('POST /api/v1/logout', function() {
         let testSession: any;
         beforeEach(function (done) {
             testSession = session(app);
@@ -247,12 +247,11 @@ describe('Auth Controller', function() {
                 });
         });
     });
-    describe('verify email', function() {
+    /* describe('POST /api/v1/verifyEmail', function() {
         beforeEach(function (done) {
             dropAllCollections().then(() => done());
-
         });
         it('should verify an email given the correct verification link');
         it('should not verify an email with an incorrect verification link');
-    });
+    }); */
 });
