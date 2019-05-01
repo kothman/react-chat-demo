@@ -39,10 +39,10 @@ const sessionMiddleware = session({
         maxAge: 24 * 60 * 60 * 1000, // 24 hours
         sameSite: true,
         secure: env.production,
-        httpOnly: true
+        httpOnly: true,
     },
     saveUninitialized: true,
-    resave: false,
+    resave: true,
     store: new MongoStore({
         mongooseConnection: mongoose.connection
     })
