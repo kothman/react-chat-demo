@@ -247,11 +247,11 @@ describe('Auth Controller', function() {
                 });
         });
     });
-    describe('POST /api/v1/verifyEmail', function() {
+    /* describe('POST /api/v1/verifyEmail', function() {
         beforeEach(function (done) {
             dropAllCollections().then(() => done());
         });
         it('should verify an email given the correct verification link');
         it('should not verify an email with an incorrect verification link');
-    });
+    }); */
 });
