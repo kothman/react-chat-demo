@@ -145,7 +145,7 @@ server.on('error', (err: Error) => {
 })
 
 if (!env.disableAutoStart) {
-    socketServer = websocket(server, db);
+    socketServer = websocket(server, db, sessionMiddleware);
     mongoose.connection.on('connected', function () {
         console.log('Connected to MongoDB via Mongoose');
         server.listen(port, () => {

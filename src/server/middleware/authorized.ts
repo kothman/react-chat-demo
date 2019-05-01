@@ -2,7 +2,7 @@ import { verify } from 'jsonwebtoken';
 import { Token } from '../../types/jwt';
 import { Request, Response } from '../../types/express';
 const env = require('../../../env');
-export default function(req: Request, res: Response, next: Function) {
+export default function(req: Request, res: Response | any, next: Function) {
     var token = req.session.token || req.headers['x-access-token'];
     if (!token)
         return res.status(401).json({ error: 'Not authorized' });
